@@ -1,0 +1,32 @@
+{
+  "private": true,
+  "name": "scenar",
+  "description": "Declarative scenario playback engine — interactive web embeds and pixel-perfect video from the same source.",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "framer-motion": "^12.38.0",
+    "jsdom": "^29.0.2",
+    "lucide-react": "^1.8.0",
+    "prettier": "^3.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "packageManager": "pnpm@10.8.1",
+  "engines": {
+    "node": ">=20"
+  }
+}
