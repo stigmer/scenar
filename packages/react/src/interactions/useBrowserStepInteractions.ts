@@ -33,14 +33,13 @@ export function useBrowserStepInteractions<T>(
 ): void {
   const {
     stepIndex,
-    interactions,
     narrationManifest,
     steps,
     playbackRate = 1,
   } = options;
 
   useEffect(() => {
-    const actions = interactions[stepIndex];
+    const actions = steps[stepIndex]?.interactions;
     if (!actions || actions.length === 0) return;
 
     const duration = getStepDurationMs(stepIndex, narrationManifest, steps);
@@ -113,7 +112,7 @@ export function useBrowserStepInteractions<T>(
             ctx.setShowRipple?.(true);
           }, fireAt + (CLICK_DELAY_MS + DRAG_SETTLE_MS + CLICK_DELAY_MS) / rate),
         );
-      } else if (action.type === "viewport-transition") {
+      } else if (action.type === "viewport_transition") {
         warnIfViewportTooCloseToAction(action, actions, duration, stepIndex);
         timers.push(setTimeout(() => applyViewportTransition(action, ctx), fireAt));
       } else {
@@ -126,18 +125,18 @@ export function useBrowserStepInteractions<T>(
     return () => {
       for (const t of timers) clearTimeout(t);
     };
-  }, [stepIndex, interactions, narrationManifest, ctx, steps, playbackRate]);
+  }, [stepIndex, narrationManifest, ctx, steps, playbackRate]);
 }
 
 function executeSimpleAction(action: StepAction, ctx: InteractionContext): void {
   switch (action.type) {
-    case "scroll-to":
+    case "scroll_to":
       executeScrollTo(action, ctx);
       break;
-    case "set-cursor":
+    case "set_cursor":
       executeSetCursor(action, ctx);
       break;
-    case "clear-cursor":
+    case "clear_cursor":
       executeClearCursor(action, ctx);
       break;
     default:

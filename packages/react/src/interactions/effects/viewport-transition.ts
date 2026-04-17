@@ -12,7 +12,7 @@ function computeViewportTransformForTarget(
   if (!el) {
     if (process.env.NODE_ENV === "development") {
       console.warn(
-        `[StepInteractions] viewport-transition target "${target}" not found in DOM.`,
+        `[scenar] viewport_transition target "${target}" not found in DOM.`,
       );
     }
     return null;
@@ -37,7 +37,7 @@ export function applyViewportTransition(action: StepAction, ctx: InteractionCont
   if (!ctx.setViewportTransform) {
     if (process.env.NODE_ENV === "development") {
       console.warn(
-        "[StepInteractions] viewport-transition action found but no setViewportTransform callback.",
+        "[scenar] viewport_transition action found but no setViewportTransform callback.",
       );
     }
     return;
@@ -51,7 +51,7 @@ export function applyViewportTransition(action: StepAction, ctx: InteractionCont
   if (!action.target) {
     if (process.env.NODE_ENV === "development") {
       console.warn(
-        "[StepInteractions] viewport-transition has no target and viewportReset is not set.",
+        "[scenar] viewport_transition has no target and viewportReset is not set.",
       );
     }
     return;

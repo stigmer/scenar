@@ -2,16 +2,21 @@ import type { NarrationManifest } from "../narration/types.js";
 import type { ViewportTransform } from "../viewport/transform.js";
 import type { ScenarioStep } from "./types.js";
 
-/** The set of interaction types the engine understands. */
+/**
+ * The set of interaction types the engine understands.
+ *
+ * Values match the proto `ActionType` enum names (`ai.scenar.scenario.v1`)
+ * so that proto ↔ engine mapping is a direct string copy.
+ */
 export type ActionType =
-  | "scroll-to"
-  | "set-cursor"
-  | "clear-cursor"
+  | "scroll_to"
+  | "set_cursor"
+  | "clear_cursor"
   | "click"
   | "type"
   | "hover"
   | "drag"
-  | "viewport-transition";
+  | "viewport_transition";
 
 /** A single timed interaction within a step. */
 export interface StepAction {
@@ -28,8 +33,8 @@ export interface StepAction {
   readonly type: ActionType;
   /**
    * Target element identifier.
-   * - For `scroll-to`: matches `[data-scroll-target="<target>"]`
-   * - For `set-cursor` / `click` / `type` / `hover`: matches `[data-cursor-target="<target>"]`
+   * - For `scroll_to`: matches `[data-scroll-target="<target>"]`
+   * - For `set_cursor` / `click` / `type` / `hover`: matches `[data-cursor-target="<target>"]`
    * - For `drag`: matches `[data-cursor-target="<target>"]` (drag source)
    */
   readonly target?: string;
@@ -52,38 +57,34 @@ export interface StepAction {
    */
   readonly hoverDuration?: number;
   /**
-   * Zoom scale factor for `viewport-transition` actions.
+   * Zoom scale factor for `viewport_transition` actions.
    * Values > 1 zoom in, < 1 zoom out. Defaults to 1.5.
    * Ignored when {@link viewportReset} is `true`.
    */
   readonly viewportZoom?: number;
   /**
-   * When `true`, a `viewport-transition` action resets the viewport
+   * When `true`, a `viewport_transition` action resets the viewport
    * to the identity transform (scale 1, no translation). `target`
    * and `viewportZoom` are ignored.
    */
   readonly viewportReset?: boolean;
 }
 
-/**
- * Map of step index → ordered array of timed actions for that step.
- * Steps not listed have no mid-step interactions.
- */
-export type StepInteractions = Readonly<Record<number, readonly StepAction[]>>;
-
 /** Configuration for the useStepInteractions hook. */
 export interface UseStepInteractionsOptions<T> {
   /** Current active step index from ScenarioPlayer. */
   stepIndex: number;
-  /** Timed actions keyed by step index. */
-  interactions: StepInteractions;
   /** Narration manifest for duration lookup. */
   narrationManifest: NarrationManifest | undefined;
   /** Container ref for DOM queries. */
   containerRef: { current: HTMLElement | null };
   /** Callback to change the cursor target mid-step. */
   setCursorTarget: (target: string | undefined) => void;
-  /** The full steps array (used for fallback duration from delayMs). */
+  /**
+   * The full steps array. Interactions are read from each step's
+   * `interactions` field. Step `delayMs` is used as fallback duration
+   * when narration is unavailable.
+   */
   steps: readonly ScenarioStep<T>[];
   /**
    * Playback speed multiplier (default 1). Browser-path timeouts are
@@ -105,7 +106,7 @@ export interface UseStepInteractionsOptions<T> {
   setDragging?: (dragging: boolean) => void;
   /**
    * Optional callback to apply a viewport transform (zoom/pan). The
-   * `viewport-transition` action computes scale and translate values
+   * `viewport_transition` action computes scale and translate values
    * needed to center the target element and calls this callback.
    */
   setViewportTransform?: (transform: ViewportTransform) => void;

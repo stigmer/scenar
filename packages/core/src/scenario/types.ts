@@ -5,6 +5,8 @@
  * playback engine. They are framework-agnostic — no React, no DOM.
  */
 
+import type { StepAction } from "./step-action.js";
+
 /**
  * A single step in a scenario timeline.
  *
@@ -12,14 +14,23 @@
  */
 export interface ScenarioStep<T> {
   /** Milliseconds to wait before revealing this step. */
-  delayMs: number;
+  readonly delayMs: number;
   /** Data snapshot at this point in the timeline. */
-  data: T;
+  readonly data: T;
   /** Short label shown below the demo content describing the current action. */
-  caption?: string;
+  readonly caption?: string;
   /**
    * Narration script for TTS generation. Consumed by the build script
    * to produce audio files — not rendered at runtime.
    */
-  narration?: string;
+  readonly narration?: string;
+  /**
+   * Timed interactions to execute while this step is active. Each
+   * interaction fires at a specific point during the step's duration
+   * (controlled by {@link StepAction.atPercent}).
+   *
+   * Interactions are executed in order. When multiple interactions
+   * share the same atPercent, they fire in array order.
+   */
+  readonly interactions?: readonly StepAction[];
 }
