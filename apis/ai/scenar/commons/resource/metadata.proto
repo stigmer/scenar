@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package ai.scenar.commons.resource;
+
+import "ai/scenar/commons/resource/enum.proto";
+import "buf/validate/validate.proto";
+
+// ResourceMetadata contains standard metadata for all Scenar resources.
+//
+// Every resource has a human-readable name, a URL-friendly slug, a
+// system-generated ID, and optional categorization via labels,
+// annotations, and tags. Visibility controls access scope.
+//
+// This is Scenar's own metadata type — structurally inspired by
+// Kubernetes-style resource patterns but independent of any external
+// resource model.
+message ResourceMetadata {
+  // Human-readable name of the resource.
+  string name = 1;
+
+  // URL-friendly identifier, unique within the Scenar instance.
+  // Used in URLs, CLI commands, and cross-resource references.
+  // Format: lowercase alphanumeric with hyphens (e.g., "api-key-setup").
+  string slug = 2;
+
+  // System-generated unique identifier. Assigned on creation by the
+  // engine or hosting service. Empty in author-defined YAML files —
+  // the system assigns an ID at registration time.
+  string id = 3;
+
+  // Visibility controls who can access this resource.
+  // Default: visibility_private for new resources.
+  ResourceVisibility visibility = 4 [(buf.validate.field).enum.defined_only = true];
+
+  // Key-value labels for organization and filtering.
+  // Labels are intended for identifying attributes that are meaningful
+  // and relevant to users (e.g., "team": "frontend", "product": "docs").
+  map<string, string> labels = 5;
+
+  // Key-value annotations for additional metadata.
+  // Annotations store non-identifying auxiliary data — tooling config,
+  // build info, or integration-specific values that don't affect
+  // resource behavior.
+  map<string, string> annotations = 6;
+
+  // Tags for categorization and filtering.
+  // Freeform strings for grouping resources (e.g., "quickstart",
+  // "authentication", "onboarding").
+  repeated string tags = 7;
+
+  // Version information for the resource.
+  ResourceMetadataVersion version = 8;
+}
+
+// ResourceMetadataVersion contains version tracking information.
+//
+// Enables scenario versioning — each edit creates a new version with
+// an optional message describing the change. The version chain allows
+// rollback and audit of scenario evolution.
+message ResourceMetadataVersion {
+  // Unique identifier for this version.
+  string id = 1;
+
+  // Message describing what changed in this version.
+  string message = 2;
+
+  // Reference to the previous version ID.
+  string previous_version_id = 3;
+}

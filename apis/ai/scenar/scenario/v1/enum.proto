@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package ai.scenar.scenario.v1;
+
+// ActionType defines the kinds of timed interactions the Scenar engine
+// can perform within a scenario step.
+//
+// Each action type maps to a distinct cursor/UI behaviour:
+//   - Cursor positioning: set_cursor, clear_cursor
+//   - UI triggers: click, type, hover, drag
+//   - Viewport control: scroll_to, viewport_transition
+//
+// The engine executes actions at the time specified by StepAction.at_percent,
+// applying action-specific configuration from the StepAction.config oneof.
+enum ActionType {
+  // Default value. Must not be used in scenario definitions.
+  unspecified = 0;
+
+  // Move the cursor to the target element. The cursor animates smoothly
+  // from its current position (or fades in if previously hidden). No
+  // click or other interaction is dispatched — this is purely visual
+  // positioning to draw the viewer's attention.
+  set_cursor = 1;
+
+  // Hide the cursor. Use after an interaction sequence completes to
+  // return the viewport to a clean state. The target field on StepAction
+  // is ignored for this action type.
+  clear_cursor = 2;
+
+  // Move the cursor to the target element, then dispatch a DOM click
+  // event. The click fires after the cursor's arrival animation settles,
+  // so the viewer sees the cursor land before the UI reacts.
+  //
+  // No additional configuration required — the click target is
+  // StepAction.target. Use ClickConfig only if future click options
+  // are needed.
+  click = 3;
+
+  // Move the cursor to the target element (an input or textarea), then
+  // type text character-by-character. Produces realistic keystroke
+  // timing so the viewer can follow along.
+  //
+  // Requires TypeConfig with the text to type. Optional type_delay_ms
+  // overrides the engine's default per-character interval.
+  type = 4;
+
+  // Move the cursor to the target element and dispatch pointer/mouse
+  // enter events. The cursor dwells on the target for a configurable
+  // duration (default: engine decides), then dispatches leave events.
+  // Useful for revealing tooltips, dropdown previews, or hover states.
+  //
+  // The cursor does NOT show a click ripple during hover — it simply
+  // rests on the target. Optional HoverConfig.hover_duration_ms
+  // overrides the default dwell time.
+  hover = 5;
+
+  // Move the cursor to the source element, press, drag to the
+  // destination element, and release. The cursor icon switches to a
+  // grab/closed-hand visual during the drag motion.
+  //
+  // StepAction.target identifies the drag source. DragConfig.drag_target
+  // identifies the drag destination. Both use the same targeting
+  // mechanism (e.g., data-cursor-target attributes in the DOM).
+  drag = 6;
+
+  // Scroll the target element into view within its nearest scrollable
+  // ancestor. No cursor movement — this is a viewport-level operation
+  // that ensures subsequent interactions target visible elements.
+  //
+  // No additional configuration required — the scroll target is
+  // StepAction.target. Use ScrollToConfig only if future scroll
+  // options are needed.
+  scroll_to = 7;
+
+  // Apply a zoom/pan transform to the viewport, centering on the
+  // target element at the specified zoom level. Persists across
+  // subsequent steps until explicitly reset.
+  //
+  // ViewportTransitionConfig.viewport_zoom sets the scale factor
+  // (> 1 zooms in, < 1 zooms out). Set viewport_reset to true to
+  // return to the identity transform (scale 1, no translation).
+  viewport_transition = 8;
+}

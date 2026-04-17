@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package ai.scenar.commons.resource;
+
+// ResourceVisibility controls who can access a resource.
+//
+// Visibility is orthogonal to ownership — it determines whether users
+// outside the resource's creator/owner can discover and use it.
+enum ResourceVisibility {
+  // Default/unspecified. For new resources, defaults to visibility_private.
+  resource_visibility_unspecified = 0;
+
+  // Only the resource owner can access.
+  // Named visibility_private to avoid Java reserved keyword conflict.
+  visibility_private = 1;
+
+  // Anyone can access (read). Write access still requires ownership.
+  // Named visibility_public to avoid Java reserved keyword conflict.
+  visibility_public = 2;
+}
+
+// ResourceEventType identifies the kind of mutation that occurred on a resource.
+//
+// Used by command controllers to classify events for audit trails,
+// webhooks, and event-driven integrations.
+enum ResourceEventType {
+  // Default value when no event type is set.
+  unspecified = 0;
+  // Resource was created.
+  created = 1;
+  // Resource spec or status was updated.
+  updated = 2;
+  // Resource was deleted.
+  deleted = 3;
+  // Resource was renamed (slug changed).
+  renamed = 4;
+}

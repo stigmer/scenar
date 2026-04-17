@@ -1,0 +1,287 @@
+syntax = "proto3";
+
+package ai.scenar.scenario.v1;
+
+import "ai/scenar/scenario/v1/enum.proto";
+import "buf/validate/validate.proto";
+import "google/protobuf/struct.proto";
+
+// ScenarioSpec defines the complete choreography of a scenario — the ordered
+// sequence of visual steps, timed cursor interactions within each step, and
+// the viewport dimensions for deterministic rendering.
+//
+// This is the core of Scenar. A ScenarioSpec fully describes what the viewer
+// sees: which component renders at each point in time, what the cursor does,
+// what text gets typed, and how the viewport transforms. The same spec drives
+// both interactive web embeds and pixel-perfect MP4 video exports.
+//
+// Example YAML:
+//   viewport:
+//     width: 896
+//     height: 540
+//   steps:
+//     - view: new-session
+//       delay_ms: 0
+//       caption: "Start here"
+//       narration_text: "Let's walk through the setup."
+//     - view: settings-api-keys
+//       delay_ms: 1500
+//       caption: "Your API keys"
+//       interactions:
+//         - at_percent: 0.3
+//           type: hover
+//           target: create-api-key
+//     - view: create-form
+//       delay_ms: 2500
+//       caption: "Name your key"
+//       interactions:
+//         - at_percent: 0.15
+//           type: type
+//           target: apikey-name-input
+//           type_config:
+//             text: "quickstart-key"
+message ScenarioSpec {
+  // Canonical viewport dimensions for deterministic rendering.
+  // When omitted, the engine uses its built-in defaults.
+  ViewportConfig viewport = 1;
+
+  // Ordered sequence of visual steps in the scenario timeline.
+  // Step 0 is the initial state. Each subsequent step transitions
+  // after its delay_ms elapses (or after the previous step's
+  // narration audio completes, whichever is longer).
+  repeated Step steps = 2 [(buf.validate.field).repeated.min_items = 1];
+}
+
+// ViewportConfig defines the canonical pixel dimensions at which the scenario
+// renders internally. The engine applies CSS zoom to scale this fixed layout
+// into the available container width, guaranteeing that cursor positions,
+// scroll offsets, and interaction targets resolve against stable coordinates
+// regardless of the actual browser viewport.
+//
+// For video export, these dimensions define the virtual viewport within the
+// composition frame.
+message ViewportConfig {
+  // Canonical width in pixels. The engine renders all content at this
+  // width and applies CSS zoom to fit the container.
+  //
+  // Typical value: 896 (matches Tailwind max-w-4xl at 16px base).
+  int32 width = 1 [(buf.validate.field).int32.gt = 0];
+
+  // Canonical height in pixels. Controls the shell/container height
+  // for content layout.
+  //
+  // Typical values: 540 for video (16:9 at 960x540), 380 for
+  // interactive docs embeds.
+  int32 height = 2 [(buf.validate.field).int32.gt = 0];
+}
+
+// Step represents a single point in the scenario timeline — a visual state
+// (which component renders) plus optional timed interactions (cursor actions,
+// typing, hovering, etc.) that occur while this step is active.
+//
+// Steps are rendered in order. The engine transitions to step N+1 after
+// max(step[N+1].delay_ms, narration_duration[N]) milliseconds. The first
+// step (index 0) renders immediately.
+//
+// The view field identifies which React component to render. The mapping
+// from view name to component is defined by the scenario author in their
+// render function — the engine treats it as an opaque string identifier.
+message Step {
+  // Component identifier for this step. Maps to a React component via
+  // the scenario's render function (e.g., "new-session", "settings-api-keys",
+  // "create-form").
+  //
+  // The engine does not interpret this value — it passes it through to the
+  // scenario's render function, which switches on it to render the
+  // appropriate UI.
+  string view = 1 [(buf.validate.field).string.min_len = 1];
+
+  // Milliseconds to wait before transitioning to this step from the
+  // previous one. Step 0 should use delay_ms: 0 (renders immediately).
+  //
+  // When narration is enabled, the actual transition time is
+  // max(delay_ms, previous_step_narration_duration) — narration always
+  // plays to completion before the next step begins.
+  int32 delay_ms = 2 [(buf.validate.field).int32.gte = 0];
+
+  // Short label displayed below the demo content describing the current
+  // action (e.g., "Click your profile", "Copy your API key"). Shown in
+  // both interactive embeds and video exports.
+  string caption = 3;
+
+  // Narration script for text-to-speech generation. Consumed by the
+  // build script to produce audio files — not rendered at runtime.
+  //
+  // When narration audio exists for this step, the engine uses the
+  // audio clip duration (instead of the next step's delay_ms) for
+  // step timing, ensuring the narration plays to completion.
+  string narration_text = 4;
+
+  // Opaque component-specific properties passed to the render function.
+  // The engine does not inspect this value — it is forwarded as-is to
+  // the React component identified by the view field.
+  //
+  // Use this for step-specific data that the component needs beyond
+  // the view identifier (e.g., fixture data variations, UI state flags).
+  // Most steps only need the view field and leave props empty.
+  google.protobuf.Struct props = 5;
+
+  // Timed interactions to execute while this step is active. Each
+  // interaction fires at a specific point during the step's duration
+  // (controlled by StepAction.at_percent).
+  //
+  // Interactions are executed in order. When multiple interactions
+  // share the same at_percent, they fire in array order.
+  //
+  // To position the cursor when a step starts, add a set_cursor
+  // interaction at at_percent: 0.0 — this keeps all cursor choreography
+  // declarative and in one place.
+  repeated StepAction interactions = 6;
+}
+
+// StepAction defines a single timed interaction within a step — what the
+// cursor does, when it does it, and any action-specific configuration.
+//
+// The at_percent field controls timing: 0.0 fires at step start, 1.0 at
+// step end, 0.5 at the midpoint. The actual millisecond time is computed
+// from the step's duration (narration clip length or next step's delay_ms).
+//
+// The target field identifies the DOM element for cursor-based actions.
+// The engine resolves targets via data attributes (e.g., data-cursor-target
+// for cursor actions, data-scroll-target for scroll actions). The target
+// string is the attribute value, not a CSS selector.
+//
+// Example — hover at 30% of step duration:
+//   at_percent: 0.3
+//   type: hover
+//   target: "create-api-key"
+//   hover_config:
+//     hover_duration_ms: 1500
+message StepAction {
+  // When to fire this action, as a fraction of the step's duration.
+  //
+  // 0.0 = step start, 1.0 = step end. The engine computes the real
+  // millisecond time from the step's narration duration (if available)
+  // or the next step's delay_ms (as fallback).
+  //
+  // Actions within a step are processed in order. When multiple actions
+  // share the same at_percent, they fire sequentially in array order.
+  float at_percent = 1 [(buf.validate.field).float = {
+    gte: 0.0
+    lte: 1.0
+  }];
+
+  // The type of interaction to perform.
+  ActionType type = 2 [(buf.validate.field).enum.defined_only = true];
+
+  // Target element identifier for cursor-based actions. The engine
+  // resolves this to a DOM element via data attributes.
+  //
+  // Required for: set_cursor, click, type, hover, drag (source),
+  // scroll_to, viewport_transition.
+  // Ignored for: clear_cursor.
+  string target = 3;
+
+  // Action-specific configuration. Only action types that require
+  // additional parameters use the config oneof — simple actions
+  // (set_cursor, clear_cursor, click, scroll_to) leave it unset.
+  oneof config {
+    // Configuration for click actions. Currently empty — the click
+    // target is StepAction.target. Reserved for future click options
+    // (e.g., double-click, right-click).
+    ClickConfig click_config = 10;
+
+    // Configuration for type actions.
+    TypeConfig type_config = 11;
+
+    // Configuration for hover actions.
+    HoverConfig hover_config = 12;
+
+    // Configuration for drag actions.
+    DragConfig drag_config = 13;
+
+    // Configuration for scroll_to actions. Currently empty — the
+    // scroll target is StepAction.target. Reserved for future scroll
+    // options (e.g., scroll direction, offset).
+    ScrollToConfig scroll_to_config = 14;
+
+    // Configuration for viewport_transition actions.
+    ViewportTransitionConfig viewport_transition_config = 15;
+  }
+}
+
+// ClickConfig holds configuration for click actions.
+//
+// Currently empty — the click target is specified by StepAction.target.
+// This message exists as an extension point for future click variants
+// (e.g., double-click, right-click, long-press).
+message ClickConfig {}
+
+// TypeConfig holds configuration for type (text input) actions.
+//
+// The engine moves the cursor to StepAction.target, focuses the input
+// element, and types the text character-by-character with realistic
+// keystroke timing.
+message TypeConfig {
+  // Text to type character-by-character into the target input element.
+  string text = 1 [(buf.validate.field).string.min_len = 1];
+
+  // Milliseconds between each character. When 0 or unset, the engine
+  // uses its built-in default (typically 50ms — fast enough to feel
+  // like confident typing, slow enough for each character to be
+  // readable in both browser playback and video export).
+  int32 type_delay_ms = 2 [(buf.validate.field).int32.gte = 0];
+}
+
+// HoverConfig holds configuration for hover (tooltip/state reveal) actions.
+//
+// The engine moves the cursor to StepAction.target, dispatches pointer/mouse
+// enter events, holds for the configured duration, then dispatches leave
+// events. The cursor does not show a click ripple during hover.
+message HoverConfig {
+  // Milliseconds to hold the cursor over the target between enter and
+  // leave events. When 0 or unset, the engine uses its built-in
+  // default (typically 1500ms — enough time for viewers to notice a
+  // tooltip or hover-state change).
+  int32 hover_duration_ms = 1 [(buf.validate.field).int32.gte = 0];
+}
+
+// DragConfig holds configuration for drag (drag-and-drop) actions.
+//
+// StepAction.target identifies the drag source element. This config
+// specifies the drag destination. The engine moves the cursor to the
+// source, presses, animates to the destination, and releases.
+message DragConfig {
+  // Target element identifier for the drag destination. Uses the same
+  // targeting mechanism as StepAction.target (e.g., data-cursor-target
+  // attribute value).
+  string drag_target = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// ScrollToConfig holds configuration for scroll_to actions.
+//
+// Currently empty — the scroll target is specified by StepAction.target,
+// and the engine scrolls it into view within its nearest scrollable
+// ancestor. This message exists as an extension point for future scroll
+// options (e.g., scroll alignment, smooth vs instant).
+message ScrollToConfig {}
+
+// ViewportTransitionConfig holds configuration for viewport zoom/pan
+// transitions.
+//
+// The engine computes a CSS transform (scale + translate) that centers
+// the target element in the viewport at the specified zoom level. The
+// transform persists across subsequent steps until explicitly reset.
+message ViewportTransitionConfig {
+  // Zoom scale factor. Values > 1 zoom in (e.g., 2.0 = 200% magnification),
+  // values < 1 zoom out. Ignored when viewport_reset is true.
+  //
+  // When 0 or unset, defaults to 1.5 (a moderate zoom that provides
+  // detail without losing spatial context).
+  float viewport_zoom = 1;
+
+  // When true, resets the viewport to the identity transform (scale 1,
+  // no translation). The target and viewport_zoom fields are ignored.
+  // Use this to return to the full view after a zoom sequence.
+  bool viewport_reset = 2;
+}

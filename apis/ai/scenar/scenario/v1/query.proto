@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package ai.scenar.scenario.v1;
+
+import "ai/scenar/commons/resource/rpc_service_options.proto";
+import "ai/scenar/scenario/v1/api.proto";
+import "ai/scenar/scenario/v1/io.proto";
+
+// ScenarioQueryController provides read operations for scenario resources.
+//
+// Like ScenarioCommandController, this service is forward-looking for a
+// future hosted Scenar platform. In local/build-time usage, scenario
+// lookup is handled by the SDK's scenario registry.
+service ScenarioQueryController {
+  option (ai.scenar.commons.resource.resource_kind) = scenario;
+
+  // Get a scenario by its unique identifier.
+  rpc get(ScenarioId) returns (Scenario);
+
+  // List scenarios with optional tag filtering and pagination.
+  rpc list(ListScenariosInput) returns (Scenarios);
+}
