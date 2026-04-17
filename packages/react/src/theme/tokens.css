@@ -1,0 +1,12 @@
+@layer scenar {
+  .scenar {
+    --scenar-surface: #ffffff;
+    --scenar-border: #e5e7eb;
+    --scenar-foreground: #0f172a;
+  }
+  .scenar.dark {
+    --scenar-surface: #0f172a;
+    --scenar-border: #1e293b;
+    --scenar-foreground: #f8fafc;
+  }
+}

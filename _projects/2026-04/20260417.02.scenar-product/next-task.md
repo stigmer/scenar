@@ -23,7 +23,7 @@ Drop this file into your conversation to quickly resume work on this project.
 | T01 | Define Scenar Proto Contract | DONE | — |
 | T02 | Scaffold Directory & Buf Configuration | DONE (via T01) | T01 |
 | T03 | Engine Extraction (zero @stigmer/* imports) | DONE | T02 |
-| T04 | Shells Extraction | PENDING | T03 |
+| T04 | Shells Extraction | DONE | T03 |
 | T05 | SDK — createScenario() | PENDING | T01, T03 |
 | T06 | Rewire Stigmer Demos to Scenar Imports | PENDING | T03, T04 |
 | T07 | Remotion Video Pipeline Integration | PENDING | T03, T06 |
@@ -78,13 +78,29 @@ Drop this file into your conversation to quickly resume work on this project.
 4. **Per-action effect files**: Adding a new interaction type is a one-file change.
 5. **Conditional hooks in useStepInteractions**: Browser vs. video path selected by TimeSource presence.
 
-## Current Task: T04 — Shells Extraction
+## Completed: T04 — Shells Extraction
 
-**Status**: PENDING — Ready to start (T03 is done)
+**Status**: DONE
 
-**Summary**: Extract the generic shell components (AppShell, BrowserView, TerminalView, CodeEditorView, APIExchangeView, ManagementShell) from `site/src/components/docs/demos/views/` and `site/src/components/docs/demos/shared/` in the Stigmer repo into the Scenar package. Shells are the chrome layer (address bars, title bars, tab strips, line numbers) — they accept arbitrary children.
+**What was built**:
+- 4 chrome primitives extracted: `BrowserView` (116 LOC), `TerminalView` (119 LOC), `CodeEditorView` (219 LOC), `PulseHighlight` (30 LOC)
+- Minimal `--scenar-*` token layer: 3 CSS custom properties (`--scenar-surface`, `--scenar-border`, `--scenar-foreground`) under `@layer scenar` with `.scenar` / `.scenar.dark` scoping
+- `@scenar/react/theme.css` export path for consumer apps
+- 13 new tests across 4 test files; total package tests: 48
+- 9 source files, 543 LOC; 4 test files, 162 LOC
 
-**Key challenge**: Shells are product-specific visual containers. They need to be useful standalone without Stigmer's design system tokens. Determine which shells are truly generic (BrowserView, TerminalView, CodeEditorView) vs. which are Stigmer-specific (ManagementShell mirrors the Stigmer console sidebar).
+**Design decisions applied**:
+1. **Primitives only** — `AppShell`, `ManagementShell`, `APIExchangeView` stay in Stigmer (too product-specific)
+2. **3 tokens, not a full palette** — only tokens consumed by shipped components; future tokens are per-component decisions
+3. **`@layer scenar`** — low-priority CSS layer; host styles win without `!important`
+4. **Interior chrome colours preserved** — Chrome/Terminal/VS Code palette stays literal (mimics real software)
+5. **Zero host-Tailwind-token dependency** — shells use CSS vars, not `bg-card`/`border-border` utility classes
+
+## Current Task: T05 — SDK `createScenario()`
+
+**Status**: PENDING — Ready to start (T01 and T03 are done)
+
+**Summary**: Build `@scenar/sdk` with a `createScenario()` function that maps proto-generated TypeScript types to the engine's `ScenarioStep<T>` generic. This bridges the proto contract (T01) with the playback engine (T03), giving users a type-safe authoring surface.
 
 ## Key Design Decisions
 

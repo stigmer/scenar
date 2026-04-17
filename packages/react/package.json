@@ -9,17 +9,18 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./theme.css": "./dist/theme.css"
   },
   "files": ["dist", "src"],
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && cp src/theme/tokens.css dist/theme.css",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests --config ../../vitest.config.ts",
     "lint": "echo 'lint placeholder'",
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
-  "sideEffects": false,
+  "sideEffects": ["./dist/theme.css"],
   "license": "Apache-2.0",
   "dependencies": {
     "@scenar/core": "workspace:*"

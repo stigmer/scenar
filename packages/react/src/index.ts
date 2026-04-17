@@ -59,3 +59,26 @@ export { usePlaybackProgress } from "./player/usePlaybackProgress.js";
 
 // Step interactions
 export { useStepInteractions } from "./interactions/useStepInteractions.js";
+
+// Theme
+export { SCENAR_CLASS } from "./theme/index.js";
+
+// Shells
+export {
+  BrowserView,
+  TerminalView,
+  CodeEditorView,
+  SHELL_HEIGHT_DEFAULT,
+  SHELL_HEIGHT_MIN,
+  BROWSER_SHELL_HEIGHT_DEFAULT,
+} from "./shells/index.js";
+export type {
+  BrowserViewProps,
+  TerminalLine,
+  TerminalViewProps,
+  FileTreeEntry,
+  CodeEditorViewProps,
+} from "./shells/index.js";
+
+// Highlights
+export { PulseHighlight } from "./highlights/index.js";
