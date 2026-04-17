@@ -13,7 +13,7 @@ export function findCursorTarget(
   if (!el || !(el instanceof HTMLElement)) {
     if (process.env.NODE_ENV === "development") {
       console.warn(
-        `[StepInteractions] cursor target "${target}" not found in DOM. ` +
+        `[scenar] cursor target "${target}" not found in DOM. ` +
           `Ensure a [data-cursor-target="${target}"] element exists.`,
       );
     }
@@ -35,7 +35,7 @@ export function findScrollTarget(
   if (!el) {
     if (process.env.NODE_ENV === "development") {
       console.warn(
-        `[StepInteractions] scroll target "${target}" not found in DOM. ` +
+        `[scenar] scroll target "${target}" not found in DOM. ` +
           `Ensure a [data-scroll-target="${target}"] element exists.`,
       );
     }
@@ -55,7 +55,7 @@ export function resolveInput(
   const targetEl = container.querySelector(cursorTargetSelector(target));
   if (!targetEl) {
     if (process.env.NODE_ENV === "development") {
-      console.warn(`[StepInteractions] type target "${target}" not found in DOM.`);
+      console.warn(`[scenar] type target "${target}" not found in DOM.`);
     }
     return null;
   }
@@ -65,7 +65,7 @@ export function resolveInput(
   const input = targetEl.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea");
   if (!input && process.env.NODE_ENV === "development") {
     console.warn(
-      `[StepInteractions] type target "${target}" has no <input> or <textarea> descendant.`,
+      `[scenar] type target "${target}" has no <input> or <textarea> descendant.`,
     );
   }
   return input;

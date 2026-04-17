@@ -6,7 +6,6 @@ export type {
   ScenarioStep,
   ActionType,
   StepAction,
-  StepInteractions,
   UseStepInteractionsOptions,
   NarrationEntry,
   NarrationManifest,

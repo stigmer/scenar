@@ -12,7 +12,7 @@ export function warnIfTypingExceedsStep(
   const typingDuration = action.atPercent * stepDurationMs + CLICK_DELAY_MS + text.length * charDelay;
   if (typingDuration > stepDurationMs) {
     console.warn(
-      `[StepInteractions] type action in step ${stepIdx} at ${action.atPercent} ` +
+      `[scenar] type action in step ${stepIdx} at ${action.atPercent} ` +
         `needs ~${Math.round(typingDuration)}ms but step is only ${Math.round(stepDurationMs)}ms.`,
     );
   }
@@ -28,7 +28,7 @@ export function warnIfHoverExceedsStep(
   const totalMs = action.atPercent * stepDurationMs + CLICK_DELAY_MS + hoverDuration;
   if (totalMs > stepDurationMs) {
     console.warn(
-      `[StepInteractions] hover action in step ${stepIdx} at ${action.atPercent} ` +
+      `[scenar] hover action in step ${stepIdx} at ${action.atPercent} ` +
         `needs ~${Math.round(totalMs)}ms but step is only ${Math.round(stepDurationMs)}ms.`,
     );
   }
@@ -43,7 +43,7 @@ export function warnIfDragExceedsStep(
   const totalMs = action.atPercent * stepDurationMs + CLICK_DELAY_MS + DRAG_SETTLE_MS + CLICK_DELAY_MS;
   if (totalMs > stepDurationMs) {
     console.warn(
-      `[StepInteractions] drag action in step ${stepIdx} at ${action.atPercent} ` +
+      `[scenar] drag action in step ${stepIdx} at ${action.atPercent} ` +
         `needs ~${Math.round(totalMs)}ms but step is only ${Math.round(stepDurationMs)}ms.`,
     );
   }
@@ -61,11 +61,11 @@ export function warnIfViewportTooCloseToAction(
 
   for (const other of allActions) {
     if (other === vpAction) continue;
-    if (other.type === "viewport-transition" || other.type === "clear-cursor") continue;
+    if (other.type === "viewport_transition" || other.type === "clear_cursor") continue;
     const otherFireAt = other.atPercent * stepDurationMs;
     if (otherFireAt > vpFireAt && otherFireAt < settleAt) {
       console.warn(
-        `[StepInteractions] ${other.type} action in step ${stepIdx} at ${other.atPercent} ` +
+        `[scenar] ${other.type} action in step ${stepIdx} at ${other.atPercent} ` +
           `fires ${Math.round(otherFireAt - vpFireAt)}ms after a viewport-transition.`,
       );
     }

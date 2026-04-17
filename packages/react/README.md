@@ -45,7 +45,7 @@ Framer Motion container for smooth zoom/pan transitions.
 
 ### `useStepInteractions(options)`
 
-Schedule timed mid-step interactions (scroll, cursor, click, type, hover, drag, viewport-transition). Automatically uses `setTimeout` in browser mode or frame-driven firing in video-export mode.
+Schedule timed mid-step interactions (scroll, cursor, click, type, hover, drag, viewport_transition). Reads interactions from each step's inline `interactions` field. Automatically uses `setTimeout` in browser mode or frame-driven firing in video-export mode.
 
 ### `useNarrationManifest(scenarioId, resolveUrl?)`
 

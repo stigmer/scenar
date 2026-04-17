@@ -8,7 +8,7 @@ export function executeSetCursor(action: StepAction, ctx: InteractionContext): v
       const el = container.querySelector(`[data-cursor-target="${action.target}"]`);
       if (!el) {
         console.warn(
-          `[StepInteractions] set-cursor target "${action.target}" not found in DOM.`,
+          `[scenar] set_cursor target "${action.target}" not found in DOM.`,
         );
       }
     }

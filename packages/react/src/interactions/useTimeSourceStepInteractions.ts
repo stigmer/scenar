@@ -28,12 +28,11 @@ export function useTimeSourceStepInteractions<T>(
   ctx: InteractionContext,
   timeSource: TimeSourceValue,
 ): void {
-  const { stepIndex, interactions, narrationManifest, steps } = options;
+  const { stepIndex, narrationManifest, steps } = options;
   const firedRef = useRef<Set<string>>(new Set());
 
-  // Fire actions based on frame time
   useEffect(() => {
-    const actions = interactions[stepIndex];
+    const actions = steps[stepIndex]?.interactions;
     if (!actions || actions.length === 0) return;
 
     const stepStartMs = timeSource.stepStartTimesMs[stepIndex] ?? 0;
@@ -98,7 +97,7 @@ export function useTimeSourceStepInteractions<T>(
           ctx.setDragging?.(false);
           ctx.setShowRipple?.(true);
         });
-      } else if (action.type === "viewport-transition") {
+      } else if (action.type === "viewport_transition") {
         fire(`${stepIndex}-${action.atPercent}-viewport`, elapsed, fireAt, () => {
           applyViewportTransition(action, ctx);
         });
@@ -110,7 +109,6 @@ export function useTimeSourceStepInteractions<T>(
     }
   });
 
-  // Reset fired set on step change
   useEffect(() => {
     firedRef.current.clear();
   }, [stepIndex]);
@@ -125,13 +123,13 @@ export function useTimeSourceStepInteractions<T>(
 
 function executeSimpleAction(action: StepAction, ctx: InteractionContext): void {
   switch (action.type) {
-    case "scroll-to":
+    case "scroll_to":
       executeScrollTo(action, ctx);
       break;
-    case "set-cursor":
+    case "set_cursor":
       executeSetCursor(action, ctx);
       break;
-    case "clear-cursor":
+    case "clear_cursor":
       executeClearCursor(action, ctx);
       break;
     default:

@@ -24,7 +24,7 @@ Drop this file into your conversation to quickly resume work on this project.
 | T02 | Scaffold Directory & Buf Configuration | DONE (via T01) | T01 |
 | T03 | Engine Extraction (zero @stigmer/* imports) | DONE | T02 |
 | T04 | Shells Extraction | DONE | T03 |
-| T05 | SDK — createScenario() | PENDING | T01, T03 |
+| T05 | SDK — createScenario() | DONE | T01, T03 |
 | T06 | Rewire Stigmer Demos to Scenar Imports | PENDING | T03, T04 |
 | T07 | Remotion Video Pipeline Integration | PENDING | T03, T06 |
 | T08 | Standalone Example (validates extraction) | PENDING | T05, T06 |
@@ -96,11 +96,22 @@ Drop this file into your conversation to quickly resume work on this project.
 4. **Interior chrome colours preserved** — Chrome/Terminal/VS Code palette stays literal (mimics real software)
 5. **Zero host-Tailwind-token dependency** — shells use CSS vars, not `bg-card`/`border-border` utility classes
 
-## Current Task: T05 — SDK `createScenario()`
+## Completed: T05 — SDK `createScenario()`
 
-**Status**: PENDING — Ready to start (T01 and T03 are done)
+**Status**: DONE — 7 source files, 472 LOC. 3 test files, 554 LOC. 31 tests passing.
 
-**Summary**: Build `@scenar/sdk` with a `createScenario()` function that maps proto-generated TypeScript types to the engine's `ScenarioStep<T>` generic. This bridges the proto contract (T01) with the playback engine (T03), giving users a type-safe authoring surface.
+**What was built**:
+- Engine reconciliation: inlined `ScenarioStep.interactions`, aligned ActionType strings with proto enum names (snake_case)
+- `@scenar/sdk` package: `createScenario()` typed TS-first builder + `loadScenarioFromProto()` proto adapter
+- SDK is framework-agnostic (zero React dependency)
+- `InvalidScenarioError` with path-scoped error reporting
+- Structural proto types (no dependency on generated stubs)
+
+**Design decisions**: DD-006 through DD-009 (see `design-decisions/`)
+
+## Current Task: T06 — Rewire Stigmer Demos to Scenar Imports
+
+**Status**: PENDING — Ready to start (T03, T04, T05 are done)
 
 ## Key Design Decisions
 
@@ -123,11 +134,13 @@ Drop this file into your conversation to quickly resume work on this project.
 ├── apis/                            (proto contract — T01)
 │   ├── ai/scenar/{scenario,commons}/
 │   └── stubs/{ts,go,python}/
-└── packages/                        (engine — T03)
+└── packages/                        (engine — T03, SDK — T05)
     ├── core/                        (@scenar/core — pure TS types, timing, utilities)
     │   └── src/{scenario,narration,timeline,timing,dom,cursor,viewport,targeting}/
-    └── react/                       (@scenar/react — React components and hooks)
-        └── src/{player,cursor,viewport,interactions,narration,time,video,playback}/
+    ├── react/                       (@scenar/react — React components and hooks)
+    │   └── src/{player,cursor,viewport,interactions,narration,time,video,playback}/
+    └── sdk/                         (@scenar/sdk — typed authoring surface — T05)
+        └── src/{author,proto,__tests__}/
 ```
 
 ### Task Plans

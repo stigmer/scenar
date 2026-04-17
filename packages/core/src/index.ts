@@ -6,7 +6,6 @@ export type { ScenarioStep } from "./scenario/types.js";
 export type {
   ActionType,
   StepAction,
-  StepInteractions,
   UseStepInteractionsOptions,
 } from "./scenario/step-action.js";
 
