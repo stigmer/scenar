@@ -58,11 +58,12 @@ Drop this file into your conversation to quickly resume work on this sub-project
 
 ## Current State
 
-- **Status**: T02 complete + follow-up cleanup done
-- **Last Session**: April 18, 2026 — Edge TTS provider added, dead dependency removed, E2E narrate verified
+- **Status**: T02 complete + follow-up cleanup done + npm publish infrastructure added
+- **Last Session**: April 18, 2026 — npm publish infrastructure and CI pipeline set up
 - **Active Task**: None — sub-project complete
 - **Commit**: `21acbeb` — `refactor(apis,sdk): simplify proto contract to scenario-only definition` (T01)
 - **T02**: Committed as `feb7830` — `feat(cli): scaffold scenar CLI with validate and narrate commands`
+- **CI/Publish**: Committed as `b6dc708` — `ci(repo): add npm publish infrastructure and CI pipeline`
 
 ## Session Progress (2026-04-18)
 
@@ -83,6 +84,19 @@ Drop this file into your conversation to quickly resume work on this sub-project
 1. **Rename file too**: `spec.proto` → `scenario.proto` (not just the message) — once the envelope is gone, "spec" implies a sub-part of a larger resource, which is misleading
 2. **Remove gRPC plugins from Go and Python configs** (not just ConnectRPC from TS) — no services remain, keep the toolchain clean
 3. **Remove `PACKAGE_VERSION_SUFFIX` lint exception** — only `commons/` lacked version suffixes, and it's deleted
+
+### Completed: npm Publish Infrastructure + CI Pipeline (2026-04-18 session 3)
+
+- Created `@scenar` npm org on npmjs.com (owner: `whysosuresh`)
+- Generated npm access token and added as `NPM_TOKEN` secret to `scenar-ai/scenar` GitHub repo
+- Added Apache-2.0 `LICENSE` file at repo root
+- Added `repository`, `publishConfig`, `keywords` to all 4 package.json files
+- Created `scripts/publish-libs.mjs` — builds, pins workspace deps, publishes from `dist/` in dependency order
+- Created `.github/workflows/ci.yaml` — build + test + typecheck on PRs and pushes to main
+- Created `.github/workflows/release.npm.yaml` — publish to npm on `v*` tags or manual workflow_dispatch
+- Added `.npmrc` to `.gitignore`
+- Dry-run verified: all 4 packages publish cleanly (`@scenar/core`, `@scenar/sdk`, `@scenar/react`, `scenar`)
+- All 130 tests passing
 
 ### Observations
 
@@ -138,6 +152,9 @@ Drop this file into your conversation to quickly resume work on this sub-project
 12. **Echogarden optional**: GPL v3 dependency made optional peer dep to keep CLI Apache-2.0
 13. **Edge TTS optional**: AGPL-3.0 dependency (`edge-tts-universal`) made optional peer dep, same pattern as Echogarden — matches Stigmer's proven TTS approach
 14. **Dead dep cleanup**: Removed unused `@bufbuild/protobuf` from `@scenar/sdk`
+15. **Tag-based releases**: Same pattern as Stigmer — `v*` tags trigger npm publish via GitHub Actions
+16. **Publish from dist/**: Script generates `dist/package.json` with pinned versions, publishes from `dist/` directory (workspace `package.json` never modified)
+17. **Lockstep versioning**: All `@scenar/*` packages share the same version number
 
 ## Task Roadmap
 
@@ -145,6 +162,7 @@ Drop this file into your conversation to quickly resume work on this sub-project
 |------|-------|--------|------------|
 | T01 | Proto simplification + stub regen + SDK adapter update | DONE | — |
 | T02 | CLI scaffolding (`scenar` with validate + narrate) | DONE | T01 |
+| T03 | npm publish infrastructure + CI pipeline | DONE | T02 |
 
 ## What's Next
 
@@ -153,6 +171,8 @@ Sub-project goals achieved. All planned work complete:
 - ~~Commit T02 changes~~ — committed as `feb7830`
 - ~~End-to-end narrate test~~ — verified with Edge TTS (produced valid MP3 + manifest)
 - ~~Remove dead `@bufbuild/protobuf` dependency~~ — removed from `@scenar/sdk`
+- ~~npm publish infrastructure~~ — committed as `b6dc708`
+- **First release**: Push commits and tag `v0.1.0` to publish all packages to npm
 - **Add more CLI commands** as the product evolves
 
 ### CLI Package Structure (Built)
