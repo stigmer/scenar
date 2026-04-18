@@ -9,19 +9,26 @@ const mockServiceDescriptor = {
   },
 };
 
-vi.mock("msw", () => ({
-  http: {
-    post: (url: string, resolver: Function) => ({ method: "POST", url, resolver }),
-  },
-  HttpResponse: {
-    json: (body: unknown, init?: { status?: number; headers?: Headers }) => ({
-      type: "json",
-      body,
-      status: init?.status ?? 200,
-      headers: init?.headers,
-    }),
-  },
-}));
+vi.mock("msw", () => {
+  class MockResponse {
+    body: string;
+    status: number;
+    headers: Record<string, string>;
+    constructor(body: string, init?: { status?: number; headers?: Record<string, string> }) {
+      this.body = body;
+      this.status = init?.status ?? 200;
+      this.headers = init?.headers ?? {};
+    }
+    json() { return JSON.parse(this.body); }
+  }
+
+  return {
+    http: {
+      post: (url: string, resolver: Function) => ({ method: "POST", url, resolver }),
+    },
+    HttpResponse: MockResponse,
+  };
+});
 
 import { connectFixture } from "../connect-fixture.js";
 
@@ -68,7 +75,7 @@ describe("connectFixture (sync)", () => {
     };
 
     const response = await handler.resolver({ request: mockRequest });
-    expect(response.body).toEqual({ id: "INV-42", amount: 250 });
+    expect(response.json()).toEqual({ id: "INV-42", amount: 250 });
     expect(response.status).toBe(200);
   });
 
@@ -106,6 +113,6 @@ describe("connectFixture (sync)", () => {
     };
 
     const response = await handler.resolver({ request: mockRequest });
-    expect(response.body).toEqual({ entries: [] });
+    expect(response.json()).toEqual({ entries: [] });
   });
 });

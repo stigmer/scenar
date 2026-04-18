@@ -12,6 +12,18 @@ const mockServiceDescriptor = {
   },
 };
 
+class MockHttpResponse {
+  body: string;
+  status: number;
+  headers: Record<string, string>;
+  constructor(body: string, init?: { status?: number; headers?: Record<string, string> }) {
+    this.body = body;
+    this.status = init?.status ?? 200;
+    this.headers = init?.headers ?? {};
+  }
+  json() { return JSON.parse(this.body); }
+}
+
 vi.mock("msw", () => {
   const handlers: Array<{ method: string; url: string; resolver: Function }> = [];
 
@@ -23,14 +35,7 @@ vi.mock("msw", () => {
         return handler;
       },
     },
-    HttpResponse: {
-      json: (body: unknown, init?: { status?: number; headers?: Headers }) => ({
-        type: "json",
-        body,
-        status: init?.status ?? 200,
-        headers: init?.headers,
-      }),
-    },
+    HttpResponse: MockHttpResponse,
     __handlers: handlers,
   };
 });
@@ -87,7 +92,7 @@ describe("connectHandler", () => {
     };
 
     const response = await handler.resolver({ request: mockRequest });
-    expect(response.body).toEqual(invoiceData);
+    expect(response.json()).toEqual(invoiceData);
     expect(response.status).toBe(200);
   });
 
@@ -103,7 +108,7 @@ describe("connectHandler", () => {
     const mockRequest = { json: () => Promise.resolve({}) };
     const response = await handler.resolver({ request: mockRequest });
 
-    expect(response.body).toEqual({ entries: [{ id: "INV-1" }] });
+    expect(response.json()).toEqual({ entries: [{ id: "INV-1" }] });
   });
 
   it("applies custom status code from options", async () => {
@@ -150,7 +155,7 @@ describe("connectHandler", () => {
     };
 
     const response = await handler.resolver({ request: mockRequest });
-    expect(response.body).toEqual({ entries: [] });
+    expect(response.json()).toEqual({ entries: [] });
   });
 });
 
