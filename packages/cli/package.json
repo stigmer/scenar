@@ -36,5 +36,11 @@
   },
   "devDependencies": {
     "edge-tts-universal": "^1.4.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scenar-ai/scenar.git",
+    "directory": "packages/cli"
+  },
+  "keywords": ["scenar", "scenario", "cli", "narration", "tts", "validate", "yaml"]
 }

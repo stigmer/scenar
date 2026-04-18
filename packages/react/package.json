@@ -35,5 +35,14 @@
     "lucide-react": {
       "optional": true
     }
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scenar-ai/scenar.git",
+    "directory": "packages/react"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": ["scenar", "scenario", "react", "demo", "playback", "interactive", "components"]
 }

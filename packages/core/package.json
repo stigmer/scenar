@@ -20,5 +20,14 @@
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
   "sideEffects": false,
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scenar-ai/scenar.git",
+    "directory": "packages/core"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": ["scenar", "scenario", "demo", "playback", "timeline", "engine"]
 }

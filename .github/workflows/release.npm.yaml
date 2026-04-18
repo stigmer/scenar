@@ -1,0 +1,61 @@
+name: release.npm
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number (e.g., 0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  determine-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${{ github.ref_name }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="v${{ github.event.inputs.version }}"
+          fi
+          VERSION_NO_V="${VERSION#v}"
+          echo "version=$VERSION_NO_V" >> $GITHUB_OUTPUT
+          echo "Publishing @scenar/* packages at version: $VERSION_NO_V"
+
+  publish:
+    needs: determine-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: node scripts/publish-libs.mjs --version ${{ needs.determine-version.outputs.version }}
