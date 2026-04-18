@@ -55,6 +55,30 @@ You supply the React components (`IntroSlide`, `DemoView`). Scenar handles playb
 - **Your components, your brand** -- You supply the React components. Scenar handles timing, cursor animation, viewport transitions, and narration.
 - **Proto-backed contract** -- Scenarios are defined against a protobuf schema. Validate with the CLI. Load from YAML or from code.
 
+## Preview Generation
+
+Already have a React app? Scenar can scan it and set up the view registry for you.
+
+```bash
+npx scenar preview init
+```
+
+This discovers your components, detects your framework, and generates a `.scenar/` directory with everything wired up. Use the generated views directly in `createScenario()` -- no manual registration needed.
+
+```tsx
+import { previewViews } from "./.scenar/preview";
+
+const scenario = createScenario({
+  views: previewViews,
+  steps: [
+    { view: "Dashboard", delayMs: 0, props: { filter: "active" } },
+    { view: "OrderDetail", delayMs: 2000, props: { orderId: "ORD-123" } },
+  ],
+});
+```
+
+Re-run `scenar preview sync` any time your app changes. Your custom views and provider config are always preserved.
+
 ## Packages
 
 | Package | What it does |
@@ -62,7 +86,8 @@ You supply the React components (`IntroSlide`, `DemoView`). Scenar handles playb
 | [`@scenar/core`](packages/core) | Types, timeline math, step actions -- no framework dependency |
 | [`@scenar/sdk`](packages/sdk) | `createScenario()` builder + proto loader |
 | [`@scenar/react`](packages/react) | `ScenarioPlayer`, cursor, viewport, narration, view shells |
-| [`@scenar/cli`](packages/cli) | Validate YAML, generate narration audio |
+| [`@scenar/preview`](packages/preview) | Scan a React project, generate a view registry automatically |
+| [`@scenar/cli`](packages/cli) | Validate YAML, generate narration, manage previews |
 
 ## Scenario Shape
 
@@ -100,6 +125,12 @@ Load YAML scenarios at runtime with `loadScenarioFromProto()` from `@scenar/sdk`
 ## CLI
 
 ```bash
+# Scan your project and generate preview views
+scenar preview init
+
+# Re-scan after adding components (preserves your customizations)
+scenar preview sync
+
 # Validate a scenario file
 scenar validate demo.yaml
 
