@@ -12,9 +12,9 @@ Drop this file into your conversation to quickly resume work on this project.
 
 **Tech Stack**: TypeScript, React, Framer Motion, Remotion, Protobuf (buf)
 
-**Repository**: [scenar-ai/scenar](https://github.com/scenar-ai/scenar) (public, open-source monorepo)
+**Repository**: [stigmer/scenar](https://github.com/stigmer/scenar) (public, open-source monorepo)
 
-**Local Path**: `/Users/suresh/scm/github.com/scenar-ai/scenar`
+**Local Path**: `/Users/suresh/scm/github.com/stigmer/scenar`
 
 ## Task Roadmap
 
@@ -31,7 +31,7 @@ Drop this file into your conversation to quickly resume work on this project.
 
 ## Completed: T01 — Define Scenar Proto Contract
 
-**Status**: DONE — Committed and pushed to scenar-ai/scenar (e5e9a32)
+**Status**: DONE — Committed and pushed to stigmer/scenar (e5e9a32)
 
 **What was built**:
 - 13 proto source files (6 scenario + 7 commons)
@@ -42,7 +42,7 @@ Drop this file into your conversation to quickly resume work on this project.
 - `buf lint` and `buf build` pass clean
 
 **Design decisions applied**:
-1. **Separate GitHub repo**: `scenar-ai/scenar` (not a subdirectory of stigmer)
+1. **Separate GitHub repo**: `stigmer/scenar` (not a subdirectory of stigmer)
 2. **Zero Stigmer imports**: Scenar's own commons (`ai.scenar.commons.*`)
 3. **Interactions embedded in Step**: Not a separate `map<int32, StepInteractions>` — each step owns its interactions for better YAML ergonomics
 4. **No CursorStyle enum**: Cursor visual style is an engine concern, not scenario data
@@ -162,7 +162,7 @@ Drop this file into your conversation to quickly resume work on this project.
 
 ## Key Design Decisions
 
-1. **Separate GitHub repo**: `scenar-ai/scenar` under the `scenar-ai` GitHub organization. Domain: scenar.ai.
+1. **Separate GitHub repo**: `stigmer/scenar` under the `stigmer` GitHub organization. Domain: scenar.ai.
 2. **Proto-first (hybrid approach)**: Proto defines the scenario contract. TypeScript types generated from protos. Users author in TS (with generated types) or YAML — both validate against the same schema.
 3. **Zero Stigmer dependencies**: Scenar protos import only `buf/validate` and `google/protobuf`. Commons are Scenar's own (`ai.scenar.commons.*`).
 4. **Embedded interactions**: Step owns its interactions. No separate interaction map keyed by step index.
@@ -175,7 +175,7 @@ Drop this file into your conversation to quickly resume work on this project.
 
 ### Scenar Repository
 ```
-/Users/suresh/scm/github.com/scenar-ai/scenar/
+/Users/suresh/scm/github.com/stigmer/scenar/
 ├── Makefile
 ├── package.json, pnpm-workspace.yaml, tsconfig.*.json
 ├── apis/                            (proto contract — T01)
@@ -192,15 +192,15 @@ Drop this file into your conversation to quickly resume work on this project.
 
 ### Task Plans
 ```
-/Users/suresh/scm/github.com/scenar-ai/scenar/_projects/2026-04/20260417.02.scenar-product/tasks/
+/Users/suresh/scm/github.com/stigmer/scenar/_projects/2026-04/20260417.02.scenar-product/tasks/
 ```
 
 ### Knowledge Folders
-- **Design Decisions**: `/Users/suresh/scm/github.com/scenar-ai/scenar/_projects/2026-04/20260417.02.scenar-product/design-decisions/`
-- **Coding Guidelines**: `/Users/suresh/scm/github.com/scenar-ai/scenar/_projects/2026-04/20260417.02.scenar-product/coding-guidelines/`
-- **Wrong Assumptions**: `/Users/suresh/scm/github.com/scenar-ai/scenar/_projects/2026-04/20260417.02.scenar-product/wrong-assumptions/`
-- **Don't Dos**: `/Users/suresh/scm/github.com/scenar-ai/scenar/_projects/2026-04/20260417.02.scenar-product/dont-dos/`
-- **Checkpoints**: `/Users/suresh/scm/github.com/scenar-ai/scenar/_projects/2026-04/20260417.02.scenar-product/checkpoints/`
+- **Design Decisions**: `/Users/suresh/scm/github.com/stigmer/scenar/_projects/2026-04/20260417.02.scenar-product/design-decisions/`
+- **Coding Guidelines**: `/Users/suresh/scm/github.com/stigmer/scenar/_projects/2026-04/20260417.02.scenar-product/coding-guidelines/`
+- **Wrong Assumptions**: `/Users/suresh/scm/github.com/stigmer/scenar/_projects/2026-04/20260417.02.scenar-product/wrong-assumptions/`
+- **Don't Dos**: `/Users/suresh/scm/github.com/stigmer/scenar/_projects/2026-04/20260417.02.scenar-product/dont-dos/`
+- **Checkpoints**: `/Users/suresh/scm/github.com/stigmer/scenar/_projects/2026-04/20260417.02.scenar-product/checkpoints/`
 
 ### Existing Shell Components (Extraction Source for T04 — in stigmer repo)
 - **Views**: `/Users/suresh/scm/github.com/stigmer/stigmer/site/src/components/docs/demos/views/`

@@ -53,8 +53,8 @@ Drop this file into your conversation to quickly resume work on this sub-project
 
 **Goal**: A single clean `scenario.proto` that users can understand in 2 minutes, plus a working CLI that can generate narration audio from scenario files.
 
-**Repository**: [scenar-ai/scenar](https://github.com/scenar-ai/scenar)
-**Local Path**: `/Users/suresh/scm/github.com/scenar-ai/scenar`
+**Repository**: [stigmer/scenar](https://github.com/stigmer/scenar)
+**Local Path**: `/Users/suresh/scm/github.com/stigmer/scenar`
 
 ## Current State
 
@@ -88,7 +88,7 @@ Drop this file into your conversation to quickly resume work on this sub-project
 ### Completed: npm Publish Infrastructure + CI Pipeline (2026-04-18 session 3)
 
 - Created `@scenar` npm org on npmjs.com (owner: `whysosuresh`)
-- Generated npm access token and added as `NPM_TOKEN` secret to `scenar-ai/scenar` GitHub repo
+- Generated npm access token and added as `NPM_TOKEN` secret to `stigmer/scenar` GitHub repo
 - Added Apache-2.0 `LICENSE` file at repo root
 - Added `repository`, `publishConfig`, `keywords` to all 4 package.json files
 - Created `scripts/publish-libs.mjs` — builds, pins workspace deps, publishes from `dist/` in dependency order

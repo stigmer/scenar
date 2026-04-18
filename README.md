@@ -6,9 +6,9 @@
 
 Describe your demo once. Play it on your website. Export it as a video. Same file, same result.
 
-[![License](https://img.shields.io/github/license/scenar-ai/scenar)](LICENSE)
+[![License](https://img.shields.io/github/license/stigmer/scenar)](LICENSE)
 [![npm](https://img.shields.io/npm/v/@scenar/react)](https://www.npmjs.com/package/@scenar/react)
-[![GitHub stars](https://img.shields.io/github/stars/scenar-ai/scenar?style=flat)](https://github.com/scenar-ai/scenar/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/stigmer/scenar?style=flat)](https://github.com/stigmer/scenar/stargazers)
 
 </div>
 
@@ -148,7 +148,7 @@ npm install -g @scenar/cli
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-- [GitHub Issues](https://github.com/scenar-ai/scenar/issues) -- Bug reports and feature requests
+- [GitHub Issues](https://github.com/stigmer/scenar/issues) -- Bug reports and feature requests
 
 ## License
 
