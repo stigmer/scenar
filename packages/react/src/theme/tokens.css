@@ -1,3 +1,5 @@
+@source "./**/*.js";
+
 @layer scenar {
   .scenar {
     --scenar-surface: #ffffff;
