@@ -76,7 +76,7 @@ export function ScenarioControls({
     >
       {/* Progress bar */}
       <div
-        className="group relative mb-2 h-1 w-full cursor-pointer rounded-full bg-foreground/15 transition-[height] duration-150 hover:h-1.5"
+        className="group relative mb-2 h-1 w-full cursor-pointer rounded-full bg-foreground/25 transition-[height] duration-150 hover:h-1.5"
         onClick={handleProgressClick}
         role="progressbar"
         aria-label="Playback progress"
