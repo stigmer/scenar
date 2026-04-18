@@ -56,100 +56,64 @@ Drop this file into your conversation to quickly resume work on this sub-project
 **Repository**: [scenar-ai/scenar](https://github.com/scenar-ai/scenar)
 **Local Path**: `/Users/suresh/scm/github.com/scenar-ai/scenar`
 
-## Decisions Taken
+## Current State
+
+- **Status**: In progress
+- **Last Session**: April 18, 2026 — T01 proto simplification (steps 1-8) completed
+- **Active Task**: T01 — CLI scaffolding portion (steps 9-12) is next
+- **Commit**: `21acbeb` — `refactor(apis,sdk): simplify proto contract to scenario-only definition`
+
+## Session Progress (2026-04-18)
+
+### Completed: T01 Steps 1-8 (Proto Simplification + SDK Update)
+
+- Deleted 11 proto source files (7 commons + 4 service)
+- Renamed `spec.proto` → `scenario.proto`, message `ScenarioSpec` → `Scenario`
+- Simplified `buf.yaml` (removed 6 RPC/service lint exceptions)
+- Removed gRPC plugins from Go and Python gen configs, ConnectRPC plugin from TS gen config
+- Regenerated stubs for all three languages (TS, Go, Python) — from ~70 files down to 11
+- Updated SDK adapter: deleted `ProtoScenario` envelope type, renamed `ProtoScenarioSpec` → `ProtoScenario`
+- Removed `apiVersion`/`kind` envelope validation from `loadScenarioFromProto`
+- Updated all tests (removed 3 envelope tests, flattened remaining 8)
+- Verified: `buf lint`, `buf build`, `pnpm -r build`, `pnpm -r test` (76/76 tests pass)
+
+### Decisions Made This Session
+
+1. **Rename file too**: `spec.proto` → `scenario.proto` (not just the message) — once the envelope is gone, "spec" implies a sub-part of a larger resource, which is misleading
+2. **Remove gRPC plugins from Go and Python configs** (not just ConnectRPC from TS) — no services remain, keep the toolchain clean
+3. **Remove `PACKAGE_VERSION_SUFFIX` lint exception** — only `commons/` lacked version suffixes, and it's deleted
+
+### Observations
+
+- `@bufbuild/protobuf` is listed in `packages/sdk/package.json` as a dependency but never imported in source — dead dependency, could be removed in a future cleanup pass
+
+## Decisions Taken (All Sessions)
 
 1. **Proto message rename**: `ScenarioSpec` -> `Scenario` (the message name, not the file name)
-2. **TTS provider**: Free offline TTS (Echogarden) as default. OpenAI TTS as optional paid upgrade via `--tts openai` flag.
-3. **CLI input**: YAML only for v1. No TypeScript scenario loading.
-4. **No DB**: Scenarios live in git. No hosted service for Phase 1.
-5. **Monetization**: Stigmer agent generates scenario PRs against user repos. Scenar stays OSS.
-6. **Shells stay in user-land**: Scenar ships generic chrome (BrowserView, TerminalView, CodeEditorView). Product-specific shells (AppShell, ManagementShell) are user-written "presentational twins."
-7. **Embed model**: The embed is a compiled artifact built in the user's environment (like Docker). CDN only hosts the output. User's private code never leaves their machine/CI.
+2. **Proto file rename**: `spec.proto` -> `scenario.proto` (decided session 2026-04-18)
+3. **TTS provider**: Free offline TTS (Echogarden) as default. OpenAI TTS as optional paid upgrade via `--tts openai` flag.
+4. **CLI input**: YAML only for v1. No TypeScript scenario loading.
+5. **No DB**: Scenarios live in git. No hosted service for Phase 1.
+6. **Monetization**: Stigmer agent generates scenario PRs against user repos. Scenar stays OSS.
+7. **Shells stay in user-land**: Scenar ships generic chrome (BrowserView, TerminalView, CodeEditorView). Product-specific shells (AppShell, ManagementShell) are user-written "presentational twins."
+8. **Embed model**: The embed is a compiled artifact built in the user's environment (like Docker). CDN only hosts the output. User's private code never leaves their machine/CI.
+9. **gRPC plugins removed**: All gRPC/ConnectRPC plugins removed from buf gen configs (no services remain)
 
 ## Task Roadmap
 
 | Task | Title | Status | Depends On |
 |------|-------|--------|------------|
-| T01 | Proto simplification + stub regen + SDK adapter update + CLI scaffold | APPROVED | — |
+| T01 | Proto simplification + stub regen + SDK adapter update | DONE | — |
+| T02 | CLI scaffolding (`@scenar/cli` with validate + narrate) | NEXT | T01 |
 
-## What's Changing (Proto Simplification)
-
-### Files to DELETE
-
-**Proto source files (7 files):**
-- `apis/ai/scenar/commons/resource/enum.proto` (ResourceVisibility, ResourceEventType)
-- `apis/ai/scenar/commons/resource/field_options.proto` (computed, immutable field options)
-- `apis/ai/scenar/commons/resource/kind.proto` (ResourceKind enum)
-- `apis/ai/scenar/commons/resource/metadata.proto` (ResourceMetadata, ResourceMetadataVersion)
-- `apis/ai/scenar/commons/resource/rpc_service_options.proto` (resource_kind service option)
-- `apis/ai/scenar/commons/resource/status.proto` (ResourceAudit, ResourceAuditStatus)
-- `apis/ai/scenar/commons/rpc/pagination.proto` (PageInfo)
-
-**Proto files to delete (service/hosting concerns):**
-- `apis/ai/scenar/scenario/v1/command.proto` (ScenarioCommandController)
-- `apis/ai/scenar/scenario/v1/query.proto` (ScenarioQueryController)
-- `apis/ai/scenar/scenario/v1/io.proto` (ScenarioId, Scenarios, ListScenariosInput, RenderInput/Output)
-- `apis/ai/scenar/scenario/v1/api.proto` (Scenario resource envelope with api_version/kind/metadata/status)
-
-**All generated stubs** in `apis/stubs/{ts,go,python}/` for deleted protos.
-
-### Files to KEEP (and simplify)
-
-- `apis/ai/scenar/scenario/v1/spec.proto` — ScenarioSpec, Step, StepAction, configs (KEEP AS-IS, already clean)
-- `apis/ai/scenar/scenario/v1/enum.proto` — ActionType enum (KEEP AS-IS)
-
-### Downstream Updates
-
-- `packages/sdk/src/proto/proto-types.ts` — remove `ProtoScenario` (apiVersion/kind wrapper), make `ProtoScenarioSpec` the top-level type
-- `packages/sdk/src/proto/load-scenario.ts` — simplify to accept spec directly (no envelope validation)
-- `packages/sdk/src/__tests__/load-scenario.test.ts` — remove envelope tests, test spec-level loading
-- buf config files — remove commons module references
-
-## What's New (CLI)
+## What's Next: T02 — CLI Scaffolding
 
 ### @scenar/cli
 
 - `scenar narrate <scenario.yaml>` — reads scenario YAML, extracts `narration_text` per step, generates audio via free offline TTS (Echogarden), writes .mp3 + manifest.json. Optional `--tts openai` for paid higher-quality voice.
 - `scenar validate <scenario.yaml>` — validates a YAML scenario against the proto schema, returns human-readable errors (or JSON with `--json`).
 
-## Essential Files to Review
-
-### Current Proto Structure
-```
-apis/ai/scenar/
-├── commons/                    ← DELETE entirely
-│   ├── resource/               ← 6 files (metadata, audit, visibility, kind, field_options, rpc_service_options)
-│   └── rpc/                    ← 1 file (pagination)
-└── scenario/v1/
-    ├── api.proto               ← DELETE (Scenario resource envelope)
-    ├── command.proto            ← DELETE (CRUD RPCs)
-    ├── query.proto              ← DELETE (query RPCs)
-    ├── io.proto                 ← DELETE (IDs, lists, render IO)
-    ├── spec.proto               ← KEEP (ScenarioSpec — the core)
-    └── enum.proto               ← KEEP (ActionType)
-```
-
-### Target Proto Structure
-```
-apis/ai/scenar/scenario/v1/
-├── spec.proto                  ← message renamed: ScenarioSpec -> Scenario
-└── enum.proto                  ← ActionType (unchanged)
-```
-
-### SDK Files to Update
-```
-packages/sdk/src/
-├── proto/
-│   ├── proto-types.ts          ← simplify (remove ProtoScenario envelope, rename ProtoScenarioSpec -> ProtoScenario)
-│   ├── load-scenario.ts        ← simplify (accept spec directly, no envelope validation)
-│   ├── action-mapper.ts        ← unchanged
-│   └── errors.ts               ← unchanged
-├── __tests__/
-│   └── load-scenario.test.ts   ← update tests (remove apiVersion/kind tests)
-└── index.ts                    ← update exports
-```
-
-### New Package to Scaffold
+### Package Structure to Scaffold
 ```
 packages/cli/
 ├── package.json                ← @scenar/cli
@@ -166,12 +130,37 @@ packages/cli/
 └── README.md
 ```
 
+### Proto Structure (Current — After T01)
+```
+apis/ai/scenar/scenario/v1/
+├── scenario.proto              ← Scenario, ViewportConfig, Step, StepAction, configs
+└── enum.proto                  ← ActionType (unchanged)
+```
+
+### SDK Structure (Current — After T01)
+```
+packages/sdk/src/
+├── proto/
+│   ├── proto-types.ts          ← ProtoScenario (was ProtoScenarioSpec), unchanged sub-types
+│   ├── load-scenario.ts        ← accepts ProtoScenario directly (no envelope)
+│   ├── action-mapper.ts        ← unchanged
+│   └── errors.ts               ← unchanged
+├── author/
+│   ├── types.ts                ← unchanged
+│   └── createScenario.ts       ← unchanged
+├── __tests__/
+│   ├── load-scenario.test.ts   ← 8 tests (envelope tests removed)
+│   ├── action-mapper.test.ts   ← 14 tests (unchanged)
+│   └── createScenario.test.ts  ← 6 tests (unchanged)
+└── index.ts                    ← ProtoScenarioSpec export removed
+```
+
 ## Resume Checklist
 
-1. [ ] Read the latest task from `tasks/`
+1. [ ] Read this file for session context
 2. [ ] Check parent design decisions in `_projects/2026-04/20260417.02.scenar-product/design-decisions/`
-3. [ ] Check parent coding guidelines
-4. [ ] Continue with the current task
+3. [ ] Check `tasks/T01_0_plan.md` for T01 scope reference (completed)
+4. [ ] Plan T02 (CLI scaffolding) before implementing
 
 ---
 
