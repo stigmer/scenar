@@ -1,6 +1,6 @@
 import * as path from "path";
 import { Command } from "commander";
-import { scanProject, generate } from "@scenar/preview";
+import { scanProject, generate, initMswServiceWorker } from "@scenar/preview";
 
 interface PreviewInitOptions {
   source?: string;
@@ -76,6 +76,27 @@ async function runPreviewInit(options: PreviewInitOptions): Promise<void> {
   }
   for (const file of result.preserved) {
     process.stdout.write(`  \x1b[33m●\x1b[0m ${file} (preserved)\n`);
+  }
+
+  // --- MSW service worker ---
+  const projectRoot = path.resolve(path.dirname(outputDir));
+  const mswResult = initMswServiceWorker(projectRoot, scanResult.framework);
+
+  if (mswResult.status === "created") {
+    process.stdout.write(
+      `\n\x1b[36m●\x1b[0m MSW service worker\n` +
+      `  \x1b[32m✓\x1b[0m ${path.relative(process.cwd(), mswResult.path!)}\n`,
+    );
+  } else if (mswResult.status === "exists") {
+    process.stdout.write(
+      `\n\x1b[36m●\x1b[0m MSW service worker\n` +
+      `  \x1b[33m●\x1b[0m ${path.relative(process.cwd(), mswResult.path!)} (exists)\n`,
+    );
+  } else if (mswResult.status === "error") {
+    process.stdout.write(
+      `\n\x1b[33m⚠\x1b[0m Could not generate MSW service worker: ${mswResult.error}\n` +
+      `  Run \`npx msw init public/\` manually.\n`,
+    );
   }
 
   process.stdout.write(`\n\x1b[32m✓\x1b[0m Preview initialized.\n`);

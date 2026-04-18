@@ -12,3 +12,7 @@ export type { GenerateOptions, GenerateResult } from "./generator/types.js";
 // Config
 export { defineConfig } from "./config.js";
 export type { PreviewConfig, FrameworkType } from "./config.js";
+
+// MSW Init
+export { initMswServiceWorker, resolvePublicDir } from "./msw-init.js";
+export type { InitMswResult } from "./msw-init.js";
