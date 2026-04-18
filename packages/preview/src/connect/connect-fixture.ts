@@ -21,10 +21,12 @@
 
 import { http, HttpResponse } from "msw";
 import type { ConnectFixtureHandler, ConnectHandlerOptions } from "./connect-handler.js";
+import { serializeResult } from "./serialize.js";
 
 interface ServiceDescriptor {
   readonly typeName: string;
-  readonly method: Record<string, { readonly name: string }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly method: Record<string, { readonly name: string; readonly output?: any }>;
 }
 
 /**
@@ -65,12 +67,7 @@ export function connectFixture(
       ...(options?.headers ?? {}),
     };
 
-    // Protobuf int64 fields are typed as `bigint` in generated TS.
-    // JSON.stringify cannot handle bigint natively; Connect-RPC encodes
-    // int64 as JSON strings, so String(value) is protocol-correct.
-    const jsonBody = JSON.stringify(result, (_key, value) =>
-      typeof value === "bigint" ? String(value) : (value as unknown),
-    );
+    const jsonBody = await serializeResult(result, method.output);
 
     return new HttpResponse(jsonBody, { status, headers: extraHeaders });
   });

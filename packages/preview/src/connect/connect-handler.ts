@@ -28,7 +28,9 @@ interface ServiceDescriptor {
 
 interface MethodDescriptor {
   readonly name: string;
-  readonly output: { readonly typeName: string };
+  // Full DescMessage schema when available (used for canonical protobuf JSON).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly output: any;
 }
 
 /**
@@ -101,12 +103,8 @@ export async function connectHandler(
       ...(options?.headers ?? {}),
     };
 
-    // Protobuf int64 fields are typed as `bigint` in generated TS.
-    // JSON.stringify cannot handle bigint natively; Connect-RPC encodes
-    // int64 as JSON strings, so String(value) is protocol-correct.
-    const jsonBody = JSON.stringify(result, (_key, value) =>
-      typeof value === "bigint" ? String(value) : (value as unknown),
-    );
+    const { serializeResult } = await import("./serialize.js");
+    const jsonBody = await serializeResult(result, method.output);
 
     return new HttpResponse(jsonBody, { status, headers: extraHeaders });
   });
