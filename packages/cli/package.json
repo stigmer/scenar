@@ -18,6 +18,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@scenar/preview": "workspace:*",
     "@scenar/sdk": "workspace:*",
     "commander": "^13.0.0",
     "yaml": "^2.7.0"

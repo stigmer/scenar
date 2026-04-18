@@ -4,6 +4,7 @@
     { "path": "packages/core" },
     { "path": "packages/cli" },
     { "path": "packages/react" },
-    { "path": "packages/sdk" }
+    { "path": "packages/sdk" },
+    { "path": "packages/preview" }
   ]
 }
