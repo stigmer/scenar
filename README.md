@@ -60,10 +60,10 @@ You supply the React components (`IntroSlide`, `DemoView`). Scenar handles playb
 Already have a React app? Scenar can scan it and set up the view registry for you.
 
 ```bash
-npx scenar preview init
+scenar preview init --source ./my-app --output ./docs-site/.scenar
 ```
 
-This discovers your components, detects your framework, and generates a `.scenar/` directory with everything wired up. Use the generated views directly in `createScenario()` -- no manual registration needed.
+This discovers your components, detects your framework, and generates a `.scenar/` directory with everything wired up. Source and output can be different projects -- ideal for monorepos where your app and docs site live side by side.
 
 ```tsx
 import { previewViews } from "./.scenar/preview";
@@ -125,11 +125,11 @@ Load YAML scenarios at runtime with `loadScenarioFromProto()` from `@scenar/sdk`
 ## CLI
 
 ```bash
-# Scan your project and generate preview views
-scenar preview init
+# Scan your app and generate preview views
+scenar preview init --source ./my-app --output ./.scenar
 
 # Re-scan after adding components (preserves your customizations)
-scenar preview sync
+scenar preview sync --source ./my-app --output ./.scenar
 
 # Validate a scenario file
 scenar validate demo.yaml
