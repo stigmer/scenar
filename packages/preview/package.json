@@ -1,0 +1,54 @@
+{
+  "name": "@scenar/preview",
+  "version": "0.0.1",
+  "description": "Automated preview generation — scan a React project and produce a view registry for Scenar scenarios.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js",
+      "default": "./dist/runtime/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests --config ../../vitest.config.ts",
+    "lint": "echo 'lint placeholder'",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "sideEffects": false,
+  "license": "Apache-2.0",
+  "dependencies": {
+    "ts-morph": "^25.0.0"
+  },
+  "peerDependencies": {
+    "msw": ">=2.0.0",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "msw": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scenar-ai/scenar.git",
+    "directory": "packages/preview"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": ["scenar", "preview", "component", "scanner", "react", "demo", "msw"]
+}
