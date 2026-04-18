@@ -13,6 +13,11 @@ import { renderConfig } from "./templates/config.js";
 /**
  * Generate the `.scenar/` directory from scan results.
  *
+ * Supports cross-project generation: `sourceRoot` (the scanned project)
+ * and `outputDir` (where files are written) can be in different locations.
+ * Import paths in `views.generated.ts` are computed as relative paths
+ * from `outputDir` to the source component files.
+ *
  * Follows split-ownership rules:
  * - Scanner-owned files are always (re)written.
  * - User-owned files are only created if they don't exist (init)
@@ -22,10 +27,7 @@ export function generate(
   scanResult: ScanResult,
   options: GenerateOptions,
 ): GenerateResult {
-  const outputDir = path.resolve(
-    options.projectRoot,
-    options.outputDir ?? ".scenar",
-  );
+  const outputDir = path.resolve(options.outputDir);
   const isInit = options.isInit ?? true;
   const written: string[] = [];
   const preserved: string[] = [];
@@ -66,7 +68,7 @@ export function generate(
 
   const configPath = path.join(outputDir, "scenar.config.ts");
   if (!fs.existsSync(configPath) && isInit) {
-    writeFile(outputDir, "scenar.config.ts", renderConfig(scanResult));
+    writeFile(outputDir, "scenar.config.ts", renderConfig(scanResult, options.sourceRoot));
     written.push("scenar.config.ts");
   } else if (fs.existsSync(configPath)) {
     preserved.push("scenar.config.ts");

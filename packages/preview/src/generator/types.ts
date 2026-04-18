@@ -1,9 +1,9 @@
 /** Options for the code generator. */
 export interface GenerateOptions {
-  /** Absolute path to the project root. */
-  readonly projectRoot: string;
-  /** Output directory for generated files (relative to projectRoot). Defaults to ".scenar". */
-  readonly outputDir?: string;
+  /** Absolute path to the project that was scanned (source). */
+  readonly sourceRoot: string;
+  /** Absolute path to the output directory for generated files. */
+  readonly outputDir: string;
   /**
    * When true, behaves like `scenar preview init`:
    * creates all files including user-owned ones.

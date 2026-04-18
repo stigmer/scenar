@@ -3,13 +3,13 @@ import { Command } from "commander";
 import { scanProject, generate } from "@scenar/preview";
 
 interface PreviewInitOptions {
-  dir?: string;
+  source?: string;
   output?: string;
   resetProviders?: boolean;
 }
 
 interface PreviewSyncOptions {
-  dir?: string;
+  source?: string;
   output?: string;
 }
 
@@ -20,9 +20,9 @@ export function registerPreviewCommand(program: Command): void {
 
   preview
     .command("init")
-    .description("Scan the project and generate the .scenar/ directory.")
-    .option("-d, --dir <path>", "project root directory (default: cwd)")
-    .option("-o, --output <path>", "output directory (default: .scenar)")
+    .description("Scan a project and generate the .scenar/ directory.")
+    .option("-s, --source <path>", "project to scan (default: cwd)")
+    .option("-o, --output <path>", "output directory for generated files (default: .scenar relative to cwd)")
     .option("--reset-providers", "force-regenerate providers.tsx")
     .action(async (options: PreviewInitOptions) => {
       await runPreviewInit(options);
@@ -31,20 +31,20 @@ export function registerPreviewCommand(program: Command): void {
   preview
     .command("sync")
     .description("Re-scan and update scanner-owned files (preserves user files).")
-    .option("-d, --dir <path>", "project root directory (default: cwd)")
-    .option("-o, --output <path>", "output directory (default: .scenar)")
+    .option("-s, --source <path>", "project to scan (default: cwd)")
+    .option("-o, --output <path>", "output directory for generated files (default: .scenar relative to cwd)")
     .action(async (options: PreviewSyncOptions) => {
       await runPreviewSync(options);
     });
 }
 
 async function runPreviewInit(options: PreviewInitOptions): Promise<void> {
-  const projectRoot = path.resolve(options.dir ?? process.cwd());
-  const outputDir = options.output ?? ".scenar";
+  const sourceRoot = path.resolve(options.source ?? process.cwd());
+  const outputDir = path.resolve(options.output ?? ".scenar");
 
-  process.stdout.write(`\x1b[36m●\x1b[0m Scanning project: ${projectRoot}\n`);
+  process.stdout.write(`\x1b[36m●\x1b[0m Scanning project: ${sourceRoot}\n`);
 
-  const scanResult = scanProject(projectRoot);
+  const scanResult = scanProject(sourceRoot);
 
   process.stdout.write(
     `  Found ${scanResult.discovered.length} components, ` +
@@ -61,10 +61,11 @@ async function runPreviewInit(options: PreviewInitOptions): Promise<void> {
     );
   }
 
-  process.stdout.write(`\n\x1b[36m●\x1b[0m Generating ${outputDir}/\n`);
+  const relOutput = path.relative(process.cwd(), outputDir);
+  process.stdout.write(`\n\x1b[36m●\x1b[0m Generating ${relOutput}/\n`);
 
   const result = generate(scanResult, {
-    projectRoot,
+    sourceRoot,
     outputDir,
     isInit: true,
     resetProviders: options.resetProviders,
@@ -78,28 +79,29 @@ async function runPreviewInit(options: PreviewInitOptions): Promise<void> {
   }
 
   process.stdout.write(`\n\x1b[32m✓\x1b[0m Preview initialized.\n`);
-  process.stdout.write(`  Review ${outputDir}/report.md for scan details.\n`);
-  process.stdout.write(`  Add custom views in ${outputDir}/views.custom.tsx.\n`);
-  process.stdout.write(`  Customize providers in ${outputDir}/providers.tsx.\n`);
+  process.stdout.write(`  Review ${relOutput}/report.md for scan details.\n`);
+  process.stdout.write(`  Add custom views in ${relOutput}/views.custom.tsx.\n`);
+  process.stdout.write(`  Customize providers in ${relOutput}/providers.tsx.\n`);
 }
 
 async function runPreviewSync(options: PreviewSyncOptions): Promise<void> {
-  const projectRoot = path.resolve(options.dir ?? process.cwd());
-  const outputDir = options.output ?? ".scenar";
+  const sourceRoot = path.resolve(options.source ?? process.cwd());
+  const outputDir = path.resolve(options.output ?? ".scenar");
 
-  process.stdout.write(`\x1b[36m●\x1b[0m Re-scanning project: ${projectRoot}\n`);
+  process.stdout.write(`\x1b[36m●\x1b[0m Re-scanning project: ${sourceRoot}\n`);
 
-  const scanResult = scanProject(projectRoot);
+  const scanResult = scanProject(sourceRoot);
 
   process.stdout.write(
     `  Found ${scanResult.discovered.length} components, ` +
     `skipped ${scanResult.skipped.length}\n`,
   );
 
-  process.stdout.write(`\n\x1b[36m●\x1b[0m Updating ${outputDir}/\n`);
+  const relOutput = path.relative(process.cwd(), outputDir);
+  process.stdout.write(`\n\x1b[36m●\x1b[0m Updating ${relOutput}/\n`);
 
   const result = generate(scanResult, {
-    projectRoot,
+    sourceRoot,
     outputDir,
     isInit: false,
   });
