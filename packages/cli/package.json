@@ -1,7 +1,7 @@
 {
   "name": "@scenar/cli",
   "version": "0.0.1",
-  "description": "Scenar CLI — validate scenario YAML and generate narration audio.",
+  "description": "Scenar CLI — validate scenarios, generate narration, and render videos.",
   "type": "module",
   "bin": {
     "scenar": "./dist/bin/scenar.js"
@@ -18,6 +18,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@scenar/core": "workspace:*",
     "@scenar/preview": "workspace:*",
     "@scenar/sdk": "workspace:*",
     "commander": "^13.0.0",
@@ -25,13 +26,25 @@
   },
   "peerDependencies": {
     "echogarden": ">=2.0.0",
-    "edge-tts-universal": ">=1.0.0"
+    "edge-tts-universal": ">=1.0.0",
+    "remotion": "4.0.448",
+    "@remotion/renderer": "4.0.448",
+    "@remotion/bundler": "4.0.448"
   },
   "peerDependenciesMeta": {
     "echogarden": {
       "optional": true
     },
     "edge-tts-universal": {
+      "optional": true
+    },
+    "remotion": {
+      "optional": true
+    },
+    "@remotion/renderer": {
+      "optional": true
+    },
+    "@remotion/bundler": {
       "optional": true
     }
   },
@@ -46,5 +59,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["scenar", "scenario", "cli", "narration", "tts", "validate", "yaml"]
+  "keywords": ["scenar", "scenario", "cli", "narration", "tts", "validate", "yaml", "video", "render", "remotion"]
 }

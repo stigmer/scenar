@@ -1,0 +1,64 @@
+{
+  "name": "@scenar/remotion",
+  "version": "0.0.1",
+  "description": "Remotion integration for Scenar — render scenario demos as pixel-perfect MP4 videos.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests --config ../../vitest.config.ts",
+    "lint": "echo 'lint placeholder'",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "sideEffects": false,
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@scenar/core": "workspace:*",
+    "@scenar/react": "workspace:*"
+  },
+  "peerDependencies": {
+    "@remotion/renderer": "4.0.448",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "remotion": "4.0.448"
+  },
+  "peerDependenciesMeta": {
+    "@remotion/renderer": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scenar-ai/scenar.git",
+    "directory": "packages/remotion"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "scenar",
+    "scenario",
+    "remotion",
+    "video",
+    "render",
+    "mp4",
+    "demo"
+  ],
+  "devDependencies": {
+    "@remotion/renderer": "4.0.448",
+    "remotion": "4.0.448"
+  }
+}

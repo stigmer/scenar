@@ -1,20 +1,27 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { type NarrationManifest, type ScenarioStep, computeStepTimeline } from "@scenar/core";
+import { type NarrationManifest, type ScenarioBundle, type ScenarioStep, computeStepTimeline } from "@scenar/core";
 import { useVideoExport } from "../video/VideoExportContext.js";
 import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
 import { useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
-import { ScenarioPoster } from "./ScenarioPoster.js";
+import { ScenarioPauseOverlay, ScenarioPoster } from "./ScenarioPoster.js";
 import { ScenarioControls } from "./ScenarioControls.js";
 
 /** Delay before auto-hiding the control bar during playback. */
 const CONTROLS_HIDE_DELAY_MS = 3_000;
 
 interface ScenarioPlayerProps<T> {
+  /**
+   * Self-contained scenario bundle (steps + narration manifest).
+   * When provided, `steps` and `narrationManifest` are extracted from the
+   * bundle.  Individual `steps` / `narrationManifest` props take precedence
+   * when both are specified.
+   */
+  bundle?: ScenarioBundle<T>;
   /** Ordered steps in the playback timeline. */
-  steps: ScenarioStep<T>[];
+  steps?: ScenarioStep<T>[];
   /** Render function — receives current step data and step index. */
   children: (data: T, stepIndex: number) => ReactNode;
   /** Additional CSS class names for the outer container. */
@@ -39,13 +46,23 @@ interface ScenarioPlayerProps<T> {
  * about what is being displayed. Respects `prefers-reduced-motion`.
  */
 export function ScenarioPlayer<T>({
-  steps,
+  bundle,
+  steps: stepsProp,
   children,
   className,
   onStepChange,
-  narrationManifest,
+  narrationManifest: manifestProp,
   showSpeedControl = true,
 }: ScenarioPlayerProps<T>) {
+  const steps = stepsProp ?? bundle?.steps;
+  const narrationManifest = manifestProp ?? bundle?.narrationManifest;
+
+  if (!steps || steps.length === 0) {
+    throw new Error(
+      "ScenarioPlayer requires steps. Provide a `bundle` or `steps` prop.",
+    );
+  }
+
   const prefersReducedMotion = useReducedMotion();
   const { isVideoExport, hideControls, initialMuted: videoExportMuted } = useVideoExport();
   const lastIndex = steps.length - 1;
@@ -178,6 +195,7 @@ export function ScenarioPlayer<T>({
 
   const caption = steps[stepIndex]!.caption;
   const showPoster = playbackState === "idle" && !isVideoExport && !prefersReducedMotion;
+  const showPauseOverlay = playbackState === "paused" && !isVideoExport;
   const showControlBar = playbackState !== "idle" && !hideControls;
 
   return (
@@ -198,6 +216,7 @@ export function ScenarioPlayer<T>({
 
         <AnimatePresence>
           {showPoster && <ScenarioPoster onPlay={handlePlay} />}
+          {showPauseOverlay && <ScenarioPauseOverlay onResume={handlePlay} />}
         </AnimatePresence>
       </div>
 

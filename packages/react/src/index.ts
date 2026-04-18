@@ -4,6 +4,7 @@
 // Re-export core types for consumer convenience
 export type {
   ScenarioStep,
+  ScenarioBundle,
   ActionType,
   StepAction,
   UseStepInteractionsOptions,
@@ -50,7 +51,7 @@ export { DemoViewport } from "./viewport/DemoViewport.js";
 
 // Player
 export { ScenarioPlayer } from "./player/ScenarioPlayer.js";
-export { ScenarioPoster } from "./player/ScenarioPoster.js";
+export { ScenarioPoster, ScenarioPauseOverlay } from "./player/ScenarioPoster.js";
 export { ScenarioControls } from "./player/ScenarioControls.js";
 export { SpeedMenu } from "./player/SpeedMenu.js";
 export { useStepProgression } from "./player/useStepProgression.js";

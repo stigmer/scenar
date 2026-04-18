@@ -46,3 +46,36 @@ export function ScenarioPoster({ onPlay, PlayIcon }: ScenarioPosterProps) {
     </motion.div>
   );
 }
+
+interface ScenarioPauseOverlayProps {
+  onResume: () => void;
+  PlayIcon?: React.ComponentType<{ size: number; className?: string }>;
+}
+
+/**
+ * Overlay with a centered play button shown when playback is paused.
+ * More subtle than the initial poster so the underlying content remains
+ * legible while still giving the user a clear click target to resume.
+ */
+export function ScenarioPauseOverlay({ onResume, PlayIcon }: ScenarioPauseOverlayProps) {
+  const Icon = PlayIcon ?? DefaultPlayIcon;
+  return (
+    <motion.div
+      className="absolute inset-0 z-10 flex cursor-pointer items-center justify-center rounded-lg bg-black/30"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onResume();
+      }}
+      role="button"
+      aria-label="Resume demo"
+    >
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/80 shadow-lg transition-transform hover:scale-110">
+        <Icon size={24} className="ml-1 text-neutral-900" />
+      </div>
+    </motion.div>
+  );
+}

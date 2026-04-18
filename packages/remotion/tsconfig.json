@@ -3,13 +3,12 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": "src"
   },
-  "include": ["bin", "src"],
-  "exclude": ["src/**/*.test.ts"],
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
   "references": [
     { "path": "../core" },
-    { "path": "../sdk" },
-    { "path": "../preview" }
+    { "path": "../react" }
   ]
 }

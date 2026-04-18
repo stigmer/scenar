@@ -3,6 +3,7 @@
 
 // Scenario types
 export type { ScenarioStep } from "./scenario/types.js";
+export type { ScenarioBundle } from "./scenario/bundle.js";
 export type {
   ActionType,
   StepAction,
