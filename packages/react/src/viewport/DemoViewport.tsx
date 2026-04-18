@@ -8,7 +8,7 @@ const DEFAULT_CANONICAL_WIDTH = 896;
 const DEFAULT_MIN_ZOOM = 0.5;
 
 /** Default CSS classes applied to the viewport wrapper. */
-const DEFAULT_WRAPPER_CLASS = "relative mx-auto max-w-4xl";
+const DEFAULT_WRAPPER_CLASS = "relative mx-auto max-w-4xl overflow-hidden";
 
 interface DemoViewportProps {
   /**
@@ -53,7 +53,7 @@ export function DemoViewport({
   const { isVideoExport } = useVideoExport();
   const outerRef = useRef<HTMLDivElement>(null);
   const internalRef = useRef<HTMLDivElement>(null);
-  const [zoom, setZoom] = useState<number | null>(null);
+  const [zoom, setZoom] = useState(1);
 
   const innerRef = containerRef ?? internalRef;
 
@@ -84,8 +84,7 @@ export function DemoViewport({
 
   const style: React.CSSProperties & Record<string, string | number> = {
     width: canonicalWidth,
-    zoom: zoom ?? 1,
-    visibility: zoom == null ? "hidden" : "visible",
+    zoom,
   };
   if (shellHeight != null) {
     style["--scenar-shell-height"] = `${shellHeight}px`;
