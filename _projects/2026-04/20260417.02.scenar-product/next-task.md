@@ -26,7 +26,7 @@ Drop this file into your conversation to quickly resume work on this project.
 | T04 | Shells Extraction | DONE | T03 |
 | T05 | SDK — createScenario() | DONE | T01, T03 |
 | T06 | Rewire Stigmer Demos to Scenar Imports | PENDING | T03, T04 |
-| T07 | Remotion Video Pipeline Integration | PENDING | T03, T06 |
+| T07 | Remotion Video Pipeline Integration | DONE | T03 |
 | T08 | Standalone Example (validates extraction) | PENDING | T05, T06 |
 
 ## Completed: T01 — Define Scenar Proto Contract
@@ -108,6 +108,45 @@ Drop this file into your conversation to quickly resume work on this project.
 - Structural proto types (no dependency on generated stubs)
 
 **Design decisions**: DD-006 through DD-009 (see `design-decisions/`)
+
+## Completed: T07 — Remotion Video Pipeline Integration
+
+**Status**: DONE — Committed as `c342809` (Scenar) + `04af3e05c` (Stigmer)
+
+**What was built**:
+
+### @scenar/remotion (new package)
+- `ScenarioComposition` — wraps scenario in `VideoExportProvider` + `TimeSourceProvider`, places Remotion `<Audio>` elements at frame-accurate offsets via `<Sequence>` with bounded `durationInFrames`
+- `useScenarioTimeline` / `calculateScenarioTimeline` — converts Scenar's ms-based timeline to Remotion frame counts with `AudioClip[]`, `stepStartFrames[]`
+- Audio resolution via Remotion's `staticFile()` (matching Stigmer's proven pattern), with `useStaticFile={false}` opt-out
+- 15 tests (11 remotion + 3 load-bundle + 5 render-command)
+
+### @scenar/core — ScenarioBundle<T>
+- New type that groups `id`, `steps`, and `narrationManifest` into a single typed value
+- Replaces the ad-hoc pattern of passing steps and manifests as separate, string-coupled props
+
+### @scenar/react — ScenarioPlayer bundle prop
+- `ScenarioPlayer` now accepts `bundle?: ScenarioBundle<T>` alongside existing `steps`/`narrationManifest` props
+- Backward compatible — individual props take precedence
+
+### @scenar/cli — `scenar render` command
+- Loads scenario bundle from directory (steps.ts + narration/manifest.json)
+- Resolves Remotion entry point, bundles, selects composition, renders to MP4
+- Output defaults to CWD (`./scenario-id.mp4`), configurable with `--out`
+- Remotion deps are optional peer deps
+
+### Stigmer migration — narration co-location + video pipeline removal
+- Moved 25 narration directories (119 MP3s + 25 manifests) from `public/demos/` to co-located `scenarios/<id>/narration/`
+- Deleted Stigmer's Remotion pipeline (7 files, ~820 LOC): Root.tsx, DemoVideo, HelloWorld, timeline, webpack, styles, render-videos script, remotion.config, registry.ts
+- Added `copy-narration-to-public.ts` for Next.js static serving
+- Removed 6 Remotion devDependencies from Stigmer
+
+**Design decisions**:
+1. **Co-located narration**: Scenario dirs are now self-contained (steps + component + narration)
+2. **Video output to CWD**: MP4s are ephemeral build artifacts, not source — user controls placement with `--out`
+3. **staticFile() by default**: Matches Stigmer's tested pattern; opt-out with `useStaticFile={false}`
+4. **Math.round for frame conversion**: Matches Stigmer's `msToFrames` exactly
+5. **Provider order**: `TimeSourceProvider` outside `VideoExportProvider` (matches Stigmer)
 
 ## Current Task: T06 — Rewire Stigmer Demos to Scenar Imports
 
