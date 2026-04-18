@@ -22,6 +22,8 @@ interface UseStepProgressionResult {
   pause: () => void;
   togglePlay: () => void;
   goTo: (index: number) => void;
+  /** Invoke to signal that the current narration clip has finished playing. */
+  handleClipEnded: () => void;
   /** Register a pending advance callback (used by narration clip-ended). */
   setPendingAdvance: (fn: (() => void) | null) => void;
   /** Notify the coordinator that this player started playing. */
@@ -174,10 +176,6 @@ export function useStepProgression<T>({
     pendingAdvanceRef.current = fn;
   }, []);
 
-  // Expose handleClipEnded as the onClipEnded used by the parent
-  // so it doesn't need to reach into pendingAdvanceRef.
-  void handleClipEnded;
-
   return {
     stepIndex,
     playbackState,
@@ -186,6 +184,7 @@ export function useStepProgression<T>({
     pause,
     togglePlay,
     goTo,
+    handleClipEnded,
     setPendingAdvance,
     coordinatorId: undefined,
   };

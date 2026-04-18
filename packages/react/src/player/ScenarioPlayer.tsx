@@ -58,23 +58,20 @@ export function ScenarioPlayer<T>({
     return parsed > 0 && parsed <= 16 ? parsed : 1;
   });
 
-  const handleClipEnded = useCallback(() => {
-    pendingAdvanceRef.current?.();
-  }, []);
-
-  const pendingAdvanceRef = useRef<(() => void) | null>(null);
+  const effectiveInitialMuted = isVideoExport ? videoExportMuted : false;
+  const [progressionMuted, setProgressionMuted] = useState(effectiveInitialMuted);
 
   const progression = useStepProgression({
     steps,
     narrationManifest,
-    muted: true, // overridden below after we know actual mute state
+    muted: progressionMuted,
     playbackRate,
     isVideoExport,
     prefersReducedMotion,
-    onClipEnded: handleClipEnded,
+    onClipEnded: () => {},
   });
 
-  const { stepIndex, playbackState, playing, play, pause, togglePlay, goTo } = progression;
+  const { stepIndex, playbackState, playing, play, pause, togglePlay, goTo, handleClipEnded } = progression;
 
   // Coordinator: single-active-player
   const coordinatorRef = useRef<{ id: string; unregister: () => void } | null>(null);
@@ -101,8 +98,6 @@ export function ScenarioPlayer<T>({
     return () => observer.disconnect();
   }, [isVideoExport, playing, pause]);
 
-  const effectiveInitialMuted = isVideoExport ? videoExportMuted : false;
-
   const { muted, toggleMute, audioRef } = useNarrationPlayback({
     manifest: narrationManifest,
     stepIndex,
@@ -111,6 +106,12 @@ export function ScenarioPlayer<T>({
     playbackRate,
     onClipEnded: handleClipEnded,
   });
+
+  // Keep progression's muted state in sync with narration so step
+  // timers respect narration duration when audio is unmuted.
+  useEffect(() => {
+    setProgressionMuted(muted);
+  }, [muted]);
 
   const stepTimeline = useMemo(
     () => computeStepTimeline(steps, muted ? null : narrationManifest),

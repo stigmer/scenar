@@ -96,11 +96,19 @@ export async function connectHandler(
     const result = await handler(body);
 
     const status = options?.status ?? 200;
-    const headers = options?.headers
-      ? new Headers(options.headers)
-      : undefined;
+    const extraHeaders: Record<string, string> = {
+      "content-type": "application/json",
+      ...(options?.headers ?? {}),
+    };
 
-    return HttpResponse.json(result as Record<string, unknown>, { status, headers });
+    // Protobuf int64 fields are typed as `bigint` in generated TS.
+    // JSON.stringify cannot handle bigint natively; Connect-RPC encodes
+    // int64 as JSON strings, so String(value) is protocol-correct.
+    const jsonBody = JSON.stringify(result, (_key, value) =>
+      typeof value === "bigint" ? String(value) : (value as unknown),
+    );
+
+    return new HttpResponse(jsonBody, { status, headers: extraHeaders });
   });
 }
 
