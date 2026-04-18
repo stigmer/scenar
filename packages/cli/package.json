@@ -1,0 +1,33 @@
+{
+  "name": "scenar",
+  "version": "0.0.1",
+  "description": "Scenar CLI — validate scenario YAML and generate narration audio.",
+  "type": "module",
+  "bin": {
+    "scenar": "./dist/bin/scenar.js"
+  },
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests --config ../../vitest.config.ts",
+    "lint": "echo 'lint placeholder'",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@scenar/sdk": "workspace:*",
+    "commander": "^13.0.0",
+    "yaml": "^2.7.0"
+  },
+  "peerDependencies": {
+    "echogarden": ">=2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "echogarden": {
+      "optional": true
+    }
+  }
+}

@@ -19,7 +19,9 @@ export type { LoadScenarioOptions } from "./proto/load-scenario.js";
 export { InvalidScenarioError } from "./proto/errors.js";
 
 // Proto structural types (for consumers building custom loaders)
+export { PROTO_ACTION_TYPE } from "./proto/proto-types.js";
 export type {
+  ProtoActionTypeValue,
   ProtoScenario,
   ProtoStep,
   ProtoStepAction,
