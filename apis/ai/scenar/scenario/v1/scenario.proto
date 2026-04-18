@@ -6,14 +6,18 @@ import "ai/scenar/scenario/v1/enum.proto";
 import "buf/validate/validate.proto";
 import "google/protobuf/struct.proto";
 
-// ScenarioSpec defines the complete choreography of a scenario — the ordered
-// sequence of visual steps, timed cursor interactions within each step, and
+// Scenario defines the complete choreography of a visual walkthrough — the
+// ordered sequence of steps, timed cursor interactions within each step, and
 // the viewport dimensions for deterministic rendering.
 //
-// This is the core of Scenar. A ScenarioSpec fully describes what the viewer
-// sees: which component renders at each point in time, what the cursor does,
-// what text gets typed, and how the viewport transforms. The same spec drives
-// both interactive web embeds and pixel-perfect MP4 video exports.
+// A Scenario fully describes what the viewer sees: which component renders at
+// each point in time, what the cursor does, what text gets typed, and how the
+// viewport transforms. The same definition drives both interactive web embeds
+// and pixel-perfect MP4 video exports.
+//
+// Scenarios are authored as YAML files, validated by the CLI, and consumed by
+// the SDK and engine at runtime. They live in version control alongside the
+// application code they demonstrate.
 //
 // Example YAML:
 //   viewport:
@@ -40,7 +44,7 @@ import "google/protobuf/struct.proto";
 //           target: apikey-name-input
 //           type_config:
 //             text: "quickstart-key"
-message ScenarioSpec {
+message Scenario {
   // Canonical viewport dimensions for deterministic rendering.
   // When omitted, the engine uses its built-in defaults.
   ViewportConfig viewport = 1;

@@ -4,7 +4,5 @@ plugins:
     out: stubs/python/scenar
   - remote: buf.build/protocolbuffers/pyi:v29.5
     out: stubs/python/scenar
-  - remote: buf.build/grpc/python:v1.71.0
-    out: stubs/python/scenar
 inputs:
   - directory: .
