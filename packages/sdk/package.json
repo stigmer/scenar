@@ -22,7 +22,6 @@
   "sideEffects": false,
   "license": "Apache-2.0",
   "dependencies": {
-    "@scenar/core": "workspace:*",
-    "@bufbuild/protobuf": "^2.2.2"
+    "@scenar/core": "workspace:*"
   }
 }

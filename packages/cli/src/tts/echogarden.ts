@@ -36,7 +36,7 @@ export function createEchogardenProvider(): TtsProvider {
         throw new Error(
           "Echogarden is not installed. Install it with:\n\n" +
           "  pnpm add echogarden\n\n" +
-          "Or use a different TTS provider: --tts openai",
+          "Or use a different TTS provider: --tts edge-tts, --tts openai",
         );
       }
 
