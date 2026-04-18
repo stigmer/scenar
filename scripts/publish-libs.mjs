@@ -8,7 +8,7 @@
  * directory. The workspace package.json is never modified.
  *
  * Publish order respects the dependency graph:
- *   @scenar/core → @scenar/sdk + @scenar/react → scenar (CLI)
+ *   @scenar/core + @scenar/preview → @scenar/sdk + @scenar/react → @scenar/cli
  *
  * Usage:
  *   node scripts/publish-libs.mjs --version 0.1.0              # build + publish
@@ -36,6 +36,7 @@ const root = resolve(__dirname, "..");
 
 const PACKAGES = [
   "packages/core",
+  "packages/preview",
   "packages/sdk",
   "packages/react",
   "packages/cli",
