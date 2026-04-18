@@ -58,10 +58,11 @@ Drop this file into your conversation to quickly resume work on this sub-project
 
 ## Current State
 
-- **Status**: In progress
-- **Last Session**: April 18, 2026 — T01 proto simplification (steps 1-8) completed
-- **Active Task**: T01 — CLI scaffolding portion (steps 9-12) is next
-- **Commit**: `21acbeb` — `refactor(apis,sdk): simplify proto contract to scenario-only definition`
+- **Status**: T02 complete
+- **Last Session**: April 18, 2026 — T02 CLI scaffolding (validate + narrate) completed
+- **Active Task**: None — sub-project complete
+- **Commit**: `21acbeb` — `refactor(apis,sdk): simplify proto contract to scenario-only definition` (T01)
+- **T02**: Uncommitted — `scenar` CLI package scaffolded with validate + narrate commands
 
 ## Session Progress (2026-04-18)
 
@@ -87,6 +88,27 @@ Drop this file into your conversation to quickly resume work on this sub-project
 
 - `@bufbuild/protobuf` is listed in `packages/sdk/package.json` as a dependency but never imported in source — dead dependency, could be removed in a future cleanup pass
 
+### Completed: T02 — CLI Scaffolding (validate + narrate)
+
+- Scaffolded `packages/cli/` with npm name `scenar` (unscoped), binary `scenar`
+- Implemented YAML scenario loader with snake_case → camelCase key conversion
+- Implemented scenario validator covering all `buf.validate` proto constraints
+- Implemented `scenar validate <file>` with human-readable and `--json` output
+- Implemented TTS provider abstraction with Echogarden (optional peer dep, GPL v3) and OpenAI providers
+- Implemented `scenar narrate <file>` with per-step audio generation, progress output, and manifest.json
+- Added `PROTO_ACTION_TYPE` and `ProtoActionTypeValue` exports to `@scenar/sdk`
+- 48 new tests (6 test files), all passing
+- Total: 124 tests across 4 packages (27 core + 28 sdk + 21 react + 48 cli)
+- Wired into workspace: root `tsconfig.json` references, pnpm workspace auto-discovery
+
+### Decisions Made: T02
+
+1. **Package name**: `scenar` (unscoped) — matches Prisma/Turbo/Storybook pattern where the CLI is the product name
+2. **YAML convention**: snake_case field names in YAML (proto-native), camelCase internally
+3. **Echogarden as optional peer dependency**: GPL v3 license conflict with Apache-2.0; user installs explicitly
+4. **Validation in CLI**: Lives in `packages/cli/src/validate/`, not in SDK (different concern layer)
+5. **Provider resolution at command handler level**: `runNarrate` accepts a `TtsProvider` for testability
+
 ## Decisions Taken (All Sessions)
 
 1. **Proto message rename**: `ScenarioSpec` -> `Scenario` (the message name, not the file name)
@@ -98,36 +120,48 @@ Drop this file into your conversation to quickly resume work on this sub-project
 7. **Shells stay in user-land**: Scenar ships generic chrome (BrowserView, TerminalView, CodeEditorView). Product-specific shells (AppShell, ManagementShell) are user-written "presentational twins."
 8. **Embed model**: The embed is a compiled artifact built in the user's environment (like Docker). CDN only hosts the output. User's private code never leaves their machine/CI.
 9. **gRPC plugins removed**: All gRPC/ConnectRPC plugins removed from buf gen configs (no services remain)
+10. **CLI package name**: `scenar` (unscoped npm name), directory `packages/cli/`
+11. **YAML uses snake_case**: Scenario YAML files use proto-native snake_case field names
+12. **Echogarden optional**: GPL v3 dependency made optional peer dep to keep CLI Apache-2.0
 
 ## Task Roadmap
 
 | Task | Title | Status | Depends On |
 |------|-------|--------|------------|
 | T01 | Proto simplification + stub regen + SDK adapter update | DONE | — |
-| T02 | CLI scaffolding (`@scenar/cli` with validate + narrate) | NEXT | T01 |
+| T02 | CLI scaffolding (`scenar` with validate + narrate) | DONE | T01 |
 
-## What's Next: T02 — CLI Scaffolding
+## What's Next
 
-### @scenar/cli
+Sub-project goals achieved. Both T01 (proto simplification) and T02 (CLI scaffolding) are complete. Potential follow-ups:
 
-- `scenar narrate <scenario.yaml>` — reads scenario YAML, extracts `narration_text` per step, generates audio via free offline TTS (Echogarden), writes .mp3 + manifest.json. Optional `--tts openai` for paid higher-quality voice.
-- `scenar validate <scenario.yaml>` — validates a YAML scenario against the proto schema, returns human-readable errors (or JSON with `--json`).
+- **Commit T02 changes** — all changes are uncommitted
+- **End-to-end narrate test** — requires Echogarden install or OpenAI API key
+- **Remove dead `@bufbuild/protobuf` dependency** from `@scenar/sdk`
+- **Add more CLI commands** as the product evolves
 
-### Package Structure to Scaffold
+### CLI Package Structure (Built)
 ```
 packages/cli/
-├── package.json                ← @scenar/cli
+├── package.json                ← scenar (unscoped)
 ├── tsconfig.json
 ├── bin/scenar.ts               ← shebang entry
 ├── src/
 │   ├── index.ts                ← commander setup
 │   ├── commands/
-│   │   ├── narrate.ts          ← free TTS (Echogarden) default, OpenAI upgrade
-│   │   └── validate.ts         ← YAML validation
-│   └── util/
-│       ├── load-yaml.ts        ← YAML scenario file reader
-│       └── tts.ts              ← TTS abstraction (Echogarden default, OpenAI optional)
-└── README.md
+│   │   ├── validate.ts         ← YAML schema validation
+│   │   └── narrate.ts          ← TTS audio generation
+│   ├── validate/
+│   │   └── scenario-validator.ts ← proto constraint rules
+│   ├── tts/
+│   │   ├── types.ts            ← TtsProvider interface + manifest types
+│   │   ├── echogarden.ts       ← optional peer dep (GPL v3)
+│   │   ├── openai.ts           ← requires OPENAI_API_KEY
+│   │   └── resolve-provider.ts ← factory with fallback guidance
+│   ├── util/
+│   │   └── load-yaml.ts        ← YAML reader + snake_case→camelCase
+│   └── __tests__/ (6 files, 48 tests)
+└── examples/demo.yaml
 ```
 
 ### Proto Structure (Current — After T01)
