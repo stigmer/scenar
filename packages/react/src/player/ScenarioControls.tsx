@@ -1,5 +1,5 @@
 import { type RefObject, useCallback, useMemo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { StepTimeline } from "@scenar/core";
 import { SpeedMenu } from "./SpeedMenu.js";
 
@@ -67,74 +67,70 @@ export function ScenarioControls({
   );
 
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          className="mt-1 px-1"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          {/* Progress bar */}
+    <motion.div
+      className="mt-1 px-1"
+      initial={false}
+      animate={{ opacity: visible ? 1 : 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ pointerEvents: visible ? "auto" : "none" }}
+    >
+      {/* Progress bar */}
+      <div
+        className="group relative mb-2 h-1 w-full cursor-pointer rounded-full bg-foreground/15 transition-[height] duration-150 hover:h-1.5"
+        onClick={handleProgressClick}
+        role="progressbar"
+        aria-label="Playback progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
+          ref={progressTrackRef}
+          className="absolute inset-y-0 left-0 rounded-full bg-foreground/60"
+        />
+        <div
+          ref={playheadRef}
+          className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+        />
+        {stepTicks.map((pct, i) => (
           <div
-            className="group relative mb-2 h-1 w-full cursor-pointer rounded-full bg-foreground/10 transition-[height] duration-150 hover:h-1.5"
-            onClick={handleProgressClick}
-            role="progressbar"
-            aria-label="Playback progress"
-            aria-valuemin={0}
-            aria-valuemax={100}
+            key={i}
+            className="absolute top-0 h-full w-0.5 rounded-full bg-background"
+            style={{ left: `${pct}%` }}
+          />
+        ))}
+      </div>
+
+      {/* Transport buttons */}
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onTogglePlay();
+          }}
+          className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
+          aria-label={playing ? "Pause" : "Play"}
+        >
+          {playing ? <PauseIcon /> : <PlayIcon />}
+        </button>
+
+        {hasNarration && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleMute();
+            }}
+            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
+            aria-label={muted ? "Unmute narration" : "Mute narration"}
           >
-            <div
-              ref={progressTrackRef}
-              className="absolute inset-y-0 left-0 rounded-full bg-foreground/50"
-            />
-            <div
-              ref={playheadRef}
-              className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/70 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
-            />
-            {stepTicks.map((pct, i) => (
-              <div
-                key={i}
-                className="absolute top-0 h-full w-0.5 rounded-full bg-background"
-                style={{ left: `${pct}%` }}
-              />
-            ))}
-          </div>
+            {muted ? <VolumeXIcon /> : <VolumeIcon />}
+          </button>
+        )}
 
-          {/* Transport buttons */}
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onTogglePlay();
-              }}
-              className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
-              aria-label={playing ? "Pause" : "Play"}
-            >
-              {playing ? <PauseIcon /> : <PlayIcon />}
-            </button>
-
-            {hasNarration && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleMute();
-                }}
-                className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
-                aria-label={muted ? "Unmute narration" : "Mute narration"}
-              >
-                {muted ? <VolumeXIcon /> : <VolumeIcon />}
-              </button>
-            )}
-
-            {showSpeedControl && (
-              <SpeedMenu playbackRate={playbackRate} onSelectSpeed={onSelectSpeed} />
-            )}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        {showSpeedControl && (
+          <SpeedMenu playbackRate={playbackRate} onSelectSpeed={onSelectSpeed} />
+        )}
+      </div>
+    </motion.div>
   );
 }
 
