@@ -53,7 +53,7 @@ export function DemoViewport({
   const { isVideoExport } = useVideoExport();
   const outerRef = useRef<HTMLDivElement>(null);
   const internalRef = useRef<HTMLDivElement>(null);
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState<number | null>(null);
 
   const innerRef = containerRef ?? internalRef;
 
@@ -84,7 +84,8 @@ export function DemoViewport({
 
   const style: React.CSSProperties & Record<string, string | number> = {
     width: canonicalWidth,
-    zoom,
+    zoom: zoom ?? 1,
+    visibility: zoom == null ? "hidden" : "visible",
   };
   if (shellHeight != null) {
     style["--scenar-shell-height"] = `${shellHeight}px`;
