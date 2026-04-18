@@ -21,7 +21,6 @@ export { InvalidScenarioError } from "./proto/errors.js";
 // Proto structural types (for consumers building custom loaders)
 export type {
   ProtoScenario,
-  ProtoScenarioSpec,
   ProtoStep,
   ProtoStepAction,
   ProtoStepActionConfig,

@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        (unknown)
-// source: ai/scenar/scenario/v1/spec.proto
+// source: ai/scenar/scenario/v1/scenario.proto
 
 package scenariov1
 
@@ -23,14 +23,18 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// ScenarioSpec defines the complete choreography of a scenario — the ordered
-// sequence of visual steps, timed cursor interactions within each step, and
+// Scenario defines the complete choreography of a visual walkthrough — the
+// ordered sequence of steps, timed cursor interactions within each step, and
 // the viewport dimensions for deterministic rendering.
 //
-// This is the core of Scenar. A ScenarioSpec fully describes what the viewer
-// sees: which component renders at each point in time, what the cursor does,
-// what text gets typed, and how the viewport transforms. The same spec drives
-// both interactive web embeds and pixel-perfect MP4 video exports.
+// A Scenario fully describes what the viewer sees: which component renders at
+// each point in time, what the cursor does, what text gets typed, and how the
+// viewport transforms. The same definition drives both interactive web embeds
+// and pixel-perfect MP4 video exports.
+//
+// Scenarios are authored as YAML files, validated by the CLI, and consumed by
+// the SDK and engine at runtime. They live in version control alongside the
+// application code they demonstrate.
 //
 // Example YAML:
 //
@@ -58,7 +62,7 @@ const (
 //	        target: apikey-name-input
 //	        type_config:
 //	          text: "quickstart-key"
-type ScenarioSpec struct {
+type Scenario struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Canonical viewport dimensions for deterministic rendering.
 	// When omitted, the engine uses its built-in defaults.
@@ -72,21 +76,21 @@ type ScenarioSpec struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ScenarioSpec) Reset() {
-	*x = ScenarioSpec{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[0]
+func (x *Scenario) Reset() {
+	*x = Scenario{}
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ScenarioSpec) String() string {
+func (x *Scenario) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ScenarioSpec) ProtoMessage() {}
+func (*Scenario) ProtoMessage() {}
 
-func (x *ScenarioSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[0]
+func (x *Scenario) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -97,19 +101,19 @@ func (x *ScenarioSpec) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ScenarioSpec.ProtoReflect.Descriptor instead.
-func (*ScenarioSpec) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{0}
+// Deprecated: Use Scenario.ProtoReflect.Descriptor instead.
+func (*Scenario) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ScenarioSpec) GetViewport() *ViewportConfig {
+func (x *Scenario) GetViewport() *ViewportConfig {
 	if x != nil {
 		return x.Viewport
 	}
 	return nil
 }
 
-func (x *ScenarioSpec) GetSteps() []*Step {
+func (x *Scenario) GetSteps() []*Step {
 	if x != nil {
 		return x.Steps
 	}
@@ -143,7 +147,7 @@ type ViewportConfig struct {
 
 func (x *ViewportConfig) Reset() {
 	*x = ViewportConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[1]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -155,7 +159,7 @@ func (x *ViewportConfig) String() string {
 func (*ViewportConfig) ProtoMessage() {}
 
 func (x *ViewportConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[1]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -168,7 +172,7 @@ func (x *ViewportConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ViewportConfig.ProtoReflect.Descriptor instead.
 func (*ViewportConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{1}
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *ViewportConfig) GetWidth() int32 {
@@ -249,7 +253,7 @@ type Step struct {
 
 func (x *Step) Reset() {
 	*x = Step{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[2]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -261,7 +265,7 @@ func (x *Step) String() string {
 func (*Step) ProtoMessage() {}
 
 func (x *Step) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[2]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -274,7 +278,7 @@ func (x *Step) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Step.ProtoReflect.Descriptor instead.
 func (*Step) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{2}
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Step) GetView() string {
@@ -377,7 +381,7 @@ type StepAction struct {
 
 func (x *StepAction) Reset() {
 	*x = StepAction{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[3]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -389,7 +393,7 @@ func (x *StepAction) String() string {
 func (*StepAction) ProtoMessage() {}
 
 func (x *StepAction) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[3]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -402,7 +406,7 @@ func (x *StepAction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StepAction.ProtoReflect.Descriptor instead.
 func (*StepAction) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{3}
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *StepAction) GetAtPercent() float32 {
@@ -550,7 +554,7 @@ type ClickConfig struct {
 
 func (x *ClickConfig) Reset() {
 	*x = ClickConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[4]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -562,7 +566,7 @@ func (x *ClickConfig) String() string {
 func (*ClickConfig) ProtoMessage() {}
 
 func (x *ClickConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[4]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -575,7 +579,7 @@ func (x *ClickConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClickConfig.ProtoReflect.Descriptor instead.
 func (*ClickConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{4}
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP(), []int{4}
 }
 
 // TypeConfig holds configuration for type (text input) actions.
@@ -598,7 +602,7 @@ type TypeConfig struct {
 
 func (x *TypeConfig) Reset() {
 	*x = TypeConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[5]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -610,7 +614,7 @@ func (x *TypeConfig) String() string {
 func (*TypeConfig) ProtoMessage() {}
 
 func (x *TypeConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[5]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -623,7 +627,7 @@ func (x *TypeConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TypeConfig.ProtoReflect.Descriptor instead.
 func (*TypeConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{5}
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *TypeConfig) GetText() string {
@@ -658,7 +662,7 @@ type HoverConfig struct {
 
 func (x *HoverConfig) Reset() {
 	*x = HoverConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[6]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -670,7 +674,7 @@ func (x *HoverConfig) String() string {
 func (*HoverConfig) ProtoMessage() {}
 
 func (x *HoverConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[6]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -683,7 +687,7 @@ func (x *HoverConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HoverConfig.ProtoReflect.Descriptor instead.
 func (*HoverConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{6}
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *HoverConfig) GetHoverDurationMs() int32 {
@@ -710,7 +714,7 @@ type DragConfig struct {
 
 func (x *DragConfig) Reset() {
 	*x = DragConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[7]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -722,7 +726,7 @@ func (x *DragConfig) String() string {
 func (*DragConfig) ProtoMessage() {}
 
 func (x *DragConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[7]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -735,7 +739,7 @@ func (x *DragConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DragConfig.ProtoReflect.Descriptor instead.
 func (*DragConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{7}
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DragConfig) GetDragTarget() string {
@@ -759,7 +763,7 @@ type ScrollToConfig struct {
 
 func (x *ScrollToConfig) Reset() {
 	*x = ScrollToConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[8]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -771,7 +775,7 @@ func (x *ScrollToConfig) String() string {
 func (*ScrollToConfig) ProtoMessage() {}
 
 func (x *ScrollToConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[8]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -784,7 +788,7 @@ func (x *ScrollToConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScrollToConfig.ProtoReflect.Descriptor instead.
 func (*ScrollToConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{8}
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP(), []int{8}
 }
 
 // ViewportTransitionConfig holds configuration for viewport zoom/pan
@@ -811,7 +815,7 @@ type ViewportTransitionConfig struct {
 
 func (x *ViewportTransitionConfig) Reset() {
 	*x = ViewportTransitionConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[9]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -823,7 +827,7 @@ func (x *ViewportTransitionConfig) String() string {
 func (*ViewportTransitionConfig) ProtoMessage() {}
 
 func (x *ViewportTransitionConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[9]
+	mi := &file_ai_scenar_scenario_v1_scenario_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -836,7 +840,7 @@ func (x *ViewportTransitionConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ViewportTransitionConfig.ProtoReflect.Descriptor instead.
 func (*ViewportTransitionConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{9}
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ViewportTransitionConfig) GetViewportZoom() float32 {
@@ -853,12 +857,12 @@ func (x *ViewportTransitionConfig) GetViewportReset() bool {
 	return false
 }
 
-var File_ai_scenar_scenario_v1_spec_proto protoreflect.FileDescriptor
+var File_ai_scenar_scenario_v1_scenario_proto protoreflect.FileDescriptor
 
-const file_ai_scenar_scenario_v1_spec_proto_rawDesc = "" +
+const file_ai_scenar_scenario_v1_scenario_proto_rawDesc = "" +
 	"\n" +
-	" ai/scenar/scenario/v1/spec.proto\x12\x15ai.scenar.scenario.v1\x1a ai/scenar/scenario/v1/enum.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/protobuf/struct.proto\"\x8e\x01\n" +
-	"\fScenarioSpec\x12A\n" +
+	"$ai/scenar/scenario/v1/scenario.proto\x12\x15ai.scenar.scenario.v1\x1a ai/scenar/scenario/v1/enum.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/protobuf/struct.proto\"\x8a\x01\n" +
+	"\bScenario\x12A\n" +
 	"\bviewport\x18\x01 \x01(\v2%.ai.scenar.scenario.v1.ViewportConfigR\bviewport\x12;\n" +
 	"\x05steps\x18\x02 \x03(\v2\x1b.ai.scenar.scenario.v1.StepB\b\xbaH\x05\x92\x01\x02\b\x01R\x05steps\"P\n" +
 	"\x0eViewportConfig\x12\x1d\n" +
@@ -903,24 +907,24 @@ const file_ai_scenar_scenario_v1_spec_proto_rawDesc = "" +
 	"\x0eScrollToConfig\"f\n" +
 	"\x18ViewportTransitionConfig\x12#\n" +
 	"\rviewport_zoom\x18\x01 \x01(\x02R\fviewportZoom\x12%\n" +
-	"\x0eviewport_reset\x18\x02 \x01(\bR\rviewportResetB\xe9\x01\n" +
-	"\x19com.ai.scenar.scenario.v1B\tSpecProtoP\x01ZJgithub.com/scenar-ai/scenar/apis/stubs/go/ai/scenar/scenario/v1;scenariov1\xa2\x02\x03ASS\xaa\x02\x15Ai.Scenar.Scenario.V1\xca\x02\x15Ai\\Scenar\\Scenario\\V1\xe2\x02!Ai\\Scenar\\Scenario\\V1\\GPBMetadata\xea\x02\x18Ai::Scenar::Scenario::V1b\x06proto3"
+	"\x0eviewport_reset\x18\x02 \x01(\bR\rviewportResetB\xed\x01\n" +
+	"\x19com.ai.scenar.scenario.v1B\rScenarioProtoP\x01ZJgithub.com/scenar-ai/scenar/apis/stubs/go/ai/scenar/scenario/v1;scenariov1\xa2\x02\x03ASS\xaa\x02\x15Ai.Scenar.Scenario.V1\xca\x02\x15Ai\\Scenar\\Scenario\\V1\xe2\x02!Ai\\Scenar\\Scenario\\V1\\GPBMetadata\xea\x02\x18Ai::Scenar::Scenario::V1b\x06proto3"
 
 var (
-	file_ai_scenar_scenario_v1_spec_proto_rawDescOnce sync.Once
-	file_ai_scenar_scenario_v1_spec_proto_rawDescData []byte
+	file_ai_scenar_scenario_v1_scenario_proto_rawDescOnce sync.Once
+	file_ai_scenar_scenario_v1_scenario_proto_rawDescData []byte
 )
 
-func file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP() []byte {
-	file_ai_scenar_scenario_v1_spec_proto_rawDescOnce.Do(func() {
-		file_ai_scenar_scenario_v1_spec_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_ai_scenar_scenario_v1_spec_proto_rawDesc), len(file_ai_scenar_scenario_v1_spec_proto_rawDesc)))
+func file_ai_scenar_scenario_v1_scenario_proto_rawDescGZIP() []byte {
+	file_ai_scenar_scenario_v1_scenario_proto_rawDescOnce.Do(func() {
+		file_ai_scenar_scenario_v1_scenario_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_ai_scenar_scenario_v1_scenario_proto_rawDesc), len(file_ai_scenar_scenario_v1_scenario_proto_rawDesc)))
 	})
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescData
+	return file_ai_scenar_scenario_v1_scenario_proto_rawDescData
 }
 
-var file_ai_scenar_scenario_v1_spec_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
-var file_ai_scenar_scenario_v1_spec_proto_goTypes = []any{
-	(*ScenarioSpec)(nil),             // 0: ai.scenar.scenario.v1.ScenarioSpec
+var file_ai_scenar_scenario_v1_scenario_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_ai_scenar_scenario_v1_scenario_proto_goTypes = []any{
+	(*Scenario)(nil),                 // 0: ai.scenar.scenario.v1.Scenario
 	(*ViewportConfig)(nil),           // 1: ai.scenar.scenario.v1.ViewportConfig
 	(*Step)(nil),                     // 2: ai.scenar.scenario.v1.Step
 	(*StepAction)(nil),               // 3: ai.scenar.scenario.v1.StepAction
@@ -933,9 +937,9 @@ var file_ai_scenar_scenario_v1_spec_proto_goTypes = []any{
 	(*structpb.Struct)(nil),          // 10: google.protobuf.Struct
 	(ActionType)(0),                  // 11: ai.scenar.scenario.v1.ActionType
 }
-var file_ai_scenar_scenario_v1_spec_proto_depIdxs = []int32{
-	1,  // 0: ai.scenar.scenario.v1.ScenarioSpec.viewport:type_name -> ai.scenar.scenario.v1.ViewportConfig
-	2,  // 1: ai.scenar.scenario.v1.ScenarioSpec.steps:type_name -> ai.scenar.scenario.v1.Step
+var file_ai_scenar_scenario_v1_scenario_proto_depIdxs = []int32{
+	1,  // 0: ai.scenar.scenario.v1.Scenario.viewport:type_name -> ai.scenar.scenario.v1.ViewportConfig
+	2,  // 1: ai.scenar.scenario.v1.Scenario.steps:type_name -> ai.scenar.scenario.v1.Step
 	10, // 2: ai.scenar.scenario.v1.Step.props:type_name -> google.protobuf.Struct
 	3,  // 3: ai.scenar.scenario.v1.Step.interactions:type_name -> ai.scenar.scenario.v1.StepAction
 	11, // 4: ai.scenar.scenario.v1.StepAction.type:type_name -> ai.scenar.scenario.v1.ActionType
@@ -952,13 +956,13 @@ var file_ai_scenar_scenario_v1_spec_proto_depIdxs = []int32{
 	0,  // [0:11] is the sub-list for field type_name
 }
 
-func init() { file_ai_scenar_scenario_v1_spec_proto_init() }
-func file_ai_scenar_scenario_v1_spec_proto_init() {
-	if File_ai_scenar_scenario_v1_spec_proto != nil {
+func init() { file_ai_scenar_scenario_v1_scenario_proto_init() }
+func file_ai_scenar_scenario_v1_scenario_proto_init() {
+	if File_ai_scenar_scenario_v1_scenario_proto != nil {
 		return
 	}
 	file_ai_scenar_scenario_v1_enum_proto_init()
-	file_ai_scenar_scenario_v1_spec_proto_msgTypes[3].OneofWrappers = []any{
+	file_ai_scenar_scenario_v1_scenario_proto_msgTypes[3].OneofWrappers = []any{
 		(*StepAction_ClickConfig)(nil),
 		(*StepAction_TypeConfig)(nil),
 		(*StepAction_HoverConfig)(nil),
@@ -970,17 +974,17 @@ func file_ai_scenar_scenario_v1_spec_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_scenar_scenario_v1_spec_proto_rawDesc), len(file_ai_scenar_scenario_v1_spec_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_scenar_scenario_v1_scenario_proto_rawDesc), len(file_ai_scenar_scenario_v1_scenario_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_ai_scenar_scenario_v1_spec_proto_goTypes,
-		DependencyIndexes: file_ai_scenar_scenario_v1_spec_proto_depIdxs,
-		MessageInfos:      file_ai_scenar_scenario_v1_spec_proto_msgTypes,
+		GoTypes:           file_ai_scenar_scenario_v1_scenario_proto_goTypes,
+		DependencyIndexes: file_ai_scenar_scenario_v1_scenario_proto_depIdxs,
+		MessageInfos:      file_ai_scenar_scenario_v1_scenario_proto_msgTypes,
 	}.Build()
-	File_ai_scenar_scenario_v1_spec_proto = out.File
-	file_ai_scenar_scenario_v1_spec_proto_goTypes = nil
-	file_ai_scenar_scenario_v1_spec_proto_depIdxs = nil
+	File_ai_scenar_scenario_v1_scenario_proto = out.File
+	file_ai_scenar_scenario_v1_scenario_proto_goTypes = nil
+	file_ai_scenar_scenario_v1_scenario_proto_depIdxs = nil
 }

@@ -23,39 +23,35 @@ const views = { settings: SettingsView, form: FormView };
 
 function makeValidScenario(): ProtoScenario {
   return {
-    apiVersion: "scenar.ai/v1",
-    kind: "Scenario",
-    spec: {
-      viewport: { width: 896, height: 540 },
-      steps: [
-        {
-          view: "settings",
-          delayMs: 0,
-          caption: "Start here",
-          narrationText: "Welcome.",
-          props: { org: "acme" },
-          interactions: [],
-        },
-        {
-          view: "form",
-          delayMs: 1500,
-          caption: "Fill the form",
-          narrationText: "",
-          props: { defaultName: "demo" },
-          interactions: [
-            {
-              atPercent: 0.2,
-              type: PROTO_ACTION_TYPE.type,
-              target: "name-input",
-              config: {
-                case: "typeConfig" as const,
-                value: { text: "quickstart", typeDelayMs: 0 },
-              },
+    viewport: { width: 896, height: 540 },
+    steps: [
+      {
+        view: "settings",
+        delayMs: 0,
+        caption: "Start here",
+        narrationText: "Welcome.",
+        props: { org: "acme" },
+        interactions: [],
+      },
+      {
+        view: "form",
+        delayMs: 1500,
+        caption: "Fill the form",
+        narrationText: "",
+        props: { defaultName: "demo" },
+        interactions: [
+          {
+            atPercent: 0.2,
+            type: PROTO_ACTION_TYPE.type,
+            target: "name-input",
+            config: {
+              case: "typeConfig" as const,
+              value: { text: "quickstart", typeDelayMs: 0 },
             },
-          ],
-        },
-      ],
-    },
+          },
+        ],
+      },
+    ],
   };
 }
 
@@ -89,10 +85,10 @@ describe("loadScenarioFromProto", () => {
 
   it("defaults props to empty object when proto props is undefined", () => {
     const proto = makeValidScenario();
-    const step = { ...proto.spec!.steps[0]!, props: undefined };
+    const step = { ...proto.steps[0]!, props: undefined };
     const modified: ProtoScenario = {
       ...proto,
-      spec: { ...proto.spec!, steps: [step] },
+      steps: [step],
     };
 
     const scenario = loadScenarioFromProto(modified, { views });
@@ -103,62 +99,15 @@ describe("loadScenarioFromProto", () => {
     const proto = makeValidScenario();
     const modified: ProtoScenario = {
       ...proto,
-      spec: { ...proto.spec!, viewport: undefined },
+      viewport: undefined,
     };
 
     const scenario = loadScenarioFromProto(modified, { views });
     expect(scenario.viewport).toBeUndefined();
   });
 
-  it("throws for wrong apiVersion", () => {
-    const proto = { ...makeValidScenario(), apiVersion: "wrong/v1" };
-
-    expect(() => loadScenarioFromProto(proto, { views })).toThrow(
-      InvalidScenarioError,
-    );
-
-    try {
-      loadScenarioFromProto(proto, { views });
-    } catch (e) {
-      const err = e as InvalidScenarioError;
-      expect(err.path).toBe("apiVersion");
-      expect(err.reason).toContain("scenar.ai/v1");
-    }
-  });
-
-  it("throws for wrong kind", () => {
-    const proto = { ...makeValidScenario(), kind: "Workflow" };
-
-    expect(() => loadScenarioFromProto(proto, { views })).toThrow(
-      InvalidScenarioError,
-    );
-
-    try {
-      loadScenarioFromProto(proto, { views });
-    } catch (e) {
-      const err = e as InvalidScenarioError;
-      expect(err.path).toBe("kind");
-    }
-  });
-
-  it("throws when spec is missing", () => {
-    const proto: ProtoScenario = {
-      apiVersion: "scenar.ai/v1",
-      kind: "Scenario",
-      spec: undefined,
-    };
-
-    expect(() => loadScenarioFromProto(proto, { views })).toThrow(
-      /spec is required/,
-    );
-  });
-
   it("throws when steps array is empty", () => {
-    const proto: ProtoScenario = {
-      apiVersion: "scenar.ai/v1",
-      kind: "Scenario",
-      spec: { steps: [] },
-    };
+    const proto: ProtoScenario = { steps: [] };
 
     expect(() => loadScenarioFromProto(proto, { views })).toThrow(
       /steps array must not be empty/,
@@ -166,21 +115,16 @@ describe("loadScenarioFromProto", () => {
   });
 
   it("throws when a step references an unregistered view", () => {
-    const proto = makeValidScenario();
     const modified: ProtoScenario = {
-      ...proto,
-      spec: {
-        ...proto.spec!,
-        steps: [
-          {
-            view: "unknown-view",
-            delayMs: 0,
-            caption: "",
-            narrationText: "",
-            interactions: [],
-          },
-        ],
-      },
+      steps: [
+        {
+          view: "unknown-view",
+          delayMs: 0,
+          caption: "",
+          narrationText: "",
+          interactions: [],
+        },
+      ],
     };
 
     try {
@@ -188,7 +132,7 @@ describe("loadScenarioFromProto", () => {
       expect.fail("should have thrown");
     } catch (e) {
       const err = e as InvalidScenarioError;
-      expect(err.path).toBe("spec.steps[0].view");
+      expect(err.path).toBe("steps[0].view");
       expect(err.reason).toContain("unknown-view");
       expect(err.reason).toContain("settings");
       expect(err.reason).toContain("form");
@@ -199,22 +143,19 @@ describe("loadScenarioFromProto", () => {
     const proto = makeValidScenario();
     const modified: ProtoScenario = {
       ...proto,
-      spec: {
-        ...proto.spec!,
-        steps: [
-          {
-            ...proto.spec!.steps[0]!,
-            interactions: [
-              {
-                atPercent: 0.5,
-                type: PROTO_ACTION_TYPE.unspecified,
-                target: "x",
-                config: { case: undefined },
-              },
-            ],
-          },
-        ],
-      },
+      steps: [
+        {
+          ...proto.steps[0]!,
+          interactions: [
+            {
+              atPercent: 0.5,
+              type: PROTO_ACTION_TYPE.unspecified,
+              target: "x",
+              config: { case: undefined },
+            },
+          ],
+        },
+      ],
     };
 
     try {
@@ -222,26 +163,21 @@ describe("loadScenarioFromProto", () => {
       expect.fail("should have thrown");
     } catch (e) {
       const err = e as InvalidScenarioError;
-      expect(err.path).toBe("spec.steps[0].interactions[0].type");
+      expect(err.path).toBe("steps[0].interactions[0].type");
     }
   });
 
   it("omits empty narration and caption strings", () => {
-    const proto = makeValidScenario();
     const modified: ProtoScenario = {
-      ...proto,
-      spec: {
-        ...proto.spec!,
-        steps: [
-          {
-            view: "settings",
-            delayMs: 0,
-            caption: "",
-            narrationText: "",
-            interactions: [],
-          },
-        ],
-      },
+      steps: [
+        {
+          view: "settings",
+          delayMs: 0,
+          caption: "",
+          narrationText: "",
+          interactions: [],
+        },
+      ],
     };
 
     const scenario = loadScenarioFromProto(modified, { views });

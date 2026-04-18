@@ -20,13 +20,12 @@ export interface LoadScenarioOptions<Views extends ViewRegistry> {
  * Convert a proto `Scenario` message into an `AuthoredScenario`
  * ready for `<ScenarioPlayer>`.
  *
- * This is the YAML / hosted-service ingestion path: a scenario
- * parsed from protobuf (or proto-JSON) enters here and comes out
- * as the same shape that `createScenario()` produces.
+ * This is the YAML ingestion path: a scenario parsed from protobuf
+ * (or proto-JSON) enters here and comes out as the same shape that
+ * `createScenario()` produces.
  *
- * Validates the resource envelope (`api_version`, `kind`), ensures
- * every step's `view` exists in the views registry, and maps proto
- * `StepAction` messages to engine `StepAction` values.
+ * Ensures every step's `view` exists in the views registry and maps
+ * proto `StepAction` messages to engine `StepAction` values.
  *
  * @throws {InvalidScenarioError} with a path and reason on any
  *   structural or semantic validation failure.
@@ -35,35 +34,16 @@ export function loadScenarioFromProto<Views extends ViewRegistry>(
   scenario: ProtoScenario,
   options: LoadScenarioOptions<Views>,
 ): AuthoredScenario<Views> {
-  if (scenario.apiVersion !== "scenar.ai/v1") {
-    throw new InvalidScenarioError(
-      "apiVersion",
-      `expected "scenar.ai/v1", got "${scenario.apiVersion}".`,
-    );
-  }
-
-  if (scenario.kind !== "Scenario") {
-    throw new InvalidScenarioError(
-      "kind",
-      `expected "Scenario", got "${scenario.kind}".`,
-    );
-  }
-
-  const spec = scenario.spec;
-  if (!spec) {
-    throw new InvalidScenarioError("spec", "spec is required.");
-  }
-
-  if (spec.steps.length === 0) {
-    throw new InvalidScenarioError("spec.steps", "steps array must not be empty.");
+  if (scenario.steps.length === 0) {
+    throw new InvalidScenarioError("steps", "steps array must not be empty.");
   }
 
   const viewNames = new Set(Object.keys(options.views));
   const steps: ScenarioStep<AuthoredStepData<Views>>[] = [];
 
-  for (let i = 0; i < spec.steps.length; i++) {
-    const protoStep = spec.steps[i]!;
-    const stepPath = `spec.steps[${i}]`;
+  for (let i = 0; i < scenario.steps.length; i++) {
+    const protoStep = scenario.steps[i]!;
+    const stepPath = `steps[${i}]`;
 
     if (!protoStep.view) {
       throw new InvalidScenarioError(`${stepPath}.view`, "view is required.");
@@ -94,7 +74,7 @@ export function loadScenarioFromProto<Views extends ViewRegistry>(
   }
 
   return {
-    viewport: spec.viewport ? { width: spec.viewport.width, height: spec.viewport.height } : undefined,
+    viewport: scenario.viewport ? { width: scenario.viewport.width, height: scenario.viewport.height } : undefined,
     views: options.views,
     steps,
   };

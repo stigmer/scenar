@@ -86,19 +86,8 @@ export interface ProtoStep {
   readonly interactions: readonly ProtoStepAction[];
 }
 
-/** Structural shape of a proto `ScenarioSpec` message. */
-export interface ProtoScenarioSpec {
+/** Structural shape of the proto `Scenario` message. */
+export interface ProtoScenario {
   readonly viewport?: ProtoViewportConfig;
   readonly steps: readonly ProtoStep[];
-}
-
-/**
- * Structural shape of a proto `Scenario` resource message.
- * Only `spec` is consumed by `loadScenarioFromProto` — metadata
- * and status are hosted-service concerns, outside SDK scope.
- */
-export interface ProtoScenario {
-  readonly apiVersion: string;
-  readonly kind: string;
-  readonly spec?: ProtoScenarioSpec;
 }
