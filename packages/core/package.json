@@ -24,7 +24,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/scenar-ai/scenar.git",
+    "url": "https://github.com/stigmer/scenar.git",
     "directory": "packages/core"
   },
   "publishConfig": {
