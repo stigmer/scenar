@@ -40,7 +40,7 @@ export function ScenarioPoster({ onPlay, PlayIcon }: ScenarioPosterProps) {
       role="button"
       aria-label="Play demo"
     >
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-lg transition-transform hover:scale-110">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 ring-1 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.25)] transition-transform hover:scale-110">
         <Icon size={28} className="ml-1 text-neutral-900" />
       </div>
     </motion.div>
@@ -73,7 +73,7 @@ export function ScenarioPauseOverlay({ onResume, PlayIcon }: ScenarioPauseOverla
       role="button"
       aria-label="Resume demo"
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/80 shadow-lg transition-transform hover:scale-110">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/80 ring-1 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.25)] transition-transform hover:scale-110">
         <Icon size={24} className="ml-1 text-neutral-900" />
       </div>
     </motion.div>
