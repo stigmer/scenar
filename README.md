@@ -62,7 +62,7 @@ You supply the React components (`IntroSlide`, `DemoView`). Scenar handles playb
 | [`@scenar/core`](packages/core) | Types, timeline math, step actions -- no framework dependency |
 | [`@scenar/sdk`](packages/sdk) | `createScenario()` builder + proto loader |
 | [`@scenar/react`](packages/react) | `ScenarioPlayer`, cursor, viewport, narration, view shells |
-| [`scenar`](packages/cli) (CLI) | Validate YAML, generate narration audio |
+| [`@scenar/cli`](packages/cli) | Validate YAML, generate narration audio |
 
 ## Scenario Shape
 
@@ -110,7 +110,7 @@ scenar narrate demo.yaml --out ./narration
 Install the CLI from npm:
 
 ```bash
-npm install -g scenar
+npm install -g @scenar/cli
 ```
 
 ## Contributing

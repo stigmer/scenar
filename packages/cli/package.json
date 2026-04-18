@@ -1,5 +1,5 @@
 {
-  "name": "scenar",
+  "name": "@scenar/cli",
   "version": "0.0.1",
   "description": "Scenar CLI — validate scenario YAML and generate narration audio.",
   "type": "module",
@@ -41,6 +41,9 @@
     "type": "git",
     "url": "https://github.com/scenar-ai/scenar.git",
     "directory": "packages/cli"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": ["scenar", "scenario", "cli", "narration", "tts", "validate", "yaml"]
 }
