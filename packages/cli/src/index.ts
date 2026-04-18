@@ -7,7 +7,7 @@ export function createProgram(): Command {
 
   program
     .name("scenar")
-    .description("Scenar CLI — validate scenario YAML and generate narration audio.")
+    .description("Scenar CLI — validate scenarios and generate narration audio.")
     .version("0.0.1");
 
   registerValidateCommand(program);

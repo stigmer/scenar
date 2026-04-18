@@ -29,7 +29,11 @@ export interface TtsResult {
 }
 
 /**
- * Shape written to `manifest.json` alongside the narration audio files.
+ * @deprecated Legacy CLI manifest shape. The narrate command now writes
+ * manifests matching `@scenar/core`'s `NarrationManifest` type directly
+ * (positional array of `{ src, durationMs } | null`).
+ *
+ * Kept temporarily for test compatibility during the transition.
  */
 export interface NarrationManifest {
   generatedAt: string;
