@@ -56,12 +56,12 @@ export function TerminalView({
     >
       {/* Title bar */}
       <div className="flex items-center bg-[#323232] px-3 py-1.5">
-        <div className="flex gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+        <div className="flex gap-2">
+          <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+          <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+          <span className="h-3 w-3 rounded-full bg-[#28c840]" />
         </div>
-        <span className="flex-1 text-center text-[10px] text-[#a0a0a0]">
+        <span className="flex-1 text-center text-xs text-[#a0a0a0]">
           {title}
         </span>
         <div className="w-[42px]" />
@@ -71,18 +71,18 @@ export function TerminalView({
       <div className="flex items-center border-b border-[#1a1a1a] bg-[#2d2d2d]">
         {/* Active tab */}
         <div className="flex items-center gap-1.5 border-r border-[#1a1a1a] bg-[#1e1e1e] px-3 py-1">
-          <ChevronRight className="h-2 w-2 text-[#50fa7b]" />
-          <span className="text-[9px] text-[#cccccc]">zsh</span>
-          <X className="h-2 w-2 text-[#666666]" />
+          <ChevronRight className="h-3 w-3 text-[#50fa7b]" />
+          <span className="text-[11px] text-[#cccccc]">zsh</span>
+          <X className="h-3 w-3 text-[#666666]" />
         </div>
         {/* New tab button */}
         <div className="px-2">
-          <Plus className="h-2.5 w-2.5 text-[#666666]" />
+          <Plus className="h-3 w-3 text-[#666666]" />
         </div>
         <div className="flex-1" />
         {/* Shell indicator */}
         <div className="flex items-center gap-1 pr-3">
-          <ChevronDown className="h-2.5 w-2.5 text-[#666666]" />
+          <ChevronDown className="h-3 w-3 text-[#666666]" />
         </div>
       </div>
 

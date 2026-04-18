@@ -5,9 +5,12 @@ import { motion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
+  EllipsisVertical,
   Globe,
   Lock,
+  Plus,
   RotateCcw,
+  Star,
   X,
 } from "lucide-react";
 import { BROWSER_SHELL_HEIGHT_DEFAULT } from "./tokens.js";
@@ -59,42 +62,54 @@ export function BrowserView({
       {/* Tab strip */}
       <div className="flex items-center bg-[#202124] px-2 pt-1.5">
         {/* Traffic lights */}
-        <div className="mr-3 flex gap-1.5 pl-1">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+        <div className="mr-3 flex gap-2 pl-1.5">
+          <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+          <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+          <span className="h-3 w-3 rounded-full bg-[#28c840]" />
         </div>
 
-        {/* Active tab */}
+        {/* Active tab — bg matches toolbar so the tab visually flows into it */}
         <div className="flex items-center gap-1.5 rounded-t-lg bg-[#35363a] px-3 py-1.5">
-          <Globe className="h-2.5 w-2.5 shrink-0 text-[#9aa0a6]" />
-          <span className="max-w-[140px] truncate text-[10px] text-[#e8eaed]">
+          <Globe className="h-3.5 w-3.5 shrink-0 text-[#9aa0a6]" />
+          <span className="max-w-[180px] truncate text-xs text-[#e8eaed]">
             {tabTitle(url)}
           </span>
-          <X className="h-2.5 w-2.5 shrink-0 text-[#9aa0a6]" />
+          <X className="h-3 w-3 shrink-0 text-[#9aa0a6]" />
         </div>
 
+        {/* New tab button */}
+        <Plus className="ml-1 h-3.5 w-3.5 shrink-0 text-[#9aa0a6]" />
+
         <div className="flex-1" />
+
+        {/* Profile avatar */}
+        <div className="mr-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#5f6368]">
+          <span className="text-[8px] font-medium leading-none text-[#e8eaed]">
+            J
+          </span>
+        </div>
       </div>
 
       {/* Navigation toolbar */}
-      <div className="flex items-center gap-1.5 bg-[#35363a] px-2 py-1.5">
+      <div className="flex items-center gap-2 bg-[#35363a] px-2 py-1">
         {/* Nav buttons */}
-        <div className="flex items-center gap-0.5">
-          <ChevronLeft className="h-3.5 w-3.5 text-[#9aa0a6]" />
-          <ChevronRight className="h-3.5 w-3.5 text-[#9aa0a6]" />
-          <RotateCcw className="ml-0.5 h-3 w-3 text-[#9aa0a6]" />
+        <div className="flex items-center gap-1">
+          <ChevronLeft className="h-4 w-4 text-[#9aa0a6]" />
+          <ChevronRight className="h-4 w-4 text-[#9aa0a6]" />
+          <RotateCcw className="ml-0.5 h-3.5 w-3.5 text-[#9aa0a6]" />
         </div>
 
         {/* Address bar */}
-        <div className="flex flex-1 items-center gap-1.5 rounded-full bg-[#202124] px-3 py-1">
-          <Lock className="h-2.5 w-2.5 shrink-0 text-[#9aa0a6]" />
-          <span className="truncate text-[10px] text-[#bdc1c6]">{url}</span>
+        <div className="flex flex-1 items-center gap-1.5 rounded-full bg-[#202124] px-3 py-1.5">
+          <Lock className="h-3 w-3 shrink-0 text-[#9aa0a6]" />
+          <span className="truncate text-xs text-[#bdc1c6]">{url}</span>
         </div>
 
-        {/* Extension placeholder */}
-        <div className="flex gap-1">
-          <div className="h-3.5 w-3.5 rounded-full bg-[#5f6368]" />
+        {/* Toolbar right — star + extension + kebab menu */}
+        <div className="flex items-center gap-1">
+          <Star className="h-3.5 w-3.5 text-[#9aa0a6]" />
+          <div className="h-4 w-4 rounded-full bg-[#5f6368]" />
+          <EllipsisVertical className="h-4 w-4 text-[#9aa0a6]" />
         </div>
       </div>
 

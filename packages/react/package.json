@@ -11,17 +11,18 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./theme.css": "./dist/theme.css"
+    "./theme.css": "./dist/theme.css",
+    "./styles.css": "./dist/styles.css"
   },
   "files": ["dist", "src"],
   "scripts": {
-    "build": "tsc --build && cp src/theme/tokens.css dist/theme.css",
+    "build": "tsc --build && cp src/theme/tokens.css dist/theme.css && tailwindcss -i src/styles/index.css -o dist/styles.css --minify",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests --config ../../vitest.config.ts",
     "lint": "echo 'lint placeholder'",
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
-  "sideEffects": ["./dist/theme.css"],
+  "sideEffects": ["./dist/theme.css", "./dist/styles.css"],
   "license": "Apache-2.0",
   "dependencies": {
     "@scenar/core": "workspace:*"
@@ -36,6 +37,10 @@
     "lucide-react": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "tailwindcss": "^4.0.0"
   },
   "repository": {
     "type": "git",

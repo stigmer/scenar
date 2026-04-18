@@ -15,6 +15,58 @@ pnpm add @scenar/react @scenar/core
 - `framer-motion` >= 11
 - `lucide-react` >= 0.400 (optional — only needed if you use the built-in control icons)
 
+## Styling
+
+The package ships two CSS files. Choose the one that matches your setup.
+
+### Option A: Self-contained (no Tailwind required)
+
+Import `styles.css` — a pre-built bundle containing every utility class used by Scenar components plus the `--scenar-*` design tokens. Wrap your scenario container with the `scenar` class (add `dark` for dark mode):
+
+```tsx
+import "@scenar/react/styles.css";
+import { ScenarioPlayer, SCENAR_CLASS } from "@scenar/react";
+
+function Demo() {
+  return (
+    <div className={`${SCENAR_CLASS} dark`}>
+      <ScenarioPlayer steps={steps}>{(data) => <View data={data} />}</ScenarioPlayer>
+    </div>
+  );
+}
+```
+
+### Option B: Tailwind host (bring your own theme)
+
+Import `theme.css` for the `--scenar-*` token definitions only. Add a `@source` directive so your Tailwind build scans the package for utility classes:
+
+```css
+/* globals.css */
+@import "tailwindcss";
+@import "@scenar/react/theme.css";
+
+@source "../node_modules/@scenar/react/**/*.js";
+```
+
+Your host's Tailwind theme tokens (`--color-foreground`, `--color-border`, etc.) will drive player control appearance, keeping it consistent with your site.
+
+### Design tokens
+
+All tokens are scoped under the `.scenar` class via `@layer scenar`:
+
+| Token | Purpose |
+|-------|---------|
+| `--scenar-surface` | Shell content area background |
+| `--scenar-border` | Shell border color |
+| `--scenar-foreground` | Primary text / icon color |
+| `--scenar-muted-foreground` | Secondary text color |
+| `--scenar-card` | Popover / dropdown background |
+| `--scenar-accent` | Hover state background |
+| `--scenar-primary` | Active / selected indicator |
+| `--scenar-ring` | Focus ring color |
+
+Override any token in your own CSS to customize the palette.
+
 ## Components
 
 ### `<ScenarioPlayer>`

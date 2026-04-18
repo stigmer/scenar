@@ -2,13 +2,27 @@
 
 @layer scenar {
   .scenar {
+    /* Shell surfaces */
     --scenar-surface: #ffffff;
     --scenar-border: #e5e7eb;
     --scenar-foreground: #0f172a;
+
+    /* Player controls & overlays */
+    --scenar-muted-foreground: #64748b;
+    --scenar-card: #ffffff;
+    --scenar-accent: #f1f5f9;
+    --scenar-primary: #0f172a;
+    --scenar-ring: #0f172a;
   }
   .scenar.dark {
     --scenar-surface: #0f172a;
     --scenar-border: #1e293b;
     --scenar-foreground: #f8fafc;
+
+    --scenar-muted-foreground: #94a3b8;
+    --scenar-card: #1e293b;
+    --scenar-accent: #1e293b;
+    --scenar-primary: #f8fafc;
+    --scenar-ring: #f8fafc;
   }
 }

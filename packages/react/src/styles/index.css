@@ -1,0 +1,42 @@
+/*
+ * @scenar/react — pre-built stylesheet
+ *
+ * Compiled during `pnpm build` via Tailwind CSS v4.
+ * Ships as `@scenar/react/styles.css` and provides:
+ *
+ *   1. Every Tailwind utility class used by Scenar components
+ *   2. The --scenar-* design tokens (light + dark)
+ *   3. A bridge from --scenar-* to Tailwind's --color-* namespace
+ *      so semantic classes (text-foreground, bg-card, etc.) resolve
+ *      inside a `.scenar` scoped container
+ *
+ * Usage (non-Tailwind host):
+ *
+ *   import "@scenar/react/styles.css";
+ *
+ *   <div className="scenar dark">
+ *     <ScenarioPlayer …>{…}</ScenarioPlayer>
+ *   </div>
+ *
+ * Tailwind hosts should import `@scenar/react/theme.css` instead
+ * and let their own Tailwind build generate utilities + theme tokens.
+ */
+
+@import "tailwindcss";
+@import "../theme/tokens.css";
+
+@source "../**/*.tsx";
+
+@theme inline {
+  --color-foreground: var(--scenar-foreground);
+  --color-muted-foreground: var(--scenar-muted-foreground);
+  --color-background: var(--scenar-surface);
+  --color-border: var(--scenar-border);
+  --color-card: var(--scenar-card);
+  --color-card-foreground: var(--scenar-foreground);
+  --color-accent: var(--scenar-accent);
+  --color-accent-foreground: var(--scenar-foreground);
+  --color-primary: var(--scenar-primary);
+  --color-primary-foreground: var(--scenar-surface);
+  --color-ring: var(--scenar-ring);
+}

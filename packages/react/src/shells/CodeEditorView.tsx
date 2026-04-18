@@ -39,10 +39,10 @@ interface CodeEditorViewProps {
 
 function fileIcon(name: string) {
   if (name.endsWith(".json"))
-    return <FileJson className="h-3 w-3 shrink-0 text-[#e6995b]" />;
+    return <FileJson className="h-3.5 w-3.5 shrink-0 text-[#e6995b]" />;
   if (name.endsWith(".ts") || name.endsWith(".tsx"))
-    return <FileCode2 className="h-3 w-3 shrink-0 text-[#519aba]" />;
-  return <FileCode2 className="h-3 w-3 shrink-0 text-[#858585]" />;
+    return <FileCode2 className="h-3.5 w-3.5 shrink-0 text-[#519aba]" />;
+  return <FileCode2 className="h-3.5 w-3.5 shrink-0 text-[#858585]" />;
 }
 
 /**
@@ -77,13 +77,13 @@ export function CodeEditorView({
     >
       {/* Title bar */}
       {fileTree && (
-        <div className="flex items-center border-b border-[#1e1e1e] bg-[#323233] px-3 py-1">
-          <div className="flex gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#ff5f57]" />
-            <span className="h-2 w-2 rounded-full bg-[#febc2e]" />
-            <span className="h-2 w-2 rounded-full bg-[#28c840]" />
+        <div className="flex items-center border-b border-[#1e1e1e] bg-[#323233] px-3 py-1.5">
+          <div className="flex gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+            <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+            <span className="h-3 w-3 rounded-full bg-[#28c840]" />
           </div>
-          <span className="flex-1 text-center text-[9px] text-[#9d9d9d]">
+          <span className="flex-1 text-center text-xs text-[#9d9d9d]">
             {filename} — {workspaceName}
           </span>
           <div className="w-[42px]" />
@@ -93,24 +93,24 @@ export function CodeEditorView({
       <div className="flex flex-1 overflow-hidden">
         {/* Activity bar */}
         {fileTree && (
-          <div className="flex w-7 shrink-0 flex-col items-center gap-2.5 border-r border-[#2d2d2d] bg-[#333333] py-2">
-            <Copy className="h-3.5 w-3.5 text-[#ffffff]" />
-            <Search className="h-3.5 w-3.5 text-[#858585]" />
-            <GitBranch className="h-3.5 w-3.5 text-[#858585]" />
-            <LayoutGrid className="h-3.5 w-3.5 text-[#858585]" />
+          <div className="flex w-9 shrink-0 flex-col items-center gap-3 border-r border-[#2d2d2d] bg-[#333333] py-2.5">
+            <Copy className="h-4 w-4 text-[#ffffff]" />
+            <Search className="h-4 w-4 text-[#858585]" />
+            <GitBranch className="h-4 w-4 text-[#858585]" />
+            <LayoutGrid className="h-4 w-4 text-[#858585]" />
             <div className="flex-1" />
-            <Settings className="h-3.5 w-3.5 text-[#858585]" />
+            <Settings className="h-4 w-4 text-[#858585]" />
           </div>
         )}
 
         {/* File explorer panel */}
         {fileTree && (
-          <div className="flex w-[150px] shrink-0 flex-col border-r border-[#2d2d2d] bg-[#252526]">
-            <div className="px-3 py-1.5 text-[9px] font-semibold uppercase tracking-wider text-[#cccccc]">
+          <div className="flex w-[160px] shrink-0 flex-col border-r border-[#2d2d2d] bg-[#252526]">
+            <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#cccccc]">
               Explorer
             </div>
-            <div className="px-1.5 pb-1 text-[9px] font-semibold text-[#cccccc]">
-              <ChevronDown className="mr-0.5 inline h-2.5 w-2.5" />
+            <div className="px-1.5 pb-1 text-[11px] font-semibold text-[#cccccc]">
+              <ChevronDown className="mr-0.5 inline h-3 w-3" />
               {workspaceName}
             </div>
             <div className="flex-1 overflow-y-auto">
@@ -120,7 +120,7 @@ export function CodeEditorView({
                 return (
                   <div
                     key={i}
-                    className={`relative flex items-center gap-1 py-[2px] pr-2 text-[10px] leading-[18px] ${
+                    className={`relative flex items-center gap-1 py-[2px] pr-2 text-[11px] leading-[18px] ${
                       isActive
                         ? "bg-[#04395e] text-[#ffffff]"
                         : "text-[#cccccc]"
@@ -139,8 +139,8 @@ export function CodeEditorView({
 
                     {entry.type === "folder" ? (
                       <>
-                        <ChevronDown className="h-3 w-3 shrink-0 text-[#cccccc]" />
-                        <FolderOpen className="h-3 w-3 shrink-0 text-[#dcb67a]" />
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[#cccccc]" />
+                        <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#dcb67a]" />
                       </>
                     ) : (
                       <>
@@ -162,7 +162,7 @@ export function CodeEditorView({
           <div className="flex items-end border-b border-[#1e1e1e] bg-[#252526]">
             <div className="flex items-center gap-1.5 border-b-2 border-[#007acc] bg-[#1e1e1e] px-3 py-1.5">
               {fileIcon(filename)}
-              <span className="text-[10px] text-[#cccccc]">{filename}</span>
+              <span className="text-xs text-[#cccccc]">{filename}</span>
             </div>
             <div className="flex-1" />
           </div>
@@ -210,6 +210,21 @@ export function CodeEditorView({
               ))}
             </div>
           </motion.div>
+        </div>
+      </div>
+
+      {/* Status bar */}
+      <div className="flex items-center justify-between border-t border-[#1e1e1e] bg-[#007acc] px-2 py-0.5">
+        <div className="flex items-center gap-3 text-[10px] text-white">
+          <span className="flex items-center gap-1">
+            <GitBranch className="h-3 w-3" />
+            main
+          </span>
+        </div>
+        <div className="flex items-center gap-3 text-[10px] text-white">
+          <span>Ln 1, Col 1</span>
+          <span>UTF-8</span>
+          <span>TypeScript</span>
         </div>
       </div>
     </div>
