@@ -8,8 +8,6 @@ interface ScenarioControlsProps {
   playing: boolean;
   muted: boolean;
   playbackRate: number;
-  stepIndex: number;
-  lastIndex: number;
   stepTimeline: StepTimeline;
   showSpeedControl: boolean;
   hasNarration: boolean;
@@ -18,7 +16,7 @@ interface ScenarioControlsProps {
   onTogglePlay: () => void;
   onToggleMute: () => void;
   onSelectSpeed: (speed: number) => void;
-  onSeek: (index: number) => void;
+  onSeekToTime: (timeMs: number) => void;
 }
 
 /**
@@ -38,7 +36,7 @@ export function ScenarioControls({
   onTogglePlay,
   onToggleMute,
   onSelectSpeed,
-  onSeek,
+  onSeekToTime,
 }: ScenarioControlsProps) {
   const stepTicks = useMemo(
     () =>
@@ -53,17 +51,9 @@ export function ScenarioControls({
       e.stopPropagation();
       const rect = e.currentTarget.getBoundingClientRect();
       const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const clickTimeMs = fraction * stepTimeline.totalDurationMs;
-      let target = 0;
-      for (let i = stepTimeline.stepStartTimesMs.length - 1; i >= 0; i--) {
-        if (clickTimeMs >= (stepTimeline.stepStartTimesMs[i] ?? 0)) {
-          target = i;
-          break;
-        }
-      }
-      onSeek(target);
+      onSeekToTime(fraction * stepTimeline.totalDurationMs);
     },
-    [stepTimeline, onSeek],
+    [stepTimeline, onSeekToTime],
   );
 
   return (

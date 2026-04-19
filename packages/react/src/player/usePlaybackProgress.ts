@@ -7,6 +7,12 @@ import type { StepTimeline } from "@scenar/core";
  * Produces a 0–1 progress value and applies it directly to two DOM
  * refs (progress track + playhead) at 60 fps, bypassing React state
  * to avoid per-frame re-renders.
+ *
+ * `seekOffsetRef` and `seekGeneration` support continuous seek: when
+ * the user clicks the progress bar, `seekToTime` populates the ref
+ * with the intra-step elapsed time and bumps the generation. This
+ * effect reads the offset instead of zeroing, so the bar lands at
+ * the exact click position.
  */
 export function usePlaybackProgress(
   playing: boolean,
@@ -17,6 +23,8 @@ export function usePlaybackProgress(
   stepTimeline: StepTimeline,
   progressTrackRef: RefObject<HTMLDivElement | null>,
   playheadRef: RefObject<HTMLDivElement | null>,
+  seekOffsetRef: RefObject<number>,
+  seekGeneration: number,
 ): void {
   const rafRef = useRef(0);
   const stepElapsedRef = useRef(0);
@@ -70,9 +78,10 @@ export function usePlaybackProgress(
   }, [playing]);
 
   useEffect(() => {
-    stepElapsedRef.current = 0;
+    stepElapsedRef.current = seekOffsetRef.current;
+    seekOffsetRef.current = 0;
     lastTickRef.current = performance.now();
-  }, [stepIndex]);
+  }, [stepIndex, seekGeneration, seekOffsetRef]);
 
   useEffect(() => {
     if (playbackState === "idle") {

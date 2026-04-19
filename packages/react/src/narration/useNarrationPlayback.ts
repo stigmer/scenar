@@ -31,6 +31,11 @@ interface UseNarrationPlaybackResult {
   toggleMute: () => void;
   /** Ref to attach to a hidden <audio> element rendered by ScenarioPlayer. */
   audioRef: RefObject<HTMLAudioElement | null>;
+  /**
+   * Imperatively seek narration audio to a position within a step's clip.
+   * Used by `seekToTime` to keep narration in sync with continuous bar seek.
+   */
+  seekToStep: (targetStepIndex: number, offsetMs: number) => void;
 }
 
 function safePlay(audio: HTMLAudioElement): void {
@@ -46,6 +51,24 @@ function playClip(audio: HTMLAudioElement, src: string, rate = 1): void {
   audio.load();
   audio.playbackRate = rate;
   safePlay(audio);
+}
+
+function seekClip(audio: HTMLAudioElement, src: string, offsetSec: number, rate = 1): void {
+  audio.src = src;
+  audio.defaultPlaybackRate = rate;
+  audio.load();
+  audio.playbackRate = rate;
+
+  const applySeek = () => {
+    audio.currentTime = offsetSec;
+    safePlay(audio);
+  };
+
+  if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
+    applySeek();
+  } else {
+    audio.addEventListener("loadedmetadata", applySeek, { once: true });
+  }
 }
 
 function stopAudio(audio: HTMLAudioElement): void {
@@ -96,6 +119,31 @@ export function useNarrationPlayback({
   const entry = manifest?.steps[stepIndex] ?? null;
   const entrySrc = entry?.src ?? null;
 
+  const seekActiveRef = useRef(false);
+
+  const seekToStep = useCallback(
+    (targetStepIndex: number, offsetMs: number) => {
+      seekActiveRef.current = true;
+      setTimeout(() => { seekActiveRef.current = false; }, 0);
+
+      const audio = audioRef.current;
+      if (!audio || !manifest || mutedRef.current) return;
+
+      const clipEntry = manifest.steps[targetStepIndex];
+      const src = clipEntry?.src;
+      if (!src) return;
+
+      const clipDurationMs = clipEntry?.durationMs ?? 0;
+      if (offsetMs >= clipDurationMs) {
+        stopAudio(audio);
+        return;
+      }
+
+      seekClip(audio, src, offsetMs / 1000, playbackRateRef.current);
+    },
+    [manifest],
+  );
+
   useEffect(() => {
     if (!manifest || initialMuted || prefetchedRef.current) return;
     prefetchManifestClips(manifest);
@@ -112,6 +160,11 @@ export function useNarrationPlayback({
   }, [manifest]);
 
   useEffect(() => {
+    if (seekActiveRef.current) {
+      seekActiveRef.current = false;
+      return;
+    }
+
     const audio = audioRef.current;
     if (!audio || !manifest) return;
 
@@ -174,5 +227,5 @@ export function useNarrationPlayback({
     };
   }, []);
 
-  return { muted, toggleMute, audioRef };
+  return { muted, toggleMute, audioRef, seekToStep };
 }

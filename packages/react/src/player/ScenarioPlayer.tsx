@@ -1,6 +1,6 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { type NarrationManifest, type ScenarioBundle, type ScenarioStep, computeStepTimeline } from "@scenar/core";
+import { type NarrationManifest, type ScenarioBundle, type ScenarioStep, computeStepTimeline, deriveStepFromTime } from "@scenar/core";
 import { useVideoExport } from "../video/VideoExportContext.js";
 import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
@@ -88,7 +88,10 @@ export function ScenarioPlayer<T>({
     onClipEnded: () => {},
   });
 
-  const { stepIndex, playbackState, playing, play, pause, togglePlay, goTo, handleClipEnded } = progression;
+  const {
+    stepIndex, playbackState, playing, play, pause, togglePlay,
+    seekToTime, seekOffsetRef, seekGeneration, handleClipEnded,
+  } = progression;
 
   // Coordinator: single-active-player
   const coordinatorRef = useRef<{ id: string; unregister: () => void } | null>(null);
@@ -115,7 +118,7 @@ export function ScenarioPlayer<T>({
     return () => observer.disconnect();
   }, [isVideoExport, playing, pause]);
 
-  const { muted, toggleMute, audioRef } = useNarrationPlayback({
+  const { muted, toggleMute, audioRef, seekToStep } = useNarrationPlayback({
     manifest: narrationManifest,
     stepIndex,
     playing,
@@ -173,6 +176,21 @@ export function ScenarioPlayer<T>({
     }
   }, [play]);
 
+  const handleSeekToTime = useCallback(
+    (timeMs: number) => {
+      const clamped = Math.max(0, Math.min(timeMs, stepTimeline.totalDurationMs));
+      const targetIndex = deriveStepFromTime(clamped, stepTimeline.stepStartTimesMs, lastIndex);
+      const stepStart = stepTimeline.stepStartTimesMs[targetIndex] ?? 0;
+      seekToStep(targetIndex, Math.max(0, clamped - stepStart));
+      seekToTime(clamped, stepTimeline);
+
+      if (coordinatorRef.current) {
+        PlaybackCoordinator.notifyPlaying(coordinatorRef.current.id);
+      }
+    },
+    [seekToTime, seekToStep, stepTimeline, lastIndex],
+  );
+
   const handleContentClick = useCallback(() => {
     if (playbackState === "idle") return;
     togglePlay();
@@ -191,6 +209,8 @@ export function ScenarioPlayer<T>({
     stepTimeline,
     progressTrackRef,
     playheadRef,
+    seekOffsetRef,
+    seekGeneration,
   );
 
   const caption = steps[stepIndex]!.caption;
@@ -245,8 +265,6 @@ export function ScenarioPlayer<T>({
           playing={playing}
           muted={muted}
           playbackRate={playbackRate}
-          stepIndex={stepIndex}
-          lastIndex={lastIndex}
           stepTimeline={stepTimeline}
           showSpeedControl={showSpeedControl}
           hasNarration={!!narrationManifest}
@@ -255,7 +273,7 @@ export function ScenarioPlayer<T>({
           onTogglePlay={togglePlay}
           onToggleMute={toggleMute}
           onSelectSpeed={setPlaybackRate}
-          onSeek={goTo}
+          onSeekToTime={handleSeekToTime}
         />
       )}
     </div>
