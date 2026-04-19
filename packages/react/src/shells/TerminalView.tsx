@@ -19,7 +19,7 @@ interface TerminalViewProps {
   readonly lines: readonly TerminalLine[];
   readonly contentKey: string;
   readonly slideDirection?: "forward" | "backward";
-  /** Font size in pixels for the terminal body (default 14). */
+  /** Font size in pixels for the terminal body (default 11). */
   readonly fontSize?: number;
 }
 
@@ -45,7 +45,7 @@ export function TerminalView({
   lines,
   contentKey,
   slideDirection,
-  fontSize = 14,
+  fontSize = 11,
 }: TerminalViewProps) {
   const slideX =
     slideDirection === "forward" ? 24 : slideDirection === "backward" ? -24 : 0;
@@ -92,24 +92,24 @@ export function TerminalView({
       {/* Terminal content */}
       <motion.div
         key={contentKey}
-        className="flex-1 overflow-y-auto bg-[#1e1e1e] px-5 py-3 font-mono"
-        style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
+        className="flex-1 overflow-y-auto bg-[#1e1e1e] px-3 py-2 font-mono leading-relaxed"
+        style={{ fontSize: `${fontSize}px` }}
         initial={{ opacity: 0, x: slideX }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
       >
         {lines.map((line, i) => {
           if (line.type === "blank") {
-            return <div key={i} className="h-4" />;
+            return <div key={i} className="h-3" />;
           }
 
           return (
             <div key={i} className={LINE_COLORS[line.type]}>
               {line.type === "prompt" && (
-                <span className="mr-1.5 text-[#bd93f9]">{cwd}</span>
+                <span className="mr-1 text-[#bd93f9]">{cwd}</span>
               )}
               {line.type === "prompt" && (
-                <span className="mr-2 text-[#50fa7b]">❯</span>
+                <span className="mr-1.5 text-[#50fa7b]">❯</span>
               )}
               <span className="whitespace-pre-wrap">{line.text}</span>
             </div>
