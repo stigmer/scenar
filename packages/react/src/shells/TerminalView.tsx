@@ -19,8 +19,17 @@ interface TerminalViewProps {
   readonly lines: readonly TerminalLine[];
   readonly contentKey: string;
   readonly slideDirection?: "forward" | "backward";
-  /** Font size in pixels for the terminal body (default 13). */
+  /** Font size in pixels for the terminal body (default 14). */
   readonly fontSize?: number;
+  /**
+   * Maximum width of the terminal shell in pixels. When set, the
+   * terminal is constrained and centred horizontally within its
+   * parent. Omit or set to `undefined` for full-width.
+   *
+   * Tip: 700 approximates an 80-column terminal at the default font
+   * size after DemoViewport zoom is applied.
+   */
+  readonly maxWidth?: number;
 }
 
 const LINE_COLORS: Record<TerminalLine["type"], string> = {
@@ -45,17 +54,21 @@ export function TerminalView({
   lines,
   contentKey,
   slideDirection,
-  fontSize = 13,
+  fontSize = 14,
+  maxWidth,
 }: TerminalViewProps) {
   const slideX =
     slideDirection === "forward" ? 24 : slideDirection === "backward" ? -24 : 0;
 
+  const shellStyle: React.CSSProperties = {
+    height: `var(--scenar-shell-height, clamp(${SHELL_HEIGHT_MIN}px, 55vh, ${SHELL_HEIGHT_DEFAULT}px))`,
+    ...(maxWidth != null && { maxWidth, margin: "0 auto" }),
+  };
+
   return (
     <div
       className="flex flex-col overflow-hidden rounded-lg border border-[#3a3a3a]"
-      style={{
-        height: `var(--scenar-shell-height, clamp(${SHELL_HEIGHT_MIN}px, 55vh, ${SHELL_HEIGHT_DEFAULT}px))`,
-      }}
+      style={shellStyle}
     >
       {/* Title bar */}
       <div className="flex items-center bg-[#323232] px-3 py-1.5">
