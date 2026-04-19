@@ -100,3 +100,44 @@ export type {
 
 // Highlights
 export { PulseHighlight } from "./highlights/index.js";
+
+// Pages — primitives & templates for realistic BrowserView content
+export {
+  // Primitives
+  PageLayout,
+  AppBar,
+  SideNav,
+  FormCard,
+  DataTable,
+  SettingsForm,
+  Breadcrumb,
+  StatusBadge,
+  // Templates
+  LoginCardPage,
+  SettingsFormPage,
+  AdminListPage,
+  DashboardPage,
+} from "./pages/index.js";
+export type {
+  // Primitive types
+  PageLayoutProps,
+  AppBarProps,
+  NavLink,
+  SideNavProps,
+  SideNavItem,
+  FormCardProps,
+  FormField,
+  DataTableProps,
+  DataTableColumn,
+  DataTableRow,
+  SettingsFormProps,
+  SettingsField,
+  BreadcrumbProps,
+  StatusBadgeProps,
+  BadgeVariant,
+  // Template types
+  LoginCardPageProps,
+  SettingsFormPageProps,
+  AdminListPageProps,
+  DashboardPageProps,
+} from "./pages/index.js";
