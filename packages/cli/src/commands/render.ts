@@ -1,7 +1,11 @@
 import { resolve, join } from "node:path";
-import { stat, mkdir, access } from "node:fs/promises";
+import { stat, mkdir, access, writeFile, rm } from "node:fs/promises";
+import { pathToFileURL } from "node:url";
 import { Command } from "commander";
 import { loadBundle, type CliBundle } from "../util/load-bundle.js";
+import { generateRemotionEntry } from "../render/generate-entry.js";
+import { resolveProvidersPath } from "../render/resolve-providers.js";
+import { detectRenderExport } from "../render/detect-render-export.js";
 
 interface RenderOptions {
   out?: string;
@@ -10,6 +14,7 @@ interface RenderOptions {
   height?: string;
   compositionId?: string;
   entry?: string;
+  webpackOverride?: string;
 }
 
 export function registerRenderCommand(program: Command): void {
@@ -19,6 +24,9 @@ export function registerRenderCommand(program: Command): void {
       "Render a scenario as an MP4 video using Remotion.\n\n" +
       "Accepts a scenario directory containing steps.ts and an optional\n" +
       "narration/ subfolder with manifest.json + audio clips.\n\n" +
+      "When the scenario directory contains an index.tsx that exports a\n" +
+      "renderStep function, the CLI auto-generates the Remotion entry\n" +
+      "point — no remotion/ directory or bundle.ts needed.\n\n" +
       "Output defaults to ./<scenario-id>.mp4 in the current working\n" +
       "directory. Use --out to write to a different path.",
     )
@@ -28,7 +36,11 @@ export function registerRenderCommand(program: Command): void {
     .option("--width <number>", "video width in pixels (default: 1920)", "1920")
     .option("--height <number>", "video height in pixels (default: 1080)", "1080")
     .option("--composition-id <id>", "Remotion composition ID to render")
-    .option("--entry <path>", "path to a Remotion entry file (Root.tsx)")
+    .option("--entry <path>", "path to a custom Remotion entry file")
+    .option(
+      "--webpack-override <path>",
+      "path to a module that default-exports a Remotion WebpackOverrideFn",
+    )
     .action(async (dir: string, options: RenderOptions) => {
       const resolved = resolve(dir);
 
@@ -54,29 +66,54 @@ export function registerRenderCommand(program: Command): void {
       const width = Number(options.width) || 1920;
       const height = Number(options.height) || 1080;
 
+      let tempDir: string | undefined;
+
       try {
         const bundle = await loadBundle(resolved);
         const scenarioId = bundle.id;
+        const compositionId = options.compositionId ?? scenarioId;
         const outputPath = resolveOutputPath(options.out, scenarioId);
-        const entryPoint = await resolveEntryPoint(options.entry);
+
+        const { entryPoint, generated } = await resolveEntryPoint({
+          entryOption: options.entry,
+          scenarioDir: resolved,
+          scenarioId,
+          compositionId,
+          hasNarration: !!bundle.narrationManifest,
+          fps,
+          width,
+          height,
+        });
+        tempDir = generated?.tempDir;
+
+        const webpackOverride = options.webpackOverride
+          ? await loadWebpackOverride(options.webpackOverride)
+          : undefined;
 
         process.stderr.write(`Scenario: ${scenarioId}\n`);
         process.stderr.write(`Steps:    ${bundle.steps.length}\n`);
         process.stderr.write(
           `Audio:    ${bundle.narrationManifest ? "yes (manifest found)" : "none"}\n`,
         );
-        process.stderr.write(`Entry:    ${entryPoint}\n`);
+        process.stderr.write(`Entry:    ${generated ? "(auto-generated)" : entryPoint}\n`);
+        if (generated?.providersPath) {
+          process.stderr.write(`Providers: ${generated.providersPath}\n`);
+        }
+        if (webpackOverride) {
+          process.stderr.write(`Webpack:  custom override loaded\n`);
+        }
         process.stderr.write(`Output:   ${outputPath}\n`);
         process.stderr.write(`Config:   ${width}x${height} @ ${fps}fps\n\n`);
 
         await renderScenario({
           bundle,
           entryPoint,
-          compositionId: options.compositionId ?? scenarioId,
+          compositionId,
           outputPath,
           fps,
           width,
           height,
+          webpackOverride,
         });
 
         process.stderr.write(`\n\x1b[32m✓\x1b[0m Video saved to ${outputPath}\n`);
@@ -84,6 +121,10 @@ export function registerRenderCommand(program: Command): void {
         const msg = error instanceof Error ? error.message : String(error);
         process.stderr.write(`\x1b[31mError:\x1b[0m ${msg}\n`);
         process.exitCode = 1;
+      } finally {
+        if (tempDir) {
+          await rm(tempDir, { recursive: true, force: true }).catch(() => {});
+        }
       }
     });
 }
@@ -106,59 +147,110 @@ function resolveOutputPath(outOption: string | undefined, scenarioId: string): s
 // Entry point resolution
 // ---------------------------------------------------------------------------
 
-async function resolveEntryPoint(entryOption: string | undefined): Promise<string> {
-  if (entryOption) {
-    const resolved = resolve(entryOption);
+interface EntryResolutionInput {
+  entryOption: string | undefined;
+  scenarioDir: string;
+  scenarioId: string;
+  compositionId: string;
+  hasNarration: boolean;
+  fps: number;
+  width: number;
+  height: number;
+}
+
+interface EntryResolutionResult {
+  entryPoint: string;
+  generated?: {
+    tempDir: string;
+    providersPath: string | null;
+  };
+}
+
+async function resolveEntryPoint(
+  input: EntryResolutionInput,
+): Promise<EntryResolutionResult> {
+  // Explicit --entry: use as-is, no generation.
+  if (input.entryOption) {
+    const resolved = resolve(input.entryOption);
     try {
       await access(resolved);
     } catch {
-      throw new Error(`Remotion entry point not found: ${entryOption}`);
+      throw new Error(`Remotion entry point not found: ${input.entryOption}`);
     }
-    return resolved;
+    return { entryPoint: resolved };
   }
 
-  const candidates = [
-    resolve("remotion/index.tsx"),
-    resolve("remotion/index.ts"),
-    resolve("src/remotion/index.tsx"),
-    resolve("src/remotion/index.ts"),
-  ];
+  // Auto-generate: detect renderStep export, find providers, write temp entry.
+  const renderFilePath = await detectRenderExport(input.scenarioDir);
+  const providersPath = await resolveProvidersPath(input.scenarioDir);
 
-  for (const candidate of candidates) {
-    try {
-      await access(candidate);
-      return candidate;
-    } catch {
-      // Try next.
-    }
+  const entrySource = generateRemotionEntry({
+    scenarioDir: input.scenarioDir,
+    renderFilePath,
+    scenarioId: input.scenarioId,
+    hasNarration: input.hasNarration,
+    providersPath,
+    fps: input.fps,
+    width: input.width,
+    height: input.height,
+    compositionId: input.compositionId,
+  });
+
+  // Write the entry inside the scenario directory so webpack's standard
+  // node_modules resolution walks up from here into the consumer project.
+  // A /tmp/ location would fail because no node_modules exist there.
+  const tempDir = join(input.scenarioDir, ".scenar-render");
+  await mkdir(tempDir, { recursive: true });
+
+  const entryPath = join(tempDir, "index.tsx");
+  await writeFile(entryPath, entrySource, "utf-8");
+
+  return {
+    entryPoint: entryPath,
+    generated: { tempDir, providersPath },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Webpack override loading
+// ---------------------------------------------------------------------------
+
+async function loadWebpackOverride(
+  overridePath: string,
+): Promise<(config: unknown) => unknown> {
+  const resolved = resolve(overridePath);
+
+  try {
+    await access(resolved);
+  } catch {
+    throw new Error(`Webpack override file not found: ${overridePath}`);
   }
 
-  throw new Error(
-    "No Remotion entry point found.\n\n" +
-    "Create a remotion/index.tsx that exports your Remotion Root component,\n" +
-    "or use --entry to specify a custom path.\n\n" +
-    "Example remotion/index.tsx:\n\n" +
-    '  import { Composition } from "remotion";\n' +
-    '  import { ScenarioComposition, calculateScenarioTimeline } from "@scenar/remotion";\n' +
-    "  import { myBundle } from \"../scenarios/my-demo/bundle\";\n\n" +
-    "  export const RemotionRoot = () => (\n" +
-    "    <Composition\n" +
-    '      id="my-demo"\n' +
-    "      component={() => (\n" +
-    "        <ScenarioComposition bundle={myBundle}>\n" +
-    "          {(data) => <MyView data={data} />}\n" +
-    "        </ScenarioComposition>\n" +
-    "      )}\n" +
-    "      fps={30}\n" +
-    "      width={1920}\n" +
-    "      height={1080}\n" +
-    "      durationInFrames={\n" +
-    "        calculateScenarioTimeline(myBundle.steps, myBundle.narrationManifest, 30)\n" +
-    "          .durationInFrames\n" +
-    "      }\n" +
-    "    />\n" +
-    "  );\n",
-  );
+  let mod: Record<string, unknown>;
+  try {
+    mod = await import(pathToFileURL(resolved).href) as Record<string, unknown>;
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `Failed to import webpack override from ${overridePath}:\n${detail}`,
+    );
+  }
+
+  const override = (mod.default ?? mod.webpackOverride) as unknown;
+  if (typeof override !== "function") {
+    throw new Error(
+      `${overridePath} does not export a webpack override function.\n\n` +
+      "Expected a default export or named 'webpackOverride' export:\n\n" +
+      '  import type { WebpackOverrideFn } from "@remotion/bundler";\n\n' +
+      "  const webpackOverride: WebpackOverrideFn = (config) => ({\n" +
+      "    ...config,\n" +
+      "    // your overrides\n" +
+      "  });\n\n" +
+      "  export default webpackOverride;\n",
+    );
+  }
+
+  return override as (config: unknown) => unknown;
 }
 
 // ---------------------------------------------------------------------------
@@ -173,10 +265,10 @@ interface RenderConfig {
   fps: number;
   width: number;
   height: number;
+  webpackOverride?: (config: unknown) => unknown;
 }
 
 async function renderScenario(config: RenderConfig): Promise<void> {
-  // Dynamic imports — these are optional peer deps.
   const bundler = await import("@remotion/bundler").catch(() => {
     throw new Error(
       "Could not load @remotion/bundler.\n" +
@@ -192,7 +284,16 @@ async function renderScenario(config: RenderConfig): Promise<void> {
   });
 
   process.stderr.write("Bundling Remotion project...\n");
-  const serveUrl = await bundler.bundle({ entryPoint: config.entryPoint });
+
+  const bundleOptions: Record<string, unknown> = {
+    entryPoint: config.entryPoint,
+  };
+  if (config.webpackOverride) {
+    bundleOptions.webpackOverride = config.webpackOverride;
+  }
+  const serveUrl = await (bundler.bundle as (opts: Record<string, unknown>) => Promise<string>)(
+    bundleOptions,
+  );
 
   process.stderr.write(`Selecting composition: ${config.compositionId}\n`);
   const composition = await renderer.selectComposition({

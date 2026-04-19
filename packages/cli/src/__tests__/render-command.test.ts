@@ -41,6 +41,7 @@ describe("scenar render", () => {
     expect(optionNames).toContain("--height");
     expect(optionNames).toContain("--entry");
     expect(optionNames).toContain("--composition-id");
+    expect(optionNames).toContain("--webpack-override");
   });
 
   it("defaults fps to 30, width to 1920, height to 1080", () => {
