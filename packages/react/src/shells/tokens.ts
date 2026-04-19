@@ -21,3 +21,19 @@ export const SHELL_HEIGHT_MIN = 320;
  * centered cards (login, signup) that need visible top/bottom margins.
  */
 export const BROWSER_SHELL_HEIGHT_DEFAULT = 420;
+
+/**
+ * Default height (px) for MobileView shells.
+ *
+ * Taller than the standard shell to accommodate the iPhone 15 Pro
+ * aspect ratio (~393×852pt logical) within the shell container.
+ */
+export const MOBILE_SHELL_HEIGHT_DEFAULT = 500;
+
+/**
+ * Default height (px) for SlideView shells.
+ *
+ * Taller than the standard shell to accommodate a 16:9 slide canvas
+ * plus the optional speaker-notes panel below.
+ */
+export const SLIDE_SHELL_HEIGHT_DEFAULT = 460;

@@ -68,9 +68,18 @@ export {
   BrowserView,
   TerminalView,
   CodeEditorView,
+  MobileView,
+  ChatView,
+  ChatBubble,
+  TypingIndicator,
+  SlideView,
+  DashboardView,
+  APIClientView,
   SHELL_HEIGHT_DEFAULT,
   SHELL_HEIGHT_MIN,
   BROWSER_SHELL_HEIGHT_DEFAULT,
+  MOBILE_SHELL_HEIGHT_DEFAULT,
+  SLIDE_SHELL_HEIGHT_DEFAULT,
 } from "./shells/index.js";
 export type {
   BrowserViewProps,
@@ -78,6 +87,15 @@ export type {
   TerminalViewProps,
   FileTreeEntry,
   CodeEditorViewProps,
+  MobileViewProps,
+  ChatViewProps,
+  ChatBubbleProps,
+  TypingIndicatorProps,
+  SlideViewProps,
+  SidebarItem,
+  DashboardViewProps,
+  APIClientViewProps,
+  HttpMethod,
 } from "./shells/index.js";
 
 // Highlights
