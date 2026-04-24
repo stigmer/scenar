@@ -26,6 +26,9 @@ export type { SidebarItem, DashboardViewProps } from "./DashboardView.js";
 export { APIClientView } from "./APIClientView.js";
 export type { APIClientViewProps, HttpMethod } from "./APIClientView.js";
 
+export { DesktopView } from "./DesktopView.js";
+export type { DesktopViewProps } from "./DesktopView.js";
+
 export {
   SHELL_HEIGHT_DEFAULT,
   SHELL_HEIGHT_MIN,

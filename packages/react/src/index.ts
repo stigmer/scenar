@@ -75,6 +75,7 @@ export {
   SlideView,
   DashboardView,
   APIClientView,
+  DesktopView,
   SHELL_HEIGHT_DEFAULT,
   SHELL_HEIGHT_MIN,
   BROWSER_SHELL_HEIGHT_DEFAULT,
@@ -96,6 +97,7 @@ export type {
   DashboardViewProps,
   APIClientViewProps,
   HttpMethod,
+  DesktopViewProps,
 } from "./shells/index.js";
 
 // Highlights
