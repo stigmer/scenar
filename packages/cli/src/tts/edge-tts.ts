@@ -28,6 +28,14 @@ export async function isEdgeTtsAvailable(): Promise<boolean> {
  * `edge-tts-universal` is an **optional peer dependency** (AGPL-3.0 licensed).
  * Users must install it explicitly: `pnpm add edge-tts-universal`.
  *
+ * Uses `IsomorphicEdgeTTS` instead of `EdgeTTS` because the latter
+ * delegates to `Communicate` whose WebSocket handler calls
+ * `message.subarray()` assuming a Node.js `Buffer`. On Node v23+ the
+ * `ws` library may deliver typed arrays or other non-Buffer objects,
+ * causing `TypeError: message.subarray is not a function`.
+ * `IsomorphicEdgeTTS` → `IsomorphicCommunicate` normalises all
+ * incoming data types before processing.
+ *
  * Duration is extracted from word-boundary subtitle metadata returned by
  * the service. Falls back to a bitrate-based estimate when metadata is
  * unavailable — same approach proven in Stigmer's narration pipeline.
@@ -38,10 +46,10 @@ export function createEdgeTtsProvider(): TtsProvider {
 
     async synthesize(text: string, options: TtsOptions): Promise<TtsResult> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let EdgeTTS: any;
+      let IsomorphicEdgeTTS: any;
       try {
         const mod = await import("edge-tts-universal");
-        EdgeTTS = mod.EdgeTTS;
+        IsomorphicEdgeTTS = mod.IsomorphicEdgeTTS;
       } catch {
         throw new Error(
           "edge-tts-universal is not installed. Install it with:\n\n" +
@@ -51,7 +59,7 @@ export function createEdgeTtsProvider(): TtsProvider {
       }
 
       const voice = options.voice ?? DEFAULT_VOICE;
-      const tts = new EdgeTTS(text, voice);
+      const tts = new IsomorphicEdgeTTS(text, voice);
       const result = await tts.synthesize();
 
       const audioBuffer = Buffer.from(await result.audio.arrayBuffer());

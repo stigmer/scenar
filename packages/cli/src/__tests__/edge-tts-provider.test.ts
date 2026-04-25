@@ -2,16 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("edge-tts-universal", () => {
   const mockSynthesize = vi.fn();
-  const MockEdgeTTS = vi.fn().mockImplementation(() => ({
+  const MockIsomorphicEdgeTTS = vi.fn().mockImplementation(() => ({
     synthesize: mockSynthesize,
   }));
-  return { EdgeTTS: MockEdgeTTS, __mockSynthesize: mockSynthesize };
+  return { IsomorphicEdgeTTS: MockIsomorphicEdgeTTS, __mockSynthesize: mockSynthesize };
 });
 
-import { EdgeTTS } from "edge-tts-universal";
+import { IsomorphicEdgeTTS } from "edge-tts-universal";
 
 // Access the inner mock so tests can configure per-call responses.
-const MockEdgeTTS = vi.mocked(EdgeTTS);
+const MockIsomorphicEdgeTTS = vi.mocked(IsomorphicEdgeTTS);
 const mockSynthesize = (
   await import("edge-tts-universal") as { __mockSynthesize: ReturnType<typeof vi.fn> }
 ).__mockSynthesize;
@@ -33,7 +33,7 @@ describe("Edge TTS provider", () => {
     const provider = createEdgeTtsProvider();
     const result = await provider.synthesize("Hello world", { voice: "en-US-JennyNeural" });
 
-    expect(MockEdgeTTS).toHaveBeenCalledWith("Hello world", "en-US-JennyNeural");
+    expect(MockIsomorphicEdgeTTS).toHaveBeenCalledWith("Hello world", "en-US-JennyNeural");
     expect(result.audio).toBeInstanceOf(Buffer);
     expect(result.durationMs).toBe(2500);
   });
@@ -48,7 +48,7 @@ describe("Edge TTS provider", () => {
     const provider = createEdgeTtsProvider();
     await provider.synthesize("Test", {});
 
-    expect(MockEdgeTTS).toHaveBeenCalledWith("Test", "en-US-AndrewMultilingualNeural");
+    expect(MockIsomorphicEdgeTTS).toHaveBeenCalledWith("Test", "en-US-AndrewMultilingualNeural");
   });
 
   it("computes duration from the last subtitle entry", async () => {
