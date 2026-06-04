@@ -23,8 +23,6 @@ export { PROTO_ACTION_TYPE } from "./proto/proto-types.js";
 export type {
   ProtoActionTypeValue,
   ProtoScenarioSpec,
-  /** @deprecated Use {@link ProtoScenarioSpec}. */
-  ProtoScenario,
   ProtoStep,
   ProtoStepAction,
   ProtoStepActionConfig,

@@ -3,7 +3,6 @@ import { loadScenarioFromProto } from "../proto/load-scenario.js";
 import { InvalidScenarioError } from "../proto/errors.js";
 import {
   PROTO_ACTION_TYPE,
-  type ProtoScenario,
   type ProtoScenarioSpec,
 } from "../proto/proto-types.js";
 
@@ -58,12 +57,6 @@ function makeValidScenario(): ProtoScenarioSpec {
     ],
   };
 }
-
-// Backward-compat guard: the deprecated `ProtoScenario` alias must stay
-// assignable from a `ProtoScenarioSpec` value. Removing the alias breaks
-// this assignment and fails `pnpm typecheck`.
-const _aliasGuard: ProtoScenario = makeValidScenario();
-void _aliasGuard;
 
 describe("loadScenarioFromProto", () => {
   it("loads a valid proto scenario into an AuthoredScenario", () => {
