@@ -12,6 +12,17 @@ lint:
     - ENUM_VALUE_UPPER_SNAKE_CASE
     - ENUM_VALUE_PREFIX
     - ENUM_ZERO_VALUE_SUFFIX
+    # Resource command/query controllers follow the platform's RPC convention
+    # (mirrored from ai.stigmer.*): lowercase verb RPCs, `...Controller` service
+    # names, and the resource itself used as both request and response (e.g.
+    # `apply(Scenario) returns (Scenario)`). This keeps Scenar's services
+    # structurally compatible with the platform's generic resource machinery, at
+    # the cost of these STANDARD naming rules.
+    - SERVICE_SUFFIX
+    - RPC_PASCAL_CASE
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+    - RPC_REQUEST_RESPONSE_UNIQUE
     # The commons/apiresource package is intentionally unversioned to mirror the
     # platform's shared contract (ai.stigmer.commons.apiresource). Commons is
     # foundational and evolves additively, not via package version bumps.

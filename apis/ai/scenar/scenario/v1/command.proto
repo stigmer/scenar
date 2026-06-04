@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package ai.scenar.scenario.v1;
+
+import "ai/scenar/commons/apiresource/io.proto";
+import "ai/scenar/commons/apiresource/rpc_service_options.proto";
+import "ai/scenar/scenario/v1/api.proto";
+
+// ScenarioCommandController provides the write operations for scenario
+// resources. It is the contract the Scenar Cloud backend implements and the
+// `scenar` CLI calls when authoring and publishing walkthroughs.
+//
+// The `apply` method is the primary entrypoint: it gives Kubernetes-style
+// idempotent create-or-update semantics, which is the natural fit for a
+// declarative YAML applied from a developer's repo or CI. `create`, `update`,
+// and `delete` exist for callers that need explicit, non-idempotent control.
+//
+// Authorization note: per-RPC authorization options are intentionally absent.
+// Scenar has not yet adopted a neutral method-level auth contract (the
+// equivalent of the platform's commons/rpc/method_options). Until that lands,
+// these RPCs carry only the service-level resource-kind tag below; the Cloud
+// backend enforces authorization in its handlers. Method auth annotations will
+// be added here in a dedicated follow-up, not improvised per RPC.
+service ScenarioCommandController {
+  // Tags this controller with the resource kind it manages so the platform's
+  // request pipeline can route and register it generically.
+  option (ai.scenar.commons.apiresource.api_resource_kind) = scenario;
+
+  // Create or update a scenario. If no scenario exists for the given
+  // (org, slug) in metadata, it is created; otherwise it is updated in place.
+  // Idempotent — re-applying an unchanged document is a no-op. This is the
+  // recommended path for CLI and CI usage.
+  rpc apply(Scenario) returns (Scenario);
+
+  // Create a new scenario. Returns an error if a scenario with the same
+  // (org, slug) already exists. Use apply for idempotent semantics.
+  rpc create(Scenario) returns (Scenario);
+
+  // Update an existing scenario, identified by metadata.id. Returns an error
+  // if the scenario does not exist.
+  rpc update(Scenario) returns (Scenario);
+
+  // Delete a scenario. Returns the deleted resource as it existed prior to
+  // removal. See ApiResourceDeleteInput for force/version_message semantics.
+  rpc delete(ai.scenar.commons.apiresource.ApiResourceDeleteInput) returns (Scenario);
+}

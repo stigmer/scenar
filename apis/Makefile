@@ -62,9 +62,13 @@ go-stubs: go-stubs-clean ## Generate Go stubs
 	@mkdir -p $(GO_STUBS_DIR)
 	@echo "Generating Go stubs..."
 	@$(BUF) generate --template buf.gen.go.yaml
-	@# Fix nested directory structure from go_package_prefix
+	@# Flatten the nested tree that go_package_prefix produces
+	@# (stubs/go/github.com/stigmer/scenar/apis/stubs/go/ai/...) down to
+	@# stubs/go/ai/... so the import path github.com/stigmer/scenar/apis/stubs/go
+	@# resolves. No error suppression here: if the prefix ever changes, this must
+	@# fail loudly rather than silently leaving (or deleting) stubs.
 	@if [ -d "$(GO_STUBS_DIR)/github.com" ]; then \
-		mv $(GO_STUBS_DIR)/github.com/scenar-ai/scenar/apis/stubs/go/* $(GO_STUBS_DIR)/ 2>/dev/null || true; \
+		mv $(GO_STUBS_DIR)/github.com/stigmer/scenar/apis/stubs/go/* $(GO_STUBS_DIR)/; \
 		rm -rf $(GO_STUBS_DIR)/github.com; \
 	fi
 	@echo "Go stubs generated"

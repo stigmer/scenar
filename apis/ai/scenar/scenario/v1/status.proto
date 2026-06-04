@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package ai.scenar.scenario.v1;
+
+import "ai/scenar/commons/apiresource/field_options.proto";
+import "ai/scenar/commons/apiresource/status.proto";
+
+// ScenarioStatus is the observed state of a Scenario resource — the `status`
+// block of the envelope (see api.proto). Every field here is computed and
+// managed by the system; clients never set status on create or update. The
+// backend derives these values when it packages, publishes, and serves a
+// scenario.
+message ScenarioStatus {
+  // Public URL at which the interactive scenario embed is served. Computed by
+  // the backend after a successful apply/publish. Empty until the scenario has
+  // been packaged.
+  string embed_url = 1 [(ai.scenar.commons.apiresource.computed) = true];
+
+  // URL of the packaged scenario bundle (the artifact the engine and exporters
+  // consume). Computed by the backend during packaging. Empty until packaged.
+  string package_url = 2 [(ai.scenar.commons.apiresource.computed) = true];
+
+  // Whether this scenario has generated narration audio. Computed from the
+  // presence of narration assets produced during packaging. Lets clients
+  // render the correct playback affordances without inspecting the spec.
+  bool has_narration = 3 [(ai.scenar.commons.apiresource.computed) = true];
+
+  // Standard creation/modification audit information. The high field number
+  // keeps audit at a stable, conventional location and leaves room below for
+  // future scenario-specific status fields.
+  ai.scenar.commons.apiresource.ApiResourceAuditStatus audit = 99;
+}

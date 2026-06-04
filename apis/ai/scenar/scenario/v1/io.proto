@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package ai.scenar.scenario.v1;
+
+import "buf/validate/validate.proto";
+
+// ListScenariosRequest is the input for the scenario list query. It scopes the
+// listing to a single organization and pages results with an opaque cursor.
+//
+// Pagination is defined per-resource here (rather than in commons) until the
+// platform settles on a shared pagination contract; the field shape
+// (page_size / page_token / next_page_token) is the conventional cursor model
+// and is intended to migrate to commons unchanged when that contract lands.
+message ListScenariosRequest {
+  // Organization whose scenarios to list. Required — listings are always
+  // scoped to a single owning org.
+  string org = 1 [(buf.validate.field).required = true];
+
+  // Maximum number of scenarios to return in one page. When 0 or unset, the
+  // server applies its default page size. The server may return fewer items
+  // than requested.
+  int32 page_size = 2 [(buf.validate.field).int32.gte = 0];
+
+  // Opaque cursor identifying the page to return. Empty fetches the first
+  // page. Pass the next_page_token from the previous ScenarioList to continue.
+  string page_token = 3;
+}

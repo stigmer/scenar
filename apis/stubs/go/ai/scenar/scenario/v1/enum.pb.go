@@ -164,8 +164,8 @@ const file_ai_scenar_scenario_v1_enum_proto_rawDesc = "" +
 	"\x05hover\x10\x05\x12\b\n" +
 	"\x04drag\x10\x06\x12\r\n" +
 	"\tscroll_to\x10\a\x12\x17\n" +
-	"\x13viewport_transition\x10\bB\xe9\x01\n" +
-	"\x19com.ai.scenar.scenario.v1B\tEnumProtoP\x01ZJgithub.com/scenar-ai/scenar/apis/stubs/go/ai/scenar/scenario/v1;scenariov1\xa2\x02\x03ASS\xaa\x02\x15Ai.Scenar.Scenario.V1\xca\x02\x15Ai\\Scenar\\Scenario\\V1\xe2\x02!Ai\\Scenar\\Scenario\\V1\\GPBMetadata\xea\x02\x18Ai::Scenar::Scenario::V1b\x06proto3"
+	"\x13viewport_transition\x10\bB\xe7\x01\n" +
+	"\x19com.ai.scenar.scenario.v1B\tEnumProtoP\x01ZHgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/scenario/v1;scenariov1\xa2\x02\x03ASS\xaa\x02\x15Ai.Scenar.Scenario.V1\xca\x02\x15Ai\\Scenar\\Scenario\\V1\xe2\x02!Ai\\Scenar\\Scenario\\V1\\GPBMetadata\xea\x02\x18Ai::Scenar::Scenario::V1b\x06proto3"
 
 var (
 	file_ai_scenar_scenario_v1_enum_proto_rawDescOnce sync.Once

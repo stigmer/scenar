@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package ai.scenar.scenario.v1;
+
+import "ai/scenar/commons/apiresource/io.proto";
+import "ai/scenar/commons/apiresource/rpc_service_options.proto";
+import "ai/scenar/scenario/v1/api.proto";
+import "ai/scenar/scenario/v1/io.proto";
+
+// ScenarioQueryController provides the read operations for scenario resources.
+// It is the contract the Scenar Cloud backend implements for fetching and
+// listing walkthroughs.
+//
+// Authorization note: as with the command controller, per-RPC authorization
+// options are intentionally absent until Scenar adopts a neutral method-level
+// auth contract. These RPCs carry only the service-level resource-kind tag;
+// the Cloud backend enforces read authorization in its handlers.
+service ScenarioQueryController {
+  // Tags this controller with the resource kind it manages so the platform's
+  // request pipeline can route and register it generically.
+  option (ai.scenar.commons.apiresource.api_resource_kind) = scenario;
+
+  // Get a scenario by its system-generated id (metadata.id).
+  rpc get(ai.scenar.commons.apiresource.ApiResourceId) returns (Scenario);
+
+  // Get a scenario by its canonical (org, slug) coordinates — the preferred
+  // lookup when the human-friendly slug is known rather than the system id.
+  rpc getByOrgAndSlug(ai.scenar.commons.apiresource.ApiResourceByOrgBySlugRequest) returns (Scenario);
+
+  // List scenarios within an organization, paged by cursor. See
+  // ListScenariosRequest and ScenarioList.
+  rpc list(ListScenariosRequest) returns (ScenarioList);
+}
