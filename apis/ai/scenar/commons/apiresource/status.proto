@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package ai.scenar.commons.apiresource;
+
+import "google/protobuf/timestamp.proto";
+
+// ApiResourceAuditStatus is the audit block embedded in every resource's
+// status. It is intentionally a thin wrapper around ApiResourceAudit so that
+// resource-specific status messages can compose it as a single named field.
+//
+// The platform's neutral audit reflection adapter locates the audit
+// information by the field name `audit` on the status message, so that name is
+// part of the commons contract. The high field number (99) leaves room for
+// future status-level audit siblings without renumbering.
+message ApiResourceAuditStatus {
+  // Audit information tracking creation and modification of the resource.
+  ApiResourceAudit audit = 99;
+}
+
+// ApiResourceAudit holds audit details split into two buckets: one for the
+// resource's specification (its desired state, authored by users) and one for
+// its status (its actual state, computed by the system). Separating them lets
+// the platform attribute spec changes and status changes to different actors
+// and timestamps.
+//
+// This two-bucket shape is a deliberate contract decision shared with the
+// platform libraries; do not collapse it into a single audit info.
+message ApiResourceAudit {
+  // Audit info for the resource's specification (desired state).
+  ApiResourceAuditInfo spec_audit = 1;
+
+  // Audit info for the resource's status (actual state).
+  ApiResourceAuditInfo status_audit = 2;
+}
+
+// ApiResourceAuditInfo captures who changed something and when, plus the kind
+// of the most recent change. Used for both the spec and status buckets.
+message ApiResourceAuditInfo {
+  // Actor who created this resource (or this bucket of it).
+  ApiResourceAuditActor created_by = 1;
+
+  // Timestamp when the resource (or bucket) was created.
+  google.protobuf.Timestamp created_at = 2;
+
+  // Actor who last updated this resource (or bucket).
+  ApiResourceAuditActor updated_by = 3;
+
+  // Timestamp when the resource (or bucket) was last updated.
+  google.protobuf.Timestamp updated_at = 4;
+
+  // String form of the most recent ApiResourceEventType (e.g. "created",
+  // "updated"). Stored as a string because audit records are persisted and
+  // passed across message boundaries where the enum is serialized by name.
+  string event = 5;
+}
+
+// ApiResourceAuditActor identifies the entity that performed an audited action.
+message ApiResourceAuditActor {
+  // Unique identifier of the actor (e.g. an identity account id or API key id).
+  string id = 1;
+
+  // URL to the actor's avatar image, when available. Populated for display
+  // purposes only; never used for authorization.
+  string avatar = 2;
+}

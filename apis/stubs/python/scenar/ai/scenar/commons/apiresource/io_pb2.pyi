@@ -1,0 +1,43 @@
+from ai.scenar.commons.apiresource.apiresourcekind import api_resource_kind_pb2 as _api_resource_kind_pb2
+from buf.validate import validate_pb2 as _validate_pb2
+from google.protobuf import descriptor as _descriptor
+from google.protobuf import message as _message
+from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
+
+DESCRIPTOR: _descriptor.FileDescriptor
+
+class ApiResourceId(_message.Message):
+    __slots__ = ("value",)
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    value: str
+    def __init__(self, value: _Optional[str] = ...) -> None: ...
+
+class ApiResourceDeleteInput(_message.Message):
+    __slots__ = ("resource_id", "version_message", "force")
+    RESOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    VERSION_MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    FORCE_FIELD_NUMBER: _ClassVar[int]
+    resource_id: str
+    version_message: str
+    force: bool
+    def __init__(self, resource_id: _Optional[str] = ..., version_message: _Optional[str] = ..., force: bool = ...) -> None: ...
+
+class ApiResourceByOrgBySlugRequest(_message.Message):
+    __slots__ = ("org", "slug")
+    ORG_FIELD_NUMBER: _ClassVar[int]
+    SLUG_FIELD_NUMBER: _ClassVar[int]
+    org: str
+    slug: str
+    def __init__(self, org: _Optional[str] = ..., slug: _Optional[str] = ...) -> None: ...
+
+class ApiResourceReference(_message.Message):
+    __slots__ = ("org", "kind", "slug", "version")
+    ORG_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    SLUG_FIELD_NUMBER: _ClassVar[int]
+    VERSION_FIELD_NUMBER: _ClassVar[int]
+    org: str
+    kind: _api_resource_kind_pb2.ApiResourceKind
+    slug: str
+    version: str
+    def __init__(self, org: _Optional[str] = ..., kind: _Optional[_Union[_api_resource_kind_pb2.ApiResourceKind, str]] = ..., slug: _Optional[str] = ..., version: _Optional[str] = ...) -> None: ...

@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package ai.scenar.commons.apiresource.apiresourcekind;
+
+import "ai/scenar/commons/apiresource/apiresourcekind/api_resource_group.proto";
+import "google/protobuf/descriptor.proto";
+
+// Enum-value option carrying metadata for each ApiResourceKind value.
+extend google.protobuf.EnumValueOptions {
+  ApiResourceKindMeta kind_meta = 90101;
+}
+
+// ApiResourceVersion is the API version of a resource kind. A single version
+// (v1) exists today; the enum leaves room for future major versions.
+enum ApiResourceVersion {
+  // Default value when no version is set.
+  api_resource_version_unspecified = 0;
+
+  // Version 1 — the current API version for all resource kinds.
+  v1 = 1;
+}
+
+// ApiResourceKindMeta describes a resource kind: its group, version, names,
+// id prefix, and versioning behaviour. This is the data the platform's kind
+// registry exposes for each kind.
+//
+// Authorization configuration (FGA scope, owner attribution, grantable roles)
+// is intentionally NOT included here yet. It will be added alongside the
+// platform's neutral authorization contract, once that contract is finalized.
+message ApiResourceKindMeta {
+  // Functional group this kind belongs to. Determines the api_version domain.
+  ApiResourceGroup group = 1;
+
+  // API version of this kind.
+  ApiResourceVersion version = 2;
+
+  // PascalCase type name of the kind (e.g. "Scenario"). Matches the `kind`
+  // field value on the resource envelope.
+  string name = 3;
+
+  // Human-readable display name (e.g. "API Key").
+  string display_name = 4;
+
+  // Prefix applied to the resource's metadata.id (e.g. "scn" -> "scn_abc123").
+  // Keeps ids self-describing and globally sortable by kind.
+  string id_prefix = 5;
+
+  // Whether this kind is versioned (each spec change produces a new immutable
+  // version with a content hash in metadata.version). Most kinds are not.
+  bool is_versioned = 6;
+}
+
+// ApiResourceKind enumerates every kind of API resource Scenar manages. The
+// value names are lowercase by convention and are the canonical machine
+// identifier for each kind; the attached kind_meta carries the descriptive
+// metadata.
+enum ApiResourceKind {
+  // Default value for an unset or unrecognized kind.
+  api_resource_kind_unknown = 0;
+
+  // A scenario: the choreography of a visual product walkthrough.
+  scenario = 1 [(kind_meta) = {
+    group: studio
+    version: v1
+    name: "Scenario"
+    display_name: "Scenario"
+    id_prefix: "scn"
+    is_versioned: false
+  }];
+
+  // An organization: the top-level tenant that owns and manages resources.
+  organization = 2 [(kind_meta) = {
+    group: tenancy
+    version: v1
+    name: "Organization"
+    display_name: "Organization"
+    id_prefix: "org"
+    is_versioned: false
+  }];
+
+  // An API key: a credential for programmatic access (e.g. CLI deploys).
+  api_key = 3 [(kind_meta) = {
+    group: iam
+    version: v1
+    name: "ApiKey"
+    display_name: "API Key"
+    id_prefix: "key"
+    is_versioned: false
+  }];
+}

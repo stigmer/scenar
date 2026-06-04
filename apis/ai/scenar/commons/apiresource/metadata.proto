@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package ai.scenar.commons.apiresource;
+
+import "ai/scenar/commons/apiresource/enum.proto";
+import "buf/validate/validate.proto";
+
+// ApiResourceMetadata carries the standard, kind-independent metadata attached
+// to every Scenar API resource. It is the `metadata` block of the
+// Kubernetes-style resource envelope (api_version / kind / metadata / spec /
+// status).
+//
+// This message is part of Scenar's "commons contract": the Scenar Cloud
+// backend reuses the platform's shared Java libraries, which locate this block
+// reflectively by the field name `metadata` and then read its sub-fields by
+// name (`id`, `slug`, `org`, `name`, `visibility`, `version`). The field
+// *names* below are therefore a contract — renaming any of them breaks the
+// platform's metadata adapter and is rejected at service startup by the
+// platform's metadata contract validator. Field *numbers* are local to Scenar
+// and carry no cross-product meaning.
+message ApiResourceMetadata {
+  // Human-readable display name of the resource.
+  //
+  // Validation is skipped when empty so that partial messages (server
+  // responses that omit the name, patch requests, etc.) remain valid.
+  string name = 1 [(buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE];
+
+  // URL-friendly identifier, unique within the owning organization. Combined
+  // with `org` it forms the canonical reference `org/slug`.
+  //
+  // Format: lowercase alphanumeric characters and hyphens (minimum 2
+  // characters); must start with a letter and end with a letter or digit.
+  // When empty on create, the server derives the slug from `name`.
+  string slug = 2 [
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
+    (buf.validate.field).string.min_len = 2,
+    (buf.validate.field).string.pattern = "^[a-z][a-z0-9-]*[a-z0-9]$"
+  ];
+
+  // System-generated unique identifier. Assigned by the server on create and
+  // immutable thereafter. Prefixed per resource kind (see ApiResourceKindMeta).
+  string id = 3;
+
+  // Organization that owns this resource. Every resource belongs to exactly
+  // one organization. Required and enforced by the backend's authorization
+  // layer in Cloud mode.
+  string org = 4;
+
+  // Access-control visibility for the resource. See ApiResourceVisibility.
+  // Defaults to visibility_private for new resources.
+  ApiResourceVisibility visibility = 5 [(buf.validate.field).enum.defined_only = true];
+
+  // Free-form key/value labels for organization and filtering.
+  map<string, string> labels = 6;
+
+  // Free-form key/value annotations for additional, non-identifying metadata.
+  map<string, string> annotations = 7;
+
+  // Tags for categorization and search.
+  repeated string tags = 8;
+
+  // Version tracking information. Populated only for versioned resource kinds.
+  ApiResourceMetadataVersion version = 9;
+}
+
+// ApiResourceMetadataVersion tracks the version of a versioned resource.
+//
+// For versioned kinds, the backend populates this on every spec-changing
+// create/update, analogous to a git commit: `id` is the content hash of the
+// new version, `message` describes the change, and `previous_version_id`
+// links to the prior version. Non-versioned kinds leave this unset.
+message ApiResourceMetadataVersion {
+  // Unique identifier for this version. For versioned resources this is the
+  // SHA-256 content hash of the spec.
+  string id = 1;
+
+  // Human-supplied description of what changed in this version, analogous to
+  // a git commit message.
+  string message = 2;
+
+  // Identifier of the previous version, forming a linked history.
+  string previous_version_id = 3;
+
+  // Optional tag assigned to this version at creation time (e.g. "stable",
+  // "v1.0", "production"). Only applicable to versioned resources.
+  string tag = 4;
+}

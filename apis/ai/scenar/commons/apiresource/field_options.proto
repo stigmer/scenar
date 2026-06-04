@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package ai.scenar.commons.apiresource;
+
+import "google/protobuf/descriptor.proto";
+
+// Custom field-level options for Scenar API resource messages.
+//
+// These options annotate fields with platform semantics that codegen and the
+// shared backend libraries consult. The platform's libraries resolve these
+// options by their *name* (via descriptor introspection), so the option names
+// below are the contract; the extension *numbers* are local to Scenar and may
+// differ from other products.
+extend google.protobuf.FieldOptions {
+  // Marks a field as server-computed / read-only. Clients may not set it on
+  // create or update; the backend populates it. Typical for status fields
+  // such as generated URLs and audit timestamps.
+  bool computed = 90201;
+
+  // Marks a field as immutable: it may be set once on create but not changed
+  // by subsequent updates.
+  bool immutable = 90202;
+
+  // Marks the field that carries the resource identifier on a reference
+  // message. Used by codegen to flatten and resolve references.
+  bool id_field = 90203;
+}

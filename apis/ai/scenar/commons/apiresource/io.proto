@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package ai.scenar.commons.apiresource;
+
+import "ai/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto";
+import "buf/validate/validate.proto";
+
+// ApiResourceId wraps a system-generated resource identifier. Used as a
+// request input wherever an RPC operates on a single resource by id.
+message ApiResourceId {
+  // The resource identifier. Required.
+  string value = 1 [(buf.validate.field).required = true];
+}
+
+// ApiResourceDeleteInput is the standard input for deleting (or previewing a
+// delete of) any API resource.
+message ApiResourceDeleteInput {
+  // Identifier of the resource to delete. Required.
+  string resource_id = 1 [(buf.validate.field).required = true];
+
+  // Optional human-supplied reason for the deletion, recorded for audit
+  // purposes (e.g. "no longer needed").
+  string version_message = 2;
+
+  // When true, forces deletion of a resource that would otherwise be
+  // protected (e.g. one with dependents). Clients must opt in explicitly.
+  bool force = 3;
+}
+
+// ApiResourceByOrgBySlugRequest is the standard input for fetching a resource
+// by its canonical (org, slug) coordinates.
+message ApiResourceByOrgBySlugRequest {
+  // Organization that owns the resource. Required.
+  string org = 1 [(buf.validate.field).required = true];
+
+  // URL-friendly slug of the resource, unique within the organization.
+  // Required.
+  string slug = 2 [(buf.validate.field).required = true];
+}
+
+// ApiResourceReference is a portable reference to another API resource by its
+// (org, kind, slug) coordinates. Resources use it to point at other resources
+// (for example, to associate a scenario with the org that owns it). The
+// canonical string form is "org/slug".
+message ApiResourceReference {
+  // Organization that owns the referenced resource.
+  //
+  // When non-empty it must be a valid org slug. When empty the reference is
+  // relative and the server resolves it to the parent resource's organization
+  // at write time, so stored references are always absolute.
+  string org = 1 [
+    (buf.validate.field).string.max_len = 63,
+    (buf.validate.field).string.pattern = "^$|^[a-z][a-z0-9-]*[a-z0-9]$"
+  ];
+
+  // Kind of the referenced resource.
+  ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKind kind = 2;
+
+  // Slug of the referenced resource, unique within its organization.
+  string slug = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 2,
+    (buf.validate.field).string.max_len = 63,
+    (buf.validate.field).string.pattern = "^[a-z][a-z0-9-]*[a-z0-9]$"
+  ];
+
+  // Version of the referenced resource. Empty resolves to the latest version;
+  // a tag or exact content hash selects a specific version. Ignored for
+  // non-versioned kinds.
+  string version = 4 [(buf.validate.field).string.pattern = "^$|^latest$|^[a-zA-Z0-9._-]+$|^[a-f0-9]{64}$"];
+}

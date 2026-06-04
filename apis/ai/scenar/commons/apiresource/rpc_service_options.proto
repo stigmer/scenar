@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package ai.scenar.commons.apiresource;
+
+import "ai/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto";
+import "google/protobuf/descriptor.proto";
+
+// Service-level option that tags a gRPC service with the API resource kind it
+// manages. The platform's request pipeline reads this annotation to associate
+// command and query controllers with their resource kind for routing and
+// registry lookup.
+//
+// This option is foundational: it is defined here in commons but first applied
+// by the per-resource command/query services introduced in later tasks.
+extend google.protobuf.ServiceOptions {
+  ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKind api_resource_kind = 90100;
+}

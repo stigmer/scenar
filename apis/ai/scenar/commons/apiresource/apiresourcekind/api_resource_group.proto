@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package ai.scenar.commons.apiresource.apiresourcekind;
+
+import "google/protobuf/descriptor.proto";
+
+// Enum-value option carrying metadata for each ApiResourceGroup value.
+extend google.protobuf.EnumValueOptions {
+  ApiResourceGroupMeta group_meta = 91101;
+}
+
+// ApiResourceGroupMeta describes an API resource group.
+message ApiResourceGroupMeta {
+  // DNS-style domain for the group, used as the api_version host segment on
+  // resources (e.g. "scenario.scenar.ai" yields api_version
+  // "scenario.scenar.ai/v1").
+  string domain = 1;
+
+  // Human-readable display name for the group.
+  string display_name = 2;
+}
+
+// ApiResourceGroup organizes Scenar's resource kinds by functional area. The
+// group determines the api_version domain of the resources within it.
+enum ApiResourceGroup {
+  // Default value when no group is set.
+  api_resource_group_unspecified = 0;
+
+  // Scenario authoring and playback resources (Scenar's studio surface).
+  studio = 1 [(group_meta) = {
+    domain: "scenario.scenar.ai"
+    display_name: "Studio"
+  }];
+
+  // Multi-tenancy resources: organizations and the resource hierarchy.
+  tenancy = 2 [(group_meta) = {
+    domain: "tenancy.scenar.ai"
+    display_name: "Tenancy"
+  }];
+
+  // Identity and access management: API keys and credentials.
+  iam = 3 [(group_meta) = {
+    domain: "iam.scenar.ai"
+    display_name: "IAM"
+  }];
+}
