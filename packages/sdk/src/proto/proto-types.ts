@@ -86,8 +86,16 @@ export interface ProtoStep {
   readonly interactions: readonly ProtoStepAction[];
 }
 
-/** Structural shape of the proto `Scenario` message. */
-export interface ProtoScenario {
+/** Structural shape of the proto `ScenarioSpec` message. */
+export interface ProtoScenarioSpec {
   readonly viewport?: ProtoViewportConfig;
   readonly steps: readonly ProtoStep[];
 }
+
+/**
+ * @deprecated Renamed to {@link ProtoScenarioSpec} to track the proto rename
+ * of the content message `Scenario` -> `ScenarioSpec`. This alias preserves
+ * the spec-level shape for existing consumers and will be removed in a future
+ * release.
+ */
+export type ProtoScenario = ProtoScenarioSpec;

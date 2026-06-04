@@ -5,7 +5,7 @@ import type {
   ViewRegistry,
 } from "../author/types.js";
 import { InvalidScenarioError } from "./errors.js";
-import type { ProtoScenario } from "./proto-types.js";
+import type { ProtoScenarioSpec } from "./proto-types.js";
 import { mapProtoAction } from "./action-mapper.js";
 
 /**
@@ -17,10 +17,10 @@ export interface LoadScenarioOptions<Views extends ViewRegistry> {
 }
 
 /**
- * Convert a proto `Scenario` message into an `AuthoredScenario`
+ * Convert a proto `ScenarioSpec` message into an `AuthoredScenario`
  * ready for `<ScenarioPlayer>`.
  *
- * This is the YAML ingestion path: a scenario parsed from protobuf
+ * This is the YAML ingestion path: a scenario spec parsed from protobuf
  * (or proto-JSON) enters here and comes out as the same shape that
  * `createScenario()` produces.
  *
@@ -31,18 +31,18 @@ export interface LoadScenarioOptions<Views extends ViewRegistry> {
  *   structural or semantic validation failure.
  */
 export function loadScenarioFromProto<Views extends ViewRegistry>(
-  scenario: ProtoScenario,
+  spec: ProtoScenarioSpec,
   options: LoadScenarioOptions<Views>,
 ): AuthoredScenario<Views> {
-  if (scenario.steps.length === 0) {
+  if (spec.steps.length === 0) {
     throw new InvalidScenarioError("steps", "steps array must not be empty.");
   }
 
   const viewNames = new Set(Object.keys(options.views));
   const steps: ScenarioStep<AuthoredStepData<Views>>[] = [];
 
-  for (let i = 0; i < scenario.steps.length; i++) {
-    const protoStep = scenario.steps[i]!;
+  for (let i = 0; i < spec.steps.length; i++) {
+    const protoStep = spec.steps[i]!;
     const stepPath = `steps[${i}]`;
 
     if (!protoStep.view) {
@@ -74,7 +74,7 @@ export function loadScenarioFromProto<Views extends ViewRegistry>(
   }
 
   return {
-    viewport: scenario.viewport ? { width: scenario.viewport.width, height: scenario.viewport.height } : undefined,
+    viewport: spec.viewport ? { width: spec.viewport.width, height: spec.viewport.height } : undefined,
     views: options.views,
     steps,
   };

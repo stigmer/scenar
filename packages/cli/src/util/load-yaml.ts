@@ -26,7 +26,7 @@ function snakeToCamel(s: string): string {
 /**
  * Reads a scenario YAML file from disk, parses it, and converts
  * snake_case field names to the camelCase convention used by the
- * SDK's `ProtoScenario` type.
+ * SDK's `ProtoScenarioSpec` type.
  *
  * @throws {Error} on file-not-found or YAML parse failure.
  */

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { loadScenarioFromProto } from "../proto/load-scenario.js";
 import { InvalidScenarioError } from "../proto/errors.js";
-import { PROTO_ACTION_TYPE, type ProtoScenario } from "../proto/proto-types.js";
+import {
+  PROTO_ACTION_TYPE,
+  type ProtoScenario,
+  type ProtoScenarioSpec,
+} from "../proto/proto-types.js";
 
 interface SettingsProps {
   readonly org: string;
@@ -21,7 +25,7 @@ function FormView(_props: FormProps): unknown {
 
 const views = { settings: SettingsView, form: FormView };
 
-function makeValidScenario(): ProtoScenario {
+function makeValidScenario(): ProtoScenarioSpec {
   return {
     viewport: { width: 896, height: 540 },
     steps: [
@@ -55,6 +59,12 @@ function makeValidScenario(): ProtoScenario {
   };
 }
 
+// Backward-compat guard: the deprecated `ProtoScenario` alias must stay
+// assignable from a `ProtoScenarioSpec` value. Removing the alias breaks
+// this assignment and fails `pnpm typecheck`.
+const _aliasGuard: ProtoScenario = makeValidScenario();
+void _aliasGuard;
+
 describe("loadScenarioFromProto", () => {
   it("loads a valid proto scenario into an AuthoredScenario", () => {
     const scenario = loadScenarioFromProto(makeValidScenario(), { views });
@@ -86,7 +96,7 @@ describe("loadScenarioFromProto", () => {
   it("defaults props to empty object when proto props is undefined", () => {
     const proto = makeValidScenario();
     const step = { ...proto.steps[0]!, props: undefined };
-    const modified: ProtoScenario = {
+    const modified: ProtoScenarioSpec = {
       ...proto,
       steps: [step],
     };
@@ -97,7 +107,7 @@ describe("loadScenarioFromProto", () => {
 
   it("handles scenario with no viewport", () => {
     const proto = makeValidScenario();
-    const modified: ProtoScenario = {
+    const modified: ProtoScenarioSpec = {
       ...proto,
       viewport: undefined,
     };
@@ -107,7 +117,7 @@ describe("loadScenarioFromProto", () => {
   });
 
   it("throws when steps array is empty", () => {
-    const proto: ProtoScenario = { steps: [] };
+    const proto: ProtoScenarioSpec = { steps: [] };
 
     expect(() => loadScenarioFromProto(proto, { views })).toThrow(
       /steps array must not be empty/,
@@ -115,7 +125,7 @@ describe("loadScenarioFromProto", () => {
   });
 
   it("throws when a step references an unregistered view", () => {
-    const modified: ProtoScenario = {
+    const modified: ProtoScenarioSpec = {
       steps: [
         {
           view: "unknown-view",
@@ -141,7 +151,7 @@ describe("loadScenarioFromProto", () => {
 
   it("throws when an action has unspecified type", () => {
     const proto = makeValidScenario();
-    const modified: ProtoScenario = {
+    const modified: ProtoScenarioSpec = {
       ...proto,
       steps: [
         {
@@ -168,7 +178,7 @@ describe("loadScenarioFromProto", () => {
   });
 
   it("omits empty narration and caption strings", () => {
-    const modified: ProtoScenario = {
+    const modified: ProtoScenarioSpec = {
       steps: [
         {
           view: "settings",
