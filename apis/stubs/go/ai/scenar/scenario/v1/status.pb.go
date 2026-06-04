@@ -43,7 +43,13 @@ type ScenarioStatus struct {
 	// Standard creation/modification audit information. The high field number
 	// keeps audit at a stable, conventional location and leaves room below for
 	// future scenario-specific status fields.
-	Audit         *apiresource.ApiResourceAuditStatus `protobuf:"bytes,99,opt,name=audit,proto3" json:"audit,omitempty"`
+	//
+	// Typed as ApiResourceAudit directly (not the ApiResourceAuditStatus
+	// wrapper): the platform's audit reflection adapter locates this block by the
+	// field name `audit` on the status message and requires its type to be
+	// ApiResourceAudit. The wrapper is only used when a resource's entire status
+	// field is the audit block.
+	Audit         *apiresource.ApiResourceAudit `protobuf:"bytes,99,opt,name=audit,proto3" json:"audit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -99,7 +105,7 @@ func (x *ScenarioStatus) GetHasNarration() bool {
 	return false
 }
 
-func (x *ScenarioStatus) GetAudit() *apiresource.ApiResourceAuditStatus {
+func (x *ScenarioStatus) GetAudit() *apiresource.ApiResourceAudit {
 	if x != nil {
 		return x.Audit
 	}
@@ -110,13 +116,13 @@ var File_ai_scenar_scenario_v1_status_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_scenario_v1_status_proto_rawDesc = "" +
 	"\n" +
-	"\"ai/scenar/scenario/v1/status.proto\x12\x15ai.scenar.scenario.v1\x1a1ai/scenar/commons/apiresource/field_options.proto\x1a*ai/scenar/commons/apiresource/status.proto\"\xd2\x01\n" +
+	"\"ai/scenar/scenario/v1/status.proto\x12\x15ai.scenar.scenario.v1\x1a1ai/scenar/commons/apiresource/field_options.proto\x1a*ai/scenar/commons/apiresource/status.proto\"\xcc\x01\n" +
 	"\x0eScenarioStatus\x12!\n" +
 	"\tembed_url\x18\x01 \x01(\tB\x04ȅ,\x01R\bembedUrl\x12%\n" +
 	"\vpackage_url\x18\x02 \x01(\tB\x04ȅ,\x01R\n" +
 	"packageUrl\x12)\n" +
-	"\rhas_narration\x18\x03 \x01(\bB\x04ȅ,\x01R\fhasNarration\x12K\n" +
-	"\x05audit\x18c \x01(\v25.ai.scenar.commons.apiresource.ApiResourceAuditStatusR\x05auditB\xe9\x01\n" +
+	"\rhas_narration\x18\x03 \x01(\bB\x04ȅ,\x01R\fhasNarration\x12E\n" +
+	"\x05audit\x18c \x01(\v2/.ai.scenar.commons.apiresource.ApiResourceAuditR\x05auditB\xe9\x01\n" +
 	"\x19com.ai.scenar.scenario.v1B\vStatusProtoP\x01ZHgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/scenario/v1;scenariov1\xa2\x02\x03ASS\xaa\x02\x15Ai.Scenar.Scenario.V1\xca\x02\x15Ai\\Scenar\\Scenario\\V1\xe2\x02!Ai\\Scenar\\Scenario\\V1\\GPBMetadata\xea\x02\x18Ai::Scenar::Scenario::V1b\x06proto3"
 
 var (
@@ -133,11 +139,11 @@ func file_ai_scenar_scenario_v1_status_proto_rawDescGZIP() []byte {
 
 var file_ai_scenar_scenario_v1_status_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_ai_scenar_scenario_v1_status_proto_goTypes = []any{
-	(*ScenarioStatus)(nil),                     // 0: ai.scenar.scenario.v1.ScenarioStatus
-	(*apiresource.ApiResourceAuditStatus)(nil), // 1: ai.scenar.commons.apiresource.ApiResourceAuditStatus
+	(*ScenarioStatus)(nil),               // 0: ai.scenar.scenario.v1.ScenarioStatus
+	(*apiresource.ApiResourceAudit)(nil), // 1: ai.scenar.commons.apiresource.ApiResourceAudit
 }
 var file_ai_scenar_scenario_v1_status_proto_depIdxs = []int32{
-	1, // 0: ai.scenar.scenario.v1.ScenarioStatus.audit:type_name -> ai.scenar.commons.apiresource.ApiResourceAuditStatus
+	1, // 0: ai.scenar.scenario.v1.ScenarioStatus.audit:type_name -> ai.scenar.commons.apiresource.ApiResourceAudit
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name

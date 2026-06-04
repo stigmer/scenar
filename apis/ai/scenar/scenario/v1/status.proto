@@ -28,5 +28,11 @@ message ScenarioStatus {
   // Standard creation/modification audit information. The high field number
   // keeps audit at a stable, conventional location and leaves room below for
   // future scenario-specific status fields.
-  ai.scenar.commons.apiresource.ApiResourceAuditStatus audit = 99;
+  //
+  // Typed as ApiResourceAudit directly (not the ApiResourceAuditStatus
+  // wrapper): the platform's audit reflection adapter locates this block by the
+  // field name `audit` on the status message and requires its type to be
+  // ApiResourceAudit. The wrapper is only used when a resource's entire status
+  // field is the audit block.
+  ai.scenar.commons.apiresource.ApiResourceAudit audit = 99;
 }

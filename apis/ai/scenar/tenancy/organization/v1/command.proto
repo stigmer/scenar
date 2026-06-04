@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package ai.scenar.tenancy.organization.v1;
+
+import "ai/scenar/commons/apiresource/io.proto";
+import "ai/scenar/commons/apiresource/rpc_service_options.proto";
+import "ai/scenar/tenancy/organization/v1/api.proto";
+
+// OrganizationCommandController provides the write operations for organization
+// resources. It is the contract the Scenar Cloud backend implements when
+// tenants are provisioned and managed.
+//
+// The `apply` method is the primary entrypoint: it gives Kubernetes-style
+// idempotent create-or-update semantics. `create`, `update`, and `delete` exist
+// for callers that need explicit, non-idempotent control.
+//
+// Authorization note: per-RPC authorization options are intentionally absent.
+// Scenar has not yet adopted a neutral method-level auth contract (the
+// equivalent of the platform's commons/rpc/method_options). Until that lands,
+// these RPCs carry only the service-level resource-kind tag below; the Cloud
+// backend enforces authorization in its handlers. Method auth annotations will
+// be added here in a dedicated follow-up, not improvised per RPC.
+service OrganizationCommandController {
+  // Tags this controller with the resource kind it manages so the platform's
+  // request pipeline can route and register it generically.
+  option (ai.scenar.commons.apiresource.api_resource_kind) = organization;
+
+  // Create or update an organization. If no organization exists for the given
+  // slug in metadata, it is created; otherwise it is updated in place.
+  // Idempotent — re-applying an unchanged document is a no-op.
+  rpc apply(Organization) returns (Organization);
+
+  // Create a new organization. Returns an error if an organization with the
+  // same slug already exists. Use apply for idempotent semantics.
+  rpc create(Organization) returns (Organization);
+
+  // Update an existing organization, identified by metadata.id. Returns an
+  // error if the organization does not exist.
+  rpc update(Organization) returns (Organization);
+
+  // Delete an organization. Returns the deleted resource as it existed prior to
+  // removal. See ApiResourceDeleteInput for force/version_message semantics.
+  rpc delete(ai.scenar.commons.apiresource.ApiResourceDeleteInput) returns (Organization);
+}

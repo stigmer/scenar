@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package ai.scenar.tenancy.organization.v1;
+
+import "ai/scenar/commons/apiresource/io.proto";
+import "ai/scenar/commons/apiresource/rpc_service_options.proto";
+import "ai/scenar/tenancy/organization/v1/api.proto";
+import "ai/scenar/tenancy/organization/v1/io.proto";
+
+// OrganizationQueryController provides the read operations for organization
+// resources. It is the contract the Scenar Cloud backend implements for
+// fetching and listing tenants.
+//
+// Authorization note: as with the command controller, per-RPC authorization
+// options are intentionally absent until Scenar adopts a neutral method-level
+// auth contract. These RPCs carry only the service-level resource-kind tag; the
+// Cloud backend enforces read authorization in its handlers.
+service OrganizationQueryController {
+  // Tags this controller with the resource kind it manages so the platform's
+  // request pipeline can route and register it generically.
+  option (ai.scenar.commons.apiresource.api_resource_kind) = organization;
+
+  // Get an organization by its system-generated id (metadata.id).
+  rpc get(ai.scenar.commons.apiresource.ApiResourceId) returns (Organization);
+
+  // List organizations, paged by cursor. See ListOrganizationsRequest and
+  // OrganizationList.
+  rpc list(ListOrganizationsRequest) returns (OrganizationList);
+}

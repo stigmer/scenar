@@ -5,7 +5,7 @@
 import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv1";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv1";
 import { file_ai_scenar_commons_apiresource_field_options } from "../../commons/apiresource/field_options_pb";
-import type { ApiResourceAuditStatus } from "../../commons/apiresource/status_pb";
+import type { ApiResourceAudit } from "../../commons/apiresource/status_pb";
 import { file_ai_scenar_commons_apiresource_status } from "../../commons/apiresource/status_pb";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/scenario/v1/status.proto.
  */
 export const file_ai_scenar_scenario_v1_status: GenFile = /*@__PURE__*/
-  fileDesc("CiJhaS9zY2VuYXIvc2NlbmFyaW8vdjEvc3RhdHVzLnByb3RvEhVhaS5zY2VuYXIuc2NlbmFyaW8udjEipwEKDlNjZW5hcmlvU3RhdHVzEhcKCWVtYmVkX3VybBgBIAEoCUIEyIUsARIZCgtwYWNrYWdlX3VybBgCIAEoCUIEyIUsARIbCg1oYXNfbmFycmF0aW9uGAMgASgIQgTIhSwBEkQKBWF1ZGl0GGMgASgLMjUuYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuQXBpUmVzb3VyY2VBdWRpdFN0YXR1c2IGcHJvdG8z", [file_ai_scenar_commons_apiresource_field_options, file_ai_scenar_commons_apiresource_status]);
+  fileDesc("CiJhaS9zY2VuYXIvc2NlbmFyaW8vdjEvc3RhdHVzLnByb3RvEhVhaS5zY2VuYXIuc2NlbmFyaW8udjEioQEKDlNjZW5hcmlvU3RhdHVzEhcKCWVtYmVkX3VybBgBIAEoCUIEyIUsARIZCgtwYWNrYWdlX3VybBgCIAEoCUIEyIUsARIbCg1oYXNfbmFycmF0aW9uGAMgASgIQgTIhSwBEj4KBWF1ZGl0GGMgASgLMi8uYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuQXBpUmVzb3VyY2VBdWRpdGIGcHJvdG8z", [file_ai_scenar_commons_apiresource_field_options, file_ai_scenar_commons_apiresource_status]);
 
 /**
  * ScenarioStatus is the observed state of a Scenario resource — the `status`
@@ -56,9 +56,15 @@ export type ScenarioStatus = Message<"ai.scenar.scenario.v1.ScenarioStatus"> & {
    * keeps audit at a stable, conventional location and leaves room below for
    * future scenario-specific status fields.
    *
-   * @generated from field: ai.scenar.commons.apiresource.ApiResourceAuditStatus audit = 99;
+   * Typed as ApiResourceAudit directly (not the ApiResourceAuditStatus
+   * wrapper): the platform's audit reflection adapter locates this block by the
+   * field name `audit` on the status message and requires its type to be
+   * ApiResourceAudit. The wrapper is only used when a resource's entire status
+   * field is the audit block.
+   *
+   * @generated from field: ai.scenar.commons.apiresource.ApiResourceAudit audit = 99;
    */
-  audit?: ApiResourceAuditStatus;
+  audit?: ApiResourceAudit;
 };
 
 /**

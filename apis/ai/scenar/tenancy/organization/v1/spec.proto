@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package ai.scenar.tenancy.organization.v1;
+
+import "buf/validate/validate.proto";
+
+// OrganizationSpec defines the desired state of an Organization resource — the
+// `spec` block of the envelope (see api.proto). It holds the user-authored,
+// presentational properties of an organization. Identity (name, slug, id) lives
+// in metadata, not here, so this message carries only the configurable details.
+message OrganizationSpec {
+  // Free-form description of the organization, shown on its profile and in
+  // listings. Optional.
+  string description = 1;
+
+  // URL of the organization's logo image, used for display in the UI.
+  // Optional; when empty the UI falls back to a generated placeholder.
+  string logo_url = 2 [
+    (buf.validate.field).string.uri = true,
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE
+  ];
+}

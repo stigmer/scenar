@@ -15,5 +15,5 @@ class ScenarioStatus(_message.Message):
     embed_url: str
     package_url: str
     has_narration: bool
-    audit: _status_pb2.ApiResourceAuditStatus
-    def __init__(self, embed_url: _Optional[str] = ..., package_url: _Optional[str] = ..., has_narration: bool = ..., audit: _Optional[_Union[_status_pb2.ApiResourceAuditStatus, _Mapping]] = ...) -> None: ...
+    audit: _status_pb2.ApiResourceAudit
+    def __init__(self, embed_url: _Optional[str] = ..., package_url: _Optional[str] = ..., has_narration: bool = ..., audit: _Optional[_Union[_status_pb2.ApiResourceAudit, _Mapping]] = ...) -> None: ...
