@@ -23,10 +23,11 @@ _sym_db = _symbol_database.Default()
 
 
 from ai.scenar.commons.apiresource.apiresourcekind import api_resource_group_pb2 as ai_dot_scenar_dot_commons_dot_apiresource_dot_apiresourcekind_dot_api__resource__group__pb2
+from ai.scenar.commons.apiresource.apiresourcekind import authorization_config_pb2 as ai_dot_scenar_dot_commons_dot_apiresource_dot_apiresourcekind_dot_authorization__config__pb2
 from google.protobuf import descriptor_pb2 as google_dot_protobuf_dot_descriptor__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\nEai/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto\x12-ai.scenar.commons.apiresource.apiresourcekind\x1a\x46\x61i/scenar/commons/apiresource/apiresourcekind/api_resource_group.proto\x1a google/protobuf/descriptor.proto\"\xc0\x02\n\x13\x41piResourceKindMeta\x12U\n\x05group\x18\x01 \x01(\x0e\x32?.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceGroupR\x05group\x12[\n\x07version\x18\x02 \x01(\x0e\x32\x41.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceVersionR\x07version\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\x12!\n\x0c\x64isplay_name\x18\x04 \x01(\tR\x0b\x64isplayName\x12\x1b\n\tid_prefix\x18\x05 \x01(\tR\x08idPrefix\x12!\n\x0cis_versioned\x18\x06 \x01(\x08R\x0bisVersioned*B\n\x12\x41piResourceVersion\x12$\n api_resource_version_unspecified\x10\x00\x12\x06\n\x02v1\x10\x01*\xcb\x01\n\x0f\x41piResourceKind\x12\x1d\n\x19\x61pi_resource_kind_unknown\x10\x00\x12/\n\x08scenario\x10\x01\x1a!\xaa\xff+\x1d\x08\x01\x10\x01\x1a\x08Scenario\"\x08Scenario*\x03scn\x12;\n\x0corganization\x10\x02\x1a)\xaa\xff+%\x08\x02\x10\x01\x1a\x0cOrganization\"\x0cOrganization*\x03org\x12+\n\x07\x61pi_key\x10\x03\x1a\x1e\xaa\xff+\x1a\x08\x03\x10\x01\x1a\x06\x41piKey\"\x07\x41PI Key*\x03key:\x84\x01\n\tkind_meta\x12!.google.protobuf.EnumValueOptions\x18\xf5\xbf\x05 \x01(\x0b\x32\x42.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMetaR\x08kindMetab\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\nEai/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto\x12-ai.scenar.commons.apiresource.apiresourcekind\x1a\x46\x61i/scenar/commons/apiresource/apiresourcekind/api_resource_group.proto\x1aHai/scenar/commons/apiresource/apiresourcekind/authorization_config.proto\x1a google/protobuf/descriptor.proto\"\xa9\x04\n\x13\x41piResourceKindMeta\x12U\n\x05group\x18\x01 \x01(\x0e\x32?.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceGroupR\x05group\x12[\n\x07version\x18\x02 \x01(\x0e\x32\x41.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceVersionR\x07version\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\x12!\n\x0c\x64isplay_name\x18\x04 \x01(\tR\x0b\x64isplayName\x12\x1b\n\tid_prefix\x18\x05 \x01(\tR\x08idPrefix\x12!\n\x0cis_versioned\x18\x06 \x01(\x08R\x0bisVersioned\x12,\n\x12not_search_indexed\x18\x07 \x01(\x08R\x10notSearchIndexed\x12O\n\x04tier\x18\x08 \x01(\x0e\x32;.ai.scenar.commons.apiresource.apiresourcekind.ResourceTierR\x04tier\x12h\n\rauthorization\x18\t \x01(\x0b\x32\x42.ai.scenar.commons.apiresource.apiresourcekind.AuthorizationConfigR\rauthorization*B\n\x12\x41piResourceVersion\x12$\n api_resource_version_unspecified\x10\x00\x12\x06\n\x02v1\x10\x01*N\n\x0cResourceTier\x12\x1d\n\x19resource_tier_unspecified\x10\x00\x12\x0f\n\x0bopen_source\x10\x01\x12\x0e\n\ncloud_only\x10\x02*@\n\x0fPlatformIdValue\x12!\n\x1dplatform_id_value_unspecified\x10\x00\x12\n\n\x06scenar\x10\x01*\xbf\x03\n\x0f\x41piResourceKind\x12\x1d\n\x19\x61pi_resource_kind_unknown\x10\x00\x12?\n\x08scenario\x10\x01\x1a\x31\xaa\xff+-\x08\x01\x10\x01\x1a\x08Scenario\"\x08Scenario*\x03scn@\x01J\x0c\x08\x02\x10\x01*\x02\x08\x01:\x02\x01\x04\x12I\n\x0corganization\x10\x02\x1a\x37\xaa\xff+3\x08\x02\x10\x01\x1a\x0cOrganization\"\x0cOrganization*\x03org@\x01J\n\x08\x04\x10\x01:\x04\x01\x02\x03\x04\x12\x35\n\x07\x61pi_key\x10\x03\x1a(\xaa\xff+$\x08\x03\x10\x01\x1a\x06\x41piKey\"\x07\x41PI Key*\x03key8\x01@\x02J\x04\x08\x04\x10\x01\x12?\n\niam_policy\x10\n\x1a/\xaa\xff++\x08\x03\x10\x01\x1a\tIamPolicy\"\nIAM Policy*\x04iamp8\x01@\x02J\x04\x08\x02\x10\x01\x12N\n\x10identity_account\x10\x0b\x1a\x38\xaa\xff+4\x08\x03\x10\x01\x1a\x0fIdentityAccount\"\x10Identity Account*\x03ida@\x02J\x04\x08\x04\x10\x03\x12\x39\n\x08platform\x10\x1f\x1a+\xaa\xff+\'\x08\x02\x10\x01\x1a\x08Platform\"\x08Platform*\x03plt8\x01@\x02J\x04\x08\x05\x10\x04:\x84\x01\n\tkind_meta\x12!.google.protobuf.EnumValueOptions\x18\xf5\xbf\x05 \x01(\x0b\x32\x42.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMetaR\x08kindMetab\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,15 +35,25 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'ai.scenar.commons.apiresour
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_APIRESOURCEKIND'].values_by_name["scenario"]._loaded_options = None
-  _globals['_APIRESOURCEKIND'].values_by_name["scenario"]._serialized_options = b'\252\377+\035\010\001\020\001\032\010Scenario\"\010Scenario*\003scn'
+  _globals['_APIRESOURCEKIND'].values_by_name["scenario"]._serialized_options = b'\252\377+-\010\001\020\001\032\010Scenario\"\010Scenario*\003scn@\001J\014\010\002\020\001*\002\010\001:\002\001\004'
   _globals['_APIRESOURCEKIND'].values_by_name["organization"]._loaded_options = None
-  _globals['_APIRESOURCEKIND'].values_by_name["organization"]._serialized_options = b'\252\377+%\010\002\020\001\032\014Organization\"\014Organization*\003org'
+  _globals['_APIRESOURCEKIND'].values_by_name["organization"]._serialized_options = b'\252\377+3\010\002\020\001\032\014Organization\"\014Organization*\003org@\001J\n\010\004\020\001:\004\001\002\003\004'
   _globals['_APIRESOURCEKIND'].values_by_name["api_key"]._loaded_options = None
-  _globals['_APIRESOURCEKIND'].values_by_name["api_key"]._serialized_options = b'\252\377+\032\010\003\020\001\032\006ApiKey\"\007API Key*\003key'
-  _globals['_APIRESOURCEVERSION']._serialized_start=549
-  _globals['_APIRESOURCEVERSION']._serialized_end=615
-  _globals['_APIRESOURCEKIND']._serialized_start=618
-  _globals['_APIRESOURCEKIND']._serialized_end=821
-  _globals['_APIRESOURCEKINDMETA']._serialized_start=227
-  _globals['_APIRESOURCEKINDMETA']._serialized_end=547
+  _globals['_APIRESOURCEKIND'].values_by_name["api_key"]._serialized_options = b'\252\377+$\010\003\020\001\032\006ApiKey\"\007API Key*\003key8\001@\002J\004\010\004\020\001'
+  _globals['_APIRESOURCEKIND'].values_by_name["iam_policy"]._loaded_options = None
+  _globals['_APIRESOURCEKIND'].values_by_name["iam_policy"]._serialized_options = b'\252\377++\010\003\020\001\032\tIamPolicy\"\nIAM Policy*\004iamp8\001@\002J\004\010\002\020\001'
+  _globals['_APIRESOURCEKIND'].values_by_name["identity_account"]._loaded_options = None
+  _globals['_APIRESOURCEKIND'].values_by_name["identity_account"]._serialized_options = b'\252\377+4\010\003\020\001\032\017IdentityAccount\"\020Identity Account*\003ida@\002J\004\010\004\020\003'
+  _globals['_APIRESOURCEKIND'].values_by_name["platform"]._loaded_options = None
+  _globals['_APIRESOURCEKIND'].values_by_name["platform"]._serialized_options = b'\252\377+\'\010\002\020\001\032\010Platform\"\010Platform*\003plt8\001@\002J\004\010\005\020\004'
+  _globals['_APIRESOURCEVERSION']._serialized_start=856
+  _globals['_APIRESOURCEVERSION']._serialized_end=922
+  _globals['_RESOURCETIER']._serialized_start=924
+  _globals['_RESOURCETIER']._serialized_end=1002
+  _globals['_PLATFORMIDVALUE']._serialized_start=1004
+  _globals['_PLATFORMIDVALUE']._serialized_end=1068
+  _globals['_APIRESOURCEKIND']._serialized_start=1071
+  _globals['_APIRESOURCEKIND']._serialized_end=1518
+  _globals['_APIRESOURCEKINDMETA']._serialized_start=301
+  _globals['_APIRESOURCEKINDMETA']._serialized_end=854
 # @@protoc_insertion_point(module_scope)

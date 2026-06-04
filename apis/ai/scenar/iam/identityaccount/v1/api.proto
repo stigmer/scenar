@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package ai.scenar.iam.identityaccount.v1;
+
+import "ai/scenar/commons/apiresource/metadata.proto";
+import "ai/scenar/commons/apiresource/status.proto";
+import "ai/scenar/iam/identityaccount/v1/spec.proto";
+import "buf/validate/validate.proto";
+
+// IdentityAccount represents a user or machine principal in Scenar.
+//
+// An identity account is the core identity primitive for authentication and
+// authorization. Accounts can be direct (signed up via Scenar), federated
+// (provisioned through an external identity provider), or machine
+// (service-to-service credentials).
+message IdentityAccount {
+  // API version for this resource type.
+  string api_version = 1 [(buf.validate.field).string.const = 'iam.scenar.ai/v1'];
+
+  // Resource kind identifier.
+  string kind = 2 [(buf.validate.field).string.const = 'IdentityAccount'];
+
+  // Resource metadata including name, organization, and labels.
+  ai.scenar.commons.apiresource.ApiResourceMetadata metadata = 3;
+
+  // Configurable properties: identity provider ID, email, name, and provisioning mode.
+  IdentityAccountSpec spec = 4;
+
+  // System-managed state including audit trail.
+  ai.scenar.commons.apiresource.ApiResourceAuditStatus status = 5;
+}

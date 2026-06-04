@@ -3,6 +3,7 @@ syntax = "proto3";
 package ai.scenar.commons.apiresource.apiresourcekind;
 
 import "ai/scenar/commons/apiresource/apiresourcekind/api_resource_group.proto";
+import "ai/scenar/commons/apiresource/apiresourcekind/authorization_config.proto";
 import "google/protobuf/descriptor.proto";
 
 // Enum-value option carrying metadata for each ApiResourceKind value.
@@ -20,13 +21,30 @@ enum ApiResourceVersion {
   v1 = 1;
 }
 
+// ResourceTier defines the availability context of a resource kind: whether it
+// exists in the open-source/local surface or only in the hosted Cloud.
+enum ResourceTier {
+  resource_tier_unspecified = 0;
+  // Available in CLI local mode and Cloud.
+  open_source = 1;
+  // Hidden in CLI local mode; available in Cloud only.
+  cloud_only = 2;
+}
+
+// PlatformIdValue defines the singleton platform instance ID. Used wherever a
+// platform kind value is required (e.g. platform-level authorization scopes).
+enum PlatformIdValue {
+  platform_id_value_unspecified = 0;
+
+  // The Scenar platform singleton instance. Used as the resource ID for
+  // platform-level authorization.
+  scenar = 1;
+}
+
 // ApiResourceKindMeta describes a resource kind: its group, version, names,
-// id prefix, and versioning behaviour. This is the data the platform's kind
-// registry exposes for each kind.
-//
-// Authorization configuration (FGA scope, owner attribution, grantable roles)
-// is intentionally NOT included here yet. It will be added alongside the
-// platform's neutral authorization contract, once that contract is finalized.
+// id prefix, versioning behaviour, availability tier, and authorization
+// configuration. This is the data the platform's kind registry exposes for
+// each kind.
 message ApiResourceKindMeta {
   // Functional group this kind belongs to. Determines the api_version domain.
   ApiResourceGroup group = 1;
@@ -48,6 +66,16 @@ message ApiResourceKindMeta {
   // Whether this kind is versioned (each spec change produces a new immutable
   // version with a content hash in metadata.version). Most kinds are not.
   bool is_versioned = 6;
+
+  // Whether this kind is excluded from the search index.
+  bool not_search_indexed = 7;
+
+  // Availability context - whether the kind is open-source/local or cloud-only.
+  ResourceTier tier = 8;
+
+  // FGA authorization configuration - defines how FGA tuples are created for
+  // this resource kind at runtime.
+  AuthorizationConfig authorization = 9;
 }
 
 // ApiResourceKind enumerates every kind of API resource Scenar manages. The
@@ -58,6 +86,24 @@ enum ApiResourceKind {
   // Default value for an unset or unrecognized kind.
   api_resource_kind_unknown = 0;
 
+  // An immutable version record tracking a change to a versioned API resource.
+  // System-managed; created by the platform when a versioned resource's spec
+  // changes. Not authored directly by users.
+  api_resource_version = 4 [(kind_meta) = {
+    group: tenancy
+    version: v1
+    name: "ApiResourceVersion"
+    display_name: "API Resource Version"
+    id_prefix: "ver"
+    is_versioned: false
+    not_search_indexed: true
+    tier: cloud_only
+    authorization: {
+      scope_type: AUTHORIZATION_SCOPE_TYPE_NONE
+      owner_type: OWNER_ATTRIBUTION_TYPE_NONE
+    }
+  }];
+
   // A scenario: the choreography of a visual product walkthrough.
   scenario = 1 [(kind_meta) = {
     group: studio
@@ -66,6 +112,17 @@ enum ApiResourceKind {
     display_name: "Scenario"
     id_prefix: "scn"
     is_versioned: false
+    not_search_indexed: false
+    tier: open_source
+    authorization: {
+      scope_type: AUTHORIZATION_SCOPE_TYPE_ORGANIZATION
+      owner_type: OWNER_ATTRIBUTION_TYPE_DIRECT
+      visibility: {supports_public: true}
+      grantable_roles: [
+        owner,
+        viewer
+      ]
+    }
   }];
 
   // An organization: the top-level tenant that owns and manages resources.
@@ -76,6 +133,18 @@ enum ApiResourceKind {
     display_name: "Organization"
     id_prefix: "org"
     is_versioned: false
+    not_search_indexed: false
+    tier: open_source
+    authorization: {
+      scope_type: AUTHORIZATION_SCOPE_TYPE_OWNER_ONLY
+      owner_type: OWNER_ATTRIBUTION_TYPE_DIRECT
+      grantable_roles: [
+        owner,
+        admin,
+        member,
+        viewer
+      ]
+    }
   }];
 
   // An API key: a credential for programmatic access (e.g. CLI deploys).
@@ -86,5 +155,59 @@ enum ApiResourceKind {
     display_name: "API Key"
     id_prefix: "key"
     is_versioned: false
+    not_search_indexed: true
+    tier: cloud_only
+    authorization: {
+      scope_type: AUTHORIZATION_SCOPE_TYPE_OWNER_ONLY
+      owner_type: OWNER_ATTRIBUTION_TYPE_DIRECT
+    }
+  }];
+
+  // An IAM policy: a role-based access grant binding a principal to a resource.
+  iam_policy = 10 [(kind_meta) = {
+    group: iam
+    version: v1
+    name: "IamPolicy"
+    display_name: "IAM Policy"
+    id_prefix: "iamp"
+    is_versioned: false
+    not_search_indexed: true
+    tier: cloud_only
+    authorization: {
+      scope_type: AUTHORIZATION_SCOPE_TYPE_ORGANIZATION
+      owner_type: OWNER_ATTRIBUTION_TYPE_DIRECT
+    }
+  }];
+
+  // An identity account: a user or machine principal in the identity system.
+  identity_account = 11 [(kind_meta) = {
+    group: iam
+    version: v1
+    name: "IdentityAccount"
+    display_name: "Identity Account"
+    id_prefix: "ida"
+    is_versioned: false
+    not_search_indexed: false
+    tier: cloud_only
+    authorization: {
+      scope_type: AUTHORIZATION_SCOPE_TYPE_OWNER_ONLY
+      owner_type: OWNER_ATTRIBUTION_TYPE_SELF
+    }
+  }];
+
+  // The singleton platform instance representing the Scenar deployment.
+  platform = 31 [(kind_meta) = {
+    group: tenancy
+    version: v1
+    name: "Platform"
+    display_name: "Platform"
+    id_prefix: "plt"
+    is_versioned: false
+    not_search_indexed: true
+    tier: cloud_only
+    authorization: {
+      scope_type: AUTHORIZATION_SCOPE_TYPE_NONE
+      owner_type: OWNER_ATTRIBUTION_TYPE_NONE
+    }
   }];
 }

@@ -6,6 +6,8 @@ import type { GenEnum, GenExtension, GenFile, GenMessage } from "@bufbuild/proto
 import { enumDesc, extDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv1";
 import type { ApiResourceGroup } from "./api_resource_group_pb";
 import { file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_group } from "./api_resource_group_pb";
+import type { AuthorizationConfig } from "./authorization_config_pb";
+import { file_ai_scenar_commons_apiresource_apiresourcekind_authorization_config } from "./authorization_config_pb";
 import type { EnumValueOptions } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_descriptor } from "@bufbuild/protobuf/wkt";
 import type { Message } from "@bufbuild/protobuf";
@@ -14,16 +16,13 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto.
  */
 export const file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind: GenFile = /*@__PURE__*/
-  fileDesc("CkVhaS9zY2VuYXIvY29tbW9ucy9hcGlyZXNvdXJjZS9hcGlyZXNvdXJjZWtpbmQvYXBpX3Jlc291cmNlX2tpbmQucHJvdG8SLWFpLnNjZW5hci5jb21tb25zLmFwaXJlc291cmNlLmFwaXJlc291cmNla2luZCKGAgoTQXBpUmVzb3VyY2VLaW5kTWV0YRJOCgVncm91cBgBIAEoDjI/LmFpLnNjZW5hci5jb21tb25zLmFwaXJlc291cmNlLmFwaXJlc291cmNla2luZC5BcGlSZXNvdXJjZUdyb3VwElIKB3ZlcnNpb24YAiABKA4yQS5haS5zY2VuYXIuY29tbW9ucy5hcGlyZXNvdXJjZS5hcGlyZXNvdXJjZWtpbmQuQXBpUmVzb3VyY2VWZXJzaW9uEgwKBG5hbWUYAyABKAkSFAoMZGlzcGxheV9uYW1lGAQgASgJEhEKCWlkX3ByZWZpeBgFIAEoCRIUCgxpc192ZXJzaW9uZWQYBiABKAgqQgoSQXBpUmVzb3VyY2VWZXJzaW9uEiQKIGFwaV9yZXNvdXJjZV92ZXJzaW9uX3Vuc3BlY2lmaWVkEAASBgoCdjEQASrLAQoPQXBpUmVzb3VyY2VLaW5kEh0KGWFwaV9yZXNvdXJjZV9raW5kX3Vua25vd24QABIvCghzY2VuYXJpbxABGiGq/ysdCAEQARoIU2NlbmFyaW8iCFNjZW5hcmlvKgNzY24SOwoMb3JnYW5pemF0aW9uEAIaKar/KyUIAhABGgxPcmdhbml6YXRpb24iDE9yZ2FuaXphdGlvbioDb3JnEisKB2FwaV9rZXkQAxoeqv8rGggDEAEaBkFwaUtleSIHQVBJIEtleSoDa2V5OoQBCglraW5kX21ldGESIS5nb29nbGUucHJvdG9idWYuRW51bVZhbHVlT3B0aW9ucxj1vwUgASgLMkIuYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuYXBpcmVzb3VyY2VraW5kLkFwaVJlc291cmNlS2luZE1ldGFSCGtpbmRNZXRhYgZwcm90bzM", [file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_group, file_google_protobuf_descriptor]);
+  fileDesc("CkVhaS9zY2VuYXIvY29tbW9ucy9hcGlyZXNvdXJjZS9hcGlyZXNvdXJjZWtpbmQvYXBpX3Jlc291cmNlX2tpbmQucHJvdG8SLWFpLnNjZW5hci5jb21tb25zLmFwaXJlc291cmNlLmFwaXJlc291cmNla2luZCLIAwoTQXBpUmVzb3VyY2VLaW5kTWV0YRJOCgVncm91cBgBIAEoDjI/LmFpLnNjZW5hci5jb21tb25zLmFwaXJlc291cmNlLmFwaXJlc291cmNla2luZC5BcGlSZXNvdXJjZUdyb3VwElIKB3ZlcnNpb24YAiABKA4yQS5haS5zY2VuYXIuY29tbW9ucy5hcGlyZXNvdXJjZS5hcGlyZXNvdXJjZWtpbmQuQXBpUmVzb3VyY2VWZXJzaW9uEgwKBG5hbWUYAyABKAkSFAoMZGlzcGxheV9uYW1lGAQgASgJEhEKCWlkX3ByZWZpeBgFIAEoCRIUCgxpc192ZXJzaW9uZWQYBiABKAgSGgoSbm90X3NlYXJjaF9pbmRleGVkGAcgASgIEkkKBHRpZXIYCCABKA4yOy5haS5zY2VuYXIuY29tbW9ucy5hcGlyZXNvdXJjZS5hcGlyZXNvdXJjZWtpbmQuUmVzb3VyY2VUaWVyElkKDWF1dGhvcml6YXRpb24YCSABKAsyQi5haS5zY2VuYXIuY29tbW9ucy5hcGlyZXNvdXJjZS5hcGlyZXNvdXJjZWtpbmQuQXV0aG9yaXphdGlvbkNvbmZpZypCChJBcGlSZXNvdXJjZVZlcnNpb24SJAogYXBpX3Jlc291cmNlX3ZlcnNpb25fdW5zcGVjaWZpZWQQABIGCgJ2MRABKk4KDFJlc291cmNlVGllchIdChlyZXNvdXJjZV90aWVyX3Vuc3BlY2lmaWVkEAASDwoLb3Blbl9zb3VyY2UQARIOCgpjbG91ZF9vbmx5EAIqQAoPUGxhdGZvcm1JZFZhbHVlEiEKHXBsYXRmb3JtX2lkX3ZhbHVlX3Vuc3BlY2lmaWVkEAASCgoGc2NlbmFyEAEqvwMKD0FwaVJlc291cmNlS2luZBIdChlhcGlfcmVzb3VyY2Vfa2luZF91bmtub3duEAASPwoIc2NlbmFyaW8QARoxqv8rLQgBEAEaCFNjZW5hcmlvIghTY2VuYXJpbyoDc2NuQAFKDAgCEAEqAggBOgIBBBJJCgxvcmdhbml6YXRpb24QAho3qv8rMwgCEAEaDE9yZ2FuaXphdGlvbiIMT3JnYW5pemF0aW9uKgNvcmdAAUoKCAQQAToEAQIDBBI1CgdhcGlfa2V5EAMaKKr/KyQIAxABGgZBcGlLZXkiB0FQSSBLZXkqA2tleTgBQAJKBAgEEAESPwoKaWFtX3BvbGljeRAKGi+q/ysrCAMQARoJSWFtUG9saWN5IgpJQU0gUG9saWN5KgRpYW1wOAFAAkoECAIQARJOChBpZGVudGl0eV9hY2NvdW50EAsaOKr/KzQIAxABGg9JZGVudGl0eUFjY291bnQiEElkZW50aXR5IEFjY291bnQqA2lkYUACSgQIBBADEjkKCHBsYXRmb3JtEB8aK6r/KycIAhABGghQbGF0Zm9ybSIIUGxhdGZvcm0qA3BsdDgBQAJKBAgFEAQ6hAEKCWtpbmRfbWV0YRIhLmdvb2dsZS5wcm90b2J1Zi5FbnVtVmFsdWVPcHRpb25zGPW/BSABKAsyQi5haS5zY2VuYXIuY29tbW9ucy5hcGlyZXNvdXJjZS5hcGlyZXNvdXJjZWtpbmQuQXBpUmVzb3VyY2VLaW5kTWV0YVIIa2luZE1ldGFiBnByb3RvMw", [file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_group, file_ai_scenar_commons_apiresource_apiresourcekind_authorization_config, file_google_protobuf_descriptor]);
 
 /**
  * ApiResourceKindMeta describes a resource kind: its group, version, names,
- * id prefix, and versioning behaviour. This is the data the platform's kind
- * registry exposes for each kind.
- *
- * Authorization configuration (FGA scope, owner attribution, grantable roles)
- * is intentionally NOT included here yet. It will be added alongside the
- * platform's neutral authorization contract, once that contract is finalized.
+ * id prefix, versioning behaviour, availability tier, and authorization
+ * configuration. This is the data the platform's kind registry exposes for
+ * each kind.
  *
  * @generated from message ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta
  */
@@ -72,6 +71,28 @@ export type ApiResourceKindMeta = Message<"ai.scenar.commons.apiresource.apireso
    * @generated from field: bool is_versioned = 6;
    */
   isVersioned: boolean;
+
+  /**
+   * Whether this kind is excluded from the search index.
+   *
+   * @generated from field: bool not_search_indexed = 7;
+   */
+  notSearchIndexed: boolean;
+
+  /**
+   * Availability context - whether the kind is open-source/local or cloud-only.
+   *
+   * @generated from field: ai.scenar.commons.apiresource.apiresourcekind.ResourceTier tier = 8;
+   */
+  tier: ResourceTier;
+
+  /**
+   * FGA authorization configuration - defines how FGA tuples are created for
+   * this resource kind at runtime.
+   *
+   * @generated from field: ai.scenar.commons.apiresource.apiresourcekind.AuthorizationConfig authorization = 9;
+   */
+  authorization?: AuthorizationConfig;
 };
 
 /**
@@ -110,6 +131,66 @@ export const ApiResourceVersionSchema: GenEnum<ApiResourceVersion> = /*@__PURE__
   enumDesc(file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind, 0);
 
 /**
+ * ResourceTier defines the availability context of a resource kind: whether it
+ * exists in the open-source/local surface or only in the hosted Cloud.
+ *
+ * @generated from enum ai.scenar.commons.apiresource.apiresourcekind.ResourceTier
+ */
+export enum ResourceTier {
+  /**
+   * @generated from enum value: resource_tier_unspecified = 0;
+   */
+  resource_tier_unspecified = 0,
+
+  /**
+   * Available in CLI local mode and Cloud.
+   *
+   * @generated from enum value: open_source = 1;
+   */
+  open_source = 1,
+
+  /**
+   * Hidden in CLI local mode; available in Cloud only.
+   *
+   * @generated from enum value: cloud_only = 2;
+   */
+  cloud_only = 2,
+}
+
+/**
+ * Describes the enum ai.scenar.commons.apiresource.apiresourcekind.ResourceTier.
+ */
+export const ResourceTierSchema: GenEnum<ResourceTier> = /*@__PURE__*/
+  enumDesc(file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind, 1);
+
+/**
+ * PlatformIdValue defines the singleton platform instance ID. Used wherever a
+ * platform kind value is required (e.g. platform-level authorization scopes).
+ *
+ * @generated from enum ai.scenar.commons.apiresource.apiresourcekind.PlatformIdValue
+ */
+export enum PlatformIdValue {
+  /**
+   * @generated from enum value: platform_id_value_unspecified = 0;
+   */
+  platform_id_value_unspecified = 0,
+
+  /**
+   * The Scenar platform singleton instance. Used as the resource ID for
+   * platform-level authorization.
+   *
+   * @generated from enum value: scenar = 1;
+   */
+  scenar = 1,
+}
+
+/**
+ * Describes the enum ai.scenar.commons.apiresource.apiresourcekind.PlatformIdValue.
+ */
+export const PlatformIdValueSchema: GenEnum<PlatformIdValue> = /*@__PURE__*/
+  enumDesc(file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind, 2);
+
+/**
  * ApiResourceKind enumerates every kind of API resource Scenar manages. The
  * value names are lowercase by convention and are the canonical machine
  * identifier for each kind; the attached kind_meta carries the descriptive
@@ -145,13 +226,34 @@ export enum ApiResourceKind {
    * @generated from enum value: api_key = 3;
    */
   api_key = 3,
+
+  /**
+   * An IAM policy: a role-based access grant binding a principal to a resource.
+   *
+   * @generated from enum value: iam_policy = 10;
+   */
+  iam_policy = 10,
+
+  /**
+   * An identity account: a user or machine principal in the identity system.
+   *
+   * @generated from enum value: identity_account = 11;
+   */
+  identity_account = 11,
+
+  /**
+   * The singleton platform instance representing the Scenar deployment.
+   *
+   * @generated from enum value: platform = 31;
+   */
+  platform = 31,
 }
 
 /**
  * Describes the enum ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKind.
  */
 export const ApiResourceKindSchema: GenEnum<ApiResourceKind> = /*@__PURE__*/
-  enumDesc(file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind, 1);
+  enumDesc(file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind, 3);
 
 /**
  * @generated from extension: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta kind_meta = 90101;

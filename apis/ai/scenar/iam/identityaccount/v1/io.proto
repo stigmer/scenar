@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package ai.scenar.iam.identityaccount.v1;
+
+import "ai/scenar/commons/apiresource/io.proto";
+import "ai/scenar/commons/rpc/pagination.proto";
+import "ai/scenar/iam/identityaccount/v1/api.proto";
+import "buf/validate/validate.proto";
+
+// IdentityAccounts contains a list of identity account resources.
+message IdentityAccounts {
+  // Identity account entries.
+  repeated IdentityAccount entries = 1;
+}
+
+// IdentityAccountId identifies an identity account by its unique identifier.
+message IdentityAccountId {
+  // Unique identifier of the identity account.
+  string value = 1 [(buf.validate.field).required = true];
+}
+
+// IdentityAccountEmail identifies an identity account by its email address.
+message IdentityAccountEmail {
+  // Email address of the identity account.
+  string value = 1 [(buf.validate.field).required = true];
+}
+
+// IdpId identifies an identity account by its identity provider ID.
+message IdpId {
+  // Identity provider ID of the account.
+  string value = 1 [(buf.validate.field).required = true];
+}
+
+// ListWithIdentityAccountIdReq is the input for paginated queries scoped to an identity account.
+message ListWithIdentityAccountIdReq {
+  // Unique identifier of the identity account to list resources for.
+  string identity_account_id = 1;
+  // Pagination parameters.
+  ai.scenar.commons.rpc.PageInfo page = 2;
+}
+
+// IdentityAccountsList is a paginated response containing identity accounts.
+message IdentityAccountsList {
+  // Total number of pages available.
+  int32 total_pages = 1;
+  // Identity accounts in the current page.
+  repeated IdentityAccount entries = 2;
+}
+
+// ListWithIdentityOrg is the input for paginated queries scoped to an organization.
+message ListWithIdentityOrg {
+  // Organization slug to list identity accounts for.
+  string org = 1;
+  // Pagination parameters.
+  ai.scenar.commons.rpc.PageInfo page = 2;
+}
+
+// ExternalSubLookup identifies a federated identity account by its identity provider
+// reference and external subject identifier (OIDC sub claim).
+//
+// Used by platform backends to check whether a federated account already exists
+// before calling createFederatedAccount.
+message ExternalSubLookup {
+  // Organization that owns the identity provider.
+  // Used as the authorization scope: caller must have can_manage_identity_accounts
+  // permission on this organization.
+  string org = 1 [(buf.validate.field).required = true];
+
+  // Reference to the IdentityProvider that the federated account belongs to.
+  ai.scenar.commons.apiresource.ApiResourceReference identity_provider_ref = 2;
+
+  // External subject identifier from the platform's OIDC provider.
+  // The raw OIDC sub claim (e.g., "google-oauth2|109876543210").
+  string external_sub = 3 [(buf.validate.field).required = true];
+}
+
+// CreateFederatedAccountInput is the command for creating a federated identity account
+// linked to an external platform's identity provider.
+message CreateFederatedAccountInput {
+  // Organization that owns the identity provider.
+  string org = 1 [(buf.validate.field).required = true];
+
+  // Reference to the IdentityProvider that this federated account belongs to.
+  ai.scenar.commons.apiresource.ApiResourceReference identity_provider_ref = 2;
+
+  // External subject identifier from the platform's OIDC provider.
+  string external_sub = 3 [(buf.validate.field).required = true];
+
+  // Email address of the user.
+  string email = 4 [(buf.validate.field).required = true];
+
+  // First name of the user.
+  string first_name = 5;
+
+  // Last name of the user.
+  string last_name = 6;
+
+  // URL of the user's profile picture.
+  string picture_url = 7;
+}
+
+// UpdateFederatedAccountInput is the command for updating profile fields on a
+// federated identity account identified by its natural key (identity provider
+// reference + external subject).
+message UpdateFederatedAccountInput {
+  // Organization that owns the identity provider.
+  string org = 1 [(buf.validate.field).required = true];
+
+  // Reference to the IdentityProvider that the federated account belongs to.
+  ai.scenar.commons.apiresource.ApiResourceReference identity_provider_ref = 2;
+
+  // External subject identifier (OIDC sub claim) — lookup key, not updatable.
+  string external_sub = 3 [(buf.validate.field).required = true];
+
+  // Updated email address.
+  string email = 4 [(buf.validate.field).required = true];
+
+  // Updated first name.
+  string first_name = 5;
+
+  // Updated last name.
+  string last_name = 6;
+
+  // Updated profile picture URL.
+  string picture_url = 7;
+}
+
+// DeprovisionFederatedAccountInput is the command for revoking a federated
+// identity account's access, with an option to delete the account entirely.
+message DeprovisionFederatedAccountInput {
+  // Organization that owns the identity provider.
+  string org = 1 [(buf.validate.field).required = true];
+
+  // Reference to the IdentityProvider that the federated account belongs to.
+  ai.scenar.commons.apiresource.ApiResourceReference identity_provider_ref = 2;
+
+  // External subject identifier (OIDC sub claim) — lookup key.
+  string external_sub = 3 [(buf.validate.field).required = true];
+
+  // When false (default): revoke the account's access in this organization only.
+  // When true: revoke access AND permanently delete the identity account.
+  bool delete_account = 4;
+}

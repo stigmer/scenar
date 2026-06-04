@@ -3,6 +3,8 @@ syntax = "proto3";
 package ai.scenar.commons.apiresource;
 
 import "ai/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto";
+import "ai/scenar/commons/apiresource/enum.proto";
+import "ai/scenar/commons/rpc/pagination.proto";
 import "buf/validate/validate.proto";
 
 // ApiResourceId wraps a system-generated resource identifier. Used as a
@@ -36,6 +38,41 @@ message ApiResourceByOrgBySlugRequest {
   // URL-friendly slug of the resource, unique within the organization.
   // Required.
   string slug = 2 [(buf.validate.field).required = true];
+}
+
+// FindApiResourcesRequest is the standard input for list/find operations over a
+// kind, scoped to an organization and paginated.
+message FindApiResourcesRequest {
+  // Organization to scope the listing to. Required.
+  string org = 1 [(buf.validate.field).required = true];
+
+  // Optional resource-kind filter (machine name, e.g. "scenario").
+  string kind = 3;
+
+  // Pagination parameters.
+  ai.scenar.commons.rpc.PageInfo page = 4;
+
+  // Page number (1-indexed) — deprecated, use page.num.
+  int32 page_number = 5;
+
+  // Number of items per page — deprecated, use page.size.
+  int32 page_size = 6;
+}
+
+// UpdateVisibilityInput is the shared input for changing the visibility of any
+// API resource. A resource-specific updateVisibility RPC accepts this input and
+// returns the full updated resource. Visibility transitions drive FGA tuple
+// management in Cloud mode (e.g. PRIVATE -> PUBLIC creates a wildcard viewer
+// tuple).
+message UpdateVisibilityInput {
+  // Identifier of the resource whose visibility is changing. Required.
+  string resource_id = 1 [(buf.validate.field).required = true];
+
+  // The new visibility setting. Must not be unspecified (0).
+  ApiResourceVisibility visibility = 2 [(buf.validate.field).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
 }
 
 // ApiResourceReference is a portable reference to another API resource by its

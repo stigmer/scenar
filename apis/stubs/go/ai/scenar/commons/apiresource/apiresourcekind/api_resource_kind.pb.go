@@ -72,6 +72,109 @@ func (ApiResourceVersion) EnumDescriptor() ([]byte, []int) {
 	return file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_rawDescGZIP(), []int{0}
 }
 
+// ResourceTier defines the availability context of a resource kind: whether it
+// exists in the open-source/local surface or only in the hosted Cloud.
+type ResourceTier int32
+
+const (
+	ResourceTier_resource_tier_unspecified ResourceTier = 0
+	// Available in CLI local mode and Cloud.
+	ResourceTier_open_source ResourceTier = 1
+	// Hidden in CLI local mode; available in Cloud only.
+	ResourceTier_cloud_only ResourceTier = 2
+)
+
+// Enum value maps for ResourceTier.
+var (
+	ResourceTier_name = map[int32]string{
+		0: "resource_tier_unspecified",
+		1: "open_source",
+		2: "cloud_only",
+	}
+	ResourceTier_value = map[string]int32{
+		"resource_tier_unspecified": 0,
+		"open_source":               1,
+		"cloud_only":                2,
+	}
+)
+
+func (x ResourceTier) Enum() *ResourceTier {
+	p := new(ResourceTier)
+	*p = x
+	return p
+}
+
+func (x ResourceTier) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ResourceTier) Descriptor() protoreflect.EnumDescriptor {
+	return file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_enumTypes[1].Descriptor()
+}
+
+func (ResourceTier) Type() protoreflect.EnumType {
+	return &file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_enumTypes[1]
+}
+
+func (x ResourceTier) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ResourceTier.Descriptor instead.
+func (ResourceTier) EnumDescriptor() ([]byte, []int) {
+	return file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_rawDescGZIP(), []int{1}
+}
+
+// PlatformIdValue defines the singleton platform instance ID. Used wherever a
+// platform kind value is required (e.g. platform-level authorization scopes).
+type PlatformIdValue int32
+
+const (
+	PlatformIdValue_platform_id_value_unspecified PlatformIdValue = 0
+	// The Scenar platform singleton instance. Used as the resource ID for
+	// platform-level authorization.
+	PlatformIdValue_scenar PlatformIdValue = 1
+)
+
+// Enum value maps for PlatformIdValue.
+var (
+	PlatformIdValue_name = map[int32]string{
+		0: "platform_id_value_unspecified",
+		1: "scenar",
+	}
+	PlatformIdValue_value = map[string]int32{
+		"platform_id_value_unspecified": 0,
+		"scenar":                        1,
+	}
+)
+
+func (x PlatformIdValue) Enum() *PlatformIdValue {
+	p := new(PlatformIdValue)
+	*p = x
+	return p
+}
+
+func (x PlatformIdValue) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PlatformIdValue) Descriptor() protoreflect.EnumDescriptor {
+	return file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_enumTypes[2].Descriptor()
+}
+
+func (PlatformIdValue) Type() protoreflect.EnumType {
+	return &file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_enumTypes[2]
+}
+
+func (x PlatformIdValue) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PlatformIdValue.Descriptor instead.
+func (PlatformIdValue) EnumDescriptor() ([]byte, []int) {
+	return file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_rawDescGZIP(), []int{2}
+}
+
 // ApiResourceKind enumerates every kind of API resource Scenar manages. The
 // value names are lowercase by convention and are the canonical machine
 // identifier for each kind; the attached kind_meta carries the descriptive
@@ -87,21 +190,33 @@ const (
 	ApiResourceKind_organization ApiResourceKind = 2
 	// An API key: a credential for programmatic access (e.g. CLI deploys).
 	ApiResourceKind_api_key ApiResourceKind = 3
+	// An IAM policy: a role-based access grant binding a principal to a resource.
+	ApiResourceKind_iam_policy ApiResourceKind = 10
+	// An identity account: a user or machine principal in the identity system.
+	ApiResourceKind_identity_account ApiResourceKind = 11
+	// The singleton platform instance representing the Scenar deployment.
+	ApiResourceKind_platform ApiResourceKind = 31
 )
 
 // Enum value maps for ApiResourceKind.
 var (
 	ApiResourceKind_name = map[int32]string{
-		0: "api_resource_kind_unknown",
-		1: "scenario",
-		2: "organization",
-		3: "api_key",
+		0:  "api_resource_kind_unknown",
+		1:  "scenario",
+		2:  "organization",
+		3:  "api_key",
+		10: "iam_policy",
+		11: "identity_account",
+		31: "platform",
 	}
 	ApiResourceKind_value = map[string]int32{
 		"api_resource_kind_unknown": 0,
 		"scenario":                  1,
 		"organization":              2,
 		"api_key":                   3,
+		"iam_policy":                10,
+		"identity_account":          11,
+		"platform":                  31,
 	}
 )
 
@@ -116,11 +231,11 @@ func (x ApiResourceKind) String() string {
 }
 
 func (ApiResourceKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_enumTypes[1].Descriptor()
+	return file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_enumTypes[3].Descriptor()
 }
 
 func (ApiResourceKind) Type() protoreflect.EnumType {
-	return &file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_enumTypes[1]
+	return &file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_enumTypes[3]
 }
 
 func (x ApiResourceKind) Number() protoreflect.EnumNumber {
@@ -129,16 +244,13 @@ func (x ApiResourceKind) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ApiResourceKind.Descriptor instead.
 func (ApiResourceKind) EnumDescriptor() ([]byte, []int) {
-	return file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_rawDescGZIP(), []int{1}
+	return file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_rawDescGZIP(), []int{3}
 }
 
 // ApiResourceKindMeta describes a resource kind: its group, version, names,
-// id prefix, and versioning behaviour. This is the data the platform's kind
-// registry exposes for each kind.
-//
-// Authorization configuration (FGA scope, owner attribution, grantable roles)
-// is intentionally NOT included here yet. It will be added alongside the
-// platform's neutral authorization contract, once that contract is finalized.
+// id prefix, versioning behaviour, availability tier, and authorization
+// configuration. This is the data the platform's kind registry exposes for
+// each kind.
 type ApiResourceKindMeta struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Functional group this kind belongs to. Determines the api_version domain.
@@ -155,7 +267,14 @@ type ApiResourceKindMeta struct {
 	IdPrefix string `protobuf:"bytes,5,opt,name=id_prefix,json=idPrefix,proto3" json:"id_prefix,omitempty"`
 	// Whether this kind is versioned (each spec change produces a new immutable
 	// version with a content hash in metadata.version). Most kinds are not.
-	IsVersioned   bool `protobuf:"varint,6,opt,name=is_versioned,json=isVersioned,proto3" json:"is_versioned,omitempty"`
+	IsVersioned bool `protobuf:"varint,6,opt,name=is_versioned,json=isVersioned,proto3" json:"is_versioned,omitempty"`
+	// Whether this kind is excluded from the search index.
+	NotSearchIndexed bool `protobuf:"varint,7,opt,name=not_search_indexed,json=notSearchIndexed,proto3" json:"not_search_indexed,omitempty"`
+	// Availability context - whether the kind is open-source/local or cloud-only.
+	Tier ResourceTier `protobuf:"varint,8,opt,name=tier,proto3,enum=ai.scenar.commons.apiresource.apiresourcekind.ResourceTier" json:"tier,omitempty"`
+	// FGA authorization configuration - defines how FGA tuples are created for
+	// this resource kind at runtime.
+	Authorization *AuthorizationConfig `protobuf:"bytes,9,opt,name=authorization,proto3" json:"authorization,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -232,6 +351,27 @@ func (x *ApiResourceKindMeta) GetIsVersioned() bool {
 	return false
 }
 
+func (x *ApiResourceKindMeta) GetNotSearchIndexed() bool {
+	if x != nil {
+		return x.NotSearchIndexed
+	}
+	return false
+}
+
+func (x *ApiResourceKindMeta) GetTier() ResourceTier {
+	if x != nil {
+		return x.Tier
+	}
+	return ResourceTier_resource_tier_unspecified
+}
+
+func (x *ApiResourceKindMeta) GetAuthorization() *AuthorizationConfig {
+	if x != nil {
+		return x.Authorization
+	}
+	return nil
+}
+
 var file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_extTypes = []protoimpl.ExtensionInfo{
 	{
 		ExtendedType:  (*descriptorpb.EnumValueOptions)(nil),
@@ -253,22 +393,41 @@ var File_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto p
 
 const file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_rawDesc = "" +
 	"\n" +
-	"Eai/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto\x12-ai.scenar.commons.apiresource.apiresourcekind\x1aFai/scenar/commons/apiresource/apiresourcekind/api_resource_group.proto\x1a google/protobuf/descriptor.proto\"\xc0\x02\n" +
+	"Eai/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto\x12-ai.scenar.commons.apiresource.apiresourcekind\x1aFai/scenar/commons/apiresource/apiresourcekind/api_resource_group.proto\x1aHai/scenar/commons/apiresource/apiresourcekind/authorization_config.proto\x1a google/protobuf/descriptor.proto\"\xa9\x04\n" +
 	"\x13ApiResourceKindMeta\x12U\n" +
 	"\x05group\x18\x01 \x01(\x0e2?.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceGroupR\x05group\x12[\n" +
 	"\aversion\x18\x02 \x01(\x0e2A.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceVersionR\aversion\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12!\n" +
 	"\fdisplay_name\x18\x04 \x01(\tR\vdisplayName\x12\x1b\n" +
 	"\tid_prefix\x18\x05 \x01(\tR\bidPrefix\x12!\n" +
-	"\fis_versioned\x18\x06 \x01(\bR\visVersioned*B\n" +
+	"\fis_versioned\x18\x06 \x01(\bR\visVersioned\x12,\n" +
+	"\x12not_search_indexed\x18\a \x01(\bR\x10notSearchIndexed\x12O\n" +
+	"\x04tier\x18\b \x01(\x0e2;.ai.scenar.commons.apiresource.apiresourcekind.ResourceTierR\x04tier\x12h\n" +
+	"\rauthorization\x18\t \x01(\v2B.ai.scenar.commons.apiresource.apiresourcekind.AuthorizationConfigR\rauthorization*B\n" +
 	"\x12ApiResourceVersion\x12$\n" +
 	" api_resource_version_unspecified\x10\x00\x12\x06\n" +
-	"\x02v1\x10\x01*\xcb\x01\n" +
+	"\x02v1\x10\x01*N\n" +
+	"\fResourceTier\x12\x1d\n" +
+	"\x19resource_tier_unspecified\x10\x00\x12\x0f\n" +
+	"\vopen_source\x10\x01\x12\x0e\n" +
+	"\n" +
+	"cloud_only\x10\x02*@\n" +
+	"\x0fPlatformIdValue\x12!\n" +
+	"\x1dplatform_id_value_unspecified\x10\x00\x12\n" +
+	"\n" +
+	"\x06scenar\x10\x01*\xbf\x03\n" +
 	"\x0fApiResourceKind\x12\x1d\n" +
-	"\x19api_resource_kind_unknown\x10\x00\x12/\n" +
-	"\bscenario\x10\x01\x1a!\xaa\xff+\x1d\b\x01\x10\x01\x1a\bScenario\"\bScenario*\x03scn\x12;\n" +
-	"\forganization\x10\x02\x1a)\xaa\xff+%\b\x02\x10\x01\x1a\fOrganization\"\fOrganization*\x03org\x12+\n" +
-	"\aapi_key\x10\x03\x1a\x1e\xaa\xff+\x1a\b\x03\x10\x01\x1a\x06ApiKey\"\aAPI Key*\x03key:\x84\x01\n" +
+	"\x19api_resource_kind_unknown\x10\x00\x12?\n" +
+	"\bscenario\x10\x01\x1a1\xaa\xff+-\b\x01\x10\x01\x1a\bScenario\"\bScenario*\x03scn@\x01J\f\b\x02\x10\x01*\x02\b\x01:\x02\x01\x04\x12I\n" +
+	"\forganization\x10\x02\x1a7\xaa\xff+3\b\x02\x10\x01\x1a\fOrganization\"\fOrganization*\x03org@\x01J\n" +
+	"\b\x04\x10\x01:\x04\x01\x02\x03\x04\x125\n" +
+	"\aapi_key\x10\x03\x1a(\xaa\xff+$\b\x03\x10\x01\x1a\x06ApiKey\"\aAPI Key*\x03key8\x01@\x02J\x04\b\x04\x10\x01\x12?\n" +
+	"\n" +
+	"iam_policy\x10\n" +
+	"\x1a/\xaa\xff++\b\x03\x10\x01\x1a\tIamPolicy\"\n" +
+	"IAM Policy*\x04iamp8\x01@\x02J\x04\b\x02\x10\x01\x12N\n" +
+	"\x10identity_account\x10\v\x1a8\xaa\xff+4\b\x03\x10\x01\x1a\x0fIdentityAccount\"\x10Identity Account*\x03ida@\x02J\x04\b\x04\x10\x03\x129\n" +
+	"\bplatform\x10\x1f\x1a+\xaa\xff+'\b\x02\x10\x01\x1a\bPlatform\"\bPlatform*\x03plt8\x01@\x02J\x04\b\x05\x10\x04:\x84\x01\n" +
 	"\tkind_meta\x12!.google.protobuf.EnumValueOptions\x18\xf5\xbf\x05 \x01(\v2B.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMetaR\bkindMetaB\xfa\x02\n" +
 	"1com.ai.scenar.commons.apiresource.apiresourcekindB\x14ApiResourceKindProtoP\x01ZUgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/commons/apiresource/apiresourcekind\xa2\x02\x05ASCAA\xaa\x02-Ai.Scenar.Commons.Apiresource.Apiresourcekind\xca\x02-Ai\\Scenar\\Commons\\Apiresource\\Apiresourcekind\xe2\x029Ai\\Scenar\\Commons\\Apiresource\\Apiresourcekind\\GPBMetadata\xea\x021Ai::Scenar::Commons::Apiresource::Apiresourcekindb\x06proto3"
 
@@ -284,25 +443,30 @@ func file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_
 	return file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_rawDescData
 }
 
-var file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_goTypes = []any{
 	(ApiResourceVersion)(0),               // 0: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceVersion
-	(ApiResourceKind)(0),                  // 1: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKind
-	(*ApiResourceKindMeta)(nil),           // 2: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta
-	(ApiResourceGroup)(0),                 // 3: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceGroup
-	(*descriptorpb.EnumValueOptions)(nil), // 4: google.protobuf.EnumValueOptions
+	(ResourceTier)(0),                     // 1: ai.scenar.commons.apiresource.apiresourcekind.ResourceTier
+	(PlatformIdValue)(0),                  // 2: ai.scenar.commons.apiresource.apiresourcekind.PlatformIdValue
+	(ApiResourceKind)(0),                  // 3: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKind
+	(*ApiResourceKindMeta)(nil),           // 4: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta
+	(ApiResourceGroup)(0),                 // 5: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceGroup
+	(*AuthorizationConfig)(nil),           // 6: ai.scenar.commons.apiresource.apiresourcekind.AuthorizationConfig
+	(*descriptorpb.EnumValueOptions)(nil), // 7: google.protobuf.EnumValueOptions
 }
 var file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_depIdxs = []int32{
-	3, // 0: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta.group:type_name -> ai.scenar.commons.apiresource.apiresourcekind.ApiResourceGroup
+	5, // 0: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta.group:type_name -> ai.scenar.commons.apiresource.apiresourcekind.ApiResourceGroup
 	0, // 1: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta.version:type_name -> ai.scenar.commons.apiresource.apiresourcekind.ApiResourceVersion
-	4, // 2: ai.scenar.commons.apiresource.apiresourcekind.kind_meta:extendee -> google.protobuf.EnumValueOptions
-	2, // 3: ai.scenar.commons.apiresource.apiresourcekind.kind_meta:type_name -> ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	3, // [3:4] is the sub-list for extension type_name
-	2, // [2:3] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 2: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta.tier:type_name -> ai.scenar.commons.apiresource.apiresourcekind.ResourceTier
+	6, // 3: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta.authorization:type_name -> ai.scenar.commons.apiresource.apiresourcekind.AuthorizationConfig
+	7, // 4: ai.scenar.commons.apiresource.apiresourcekind.kind_meta:extendee -> google.protobuf.EnumValueOptions
+	4, // 5: ai.scenar.commons.apiresource.apiresourcekind.kind_meta:type_name -> ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindMeta
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	5, // [5:6] is the sub-list for extension type_name
+	4, // [4:5] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_init() }
@@ -311,12 +475,13 @@ func file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_
 		return
 	}
 	file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_group_proto_init()
+	file_ai_scenar_commons_apiresource_apiresourcekind_authorization_config_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_rawDesc), len(file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto_rawDesc)),
-			NumEnums:      2,
+			NumEnums:      4,
 			NumMessages:   1,
 			NumExtensions: 1,
 			NumServices:   0,

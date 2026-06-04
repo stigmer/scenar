@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package ai.scenar.iam.identityaccount.v1;
+
+// IdentityAccountProvisioningMode defines how an identity account was created.
+//
+// @internal
+// Unspecified is the default for legacy accounts created before this enum was introduced.
+enum IdentityAccountProvisioningMode {
+  // Default value for legacy accounts created before provisioning mode tracking.
+  identity_account_provisioning_mode_unspecified = 0;
+
+  // User signed up directly via Scenar's own authentication tenant.
+  direct = 1;
+
+  // Account was created by the platform for federated authentication via an IdentityProvider.
+  federated = 2;
+
+  // Machine-to-machine client credentials account for inter-service communication.
+  machine = 3;
+
+  // Account provisioned via a platform client's user-token minting flow.
+  platform_client = 4;
+}
