@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package ai.scenar.iam.apikey.v1;
+
+import "ai/scenar/commons/apiresource/metadata.proto";
+import "ai/scenar/iam/apikey/v1/spec.proto";
+import "ai/scenar/iam/apikey/v1/status.proto";
+import "buf/validate/validate.proto";
+
+// ApiKey is a credential for programmatic access to the Scenar Cloud API — for
+// example, a CLI authenticating a deploy. It follows the Kubernetes-style
+// envelope shared by every Scenar resource — api_version / kind / metadata /
+// spec / status — so the Scenar Cloud backend can manage keys through the
+// platform's generic resource machinery.
+//
+// Each key is owned by exactly one organization (metadata.org) and authenticates
+// as that organization. The raw key value is generated server-side and returned
+// only once, in the create response, via status.plaintext_key; only its hash and
+// fingerprint are persisted (see ApiKeySpec).
+message ApiKey {
+  // API version of this resource, in `<group-domain>/<version>` form. Pinned to
+  // the iam group's domain so the value is self-describing and routable by the
+  // platform's resource registry.
+  //
+  // Must be exactly "iam.scenar.ai/v1".
+  string api_version = 1 [(buf.validate.field).string.const = 'iam.scenar.ai/v1'];
+
+  // Resource kind discriminator. Pairs with api_version to uniquely identify
+  // the resource type within a multi-kind document stream.
+  //
+  // Must be exactly "ApiKey".
+  string kind = 2 [(buf.validate.field).string.const = 'ApiKey'];
+
+  // Standard resource metadata: name, slug, owning org, visibility, labels,
+  // annotations, and tags. Required — every key must carry identity and name
+  // the organization that owns it. See
+  // ai.scenar.commons.apiresource.ApiResourceMetadata.
+  ai.scenar.commons.apiresource.ApiResourceMetadata metadata = 3 [(buf.validate.field).required = true];
+
+  // Desired state: the key's expiration policy. Authored by users on create.
+  // The key_hash and fingerprint within are server-computed. See ApiKeySpec.
+  ApiKeySpec spec = 4;
+
+  // Observed state: system-computed fields such as last-used time and audit,
+  // plus the one-time plaintext key on the create response. Populated by the
+  // backend; ignored on write. See ApiKeyStatus.
+  ApiKeyStatus status = 5;
+}
+
+// ApiKeyList is the paginated result of a list query over API keys. It mirrors
+// the resource envelope (api_version / kind) at the collection level so list
+// responses are self-describing.
+message ApiKeyList {
+  // API version of the list envelope. Echoes the resource's api_version.
+  string api_version = 1;
+
+  // Kind discriminator for the list envelope (e.g. "ApiKeyList").
+  string kind = 2;
+
+  // The page of API keys in this response, in server-defined order. Each entry
+  // carries the hash and fingerprint but never the plaintext key.
+  repeated ApiKey items = 3;
+
+  // Opaque cursor for fetching the next page. Empty when this is the last page.
+  // Pass back as ListApiKeysRequest.page_token to continue iterating.
+  string next_page_token = 4;
+}

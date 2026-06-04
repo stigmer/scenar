@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package ai.scenar.iam.apikey.v1;
+
+import "ai/scenar/commons/apiresource/io.proto";
+import "ai/scenar/commons/apiresource/rpc_service_options.proto";
+import "ai/scenar/iam/apikey/v1/api.proto";
+import "ai/scenar/iam/apikey/v1/io.proto";
+
+// ApiKeyQueryController provides the read operations for API key resources. It
+// is the contract the Scenar Cloud backend implements for fetching, resolving,
+// and listing keys. No read ever returns the plaintext key.
+//
+// Authorization note: as with the command controller, per-RPC authorization
+// options are intentionally absent until Scenar adopts a neutral method-level
+// auth contract. These RPCs carry only the service-level resource-kind tag; the
+// Cloud backend enforces read authorization in its handlers.
+service ApiKeyQueryController {
+  // Tags this controller with the resource kind it manages so the platform's
+  // request pipeline can route and register it generically.
+  option (ai.scenar.commons.apiresource.api_resource_kind) = api_key;
+
+  // Get an API key by its system-generated id (metadata.id).
+  rpc get(ai.scenar.commons.apiresource.ApiResourceId) returns (ApiKey);
+
+  // Resolve an API key by the SHA-256 hash of its raw value. This is the
+  // authentication lookup: the Cloud auth interceptor hashes the presented key
+  // and calls this to load the owning key record. See ApiKeyByHashRequest.
+  rpc getByKeyHash(ApiKeyByHashRequest) returns (ApiKey);
+
+  // List the API keys owned by an organization, paged by cursor. See
+  // ListApiKeysRequest and ApiKeyList.
+  rpc list(ListApiKeysRequest) returns (ApiKeyList);
+}

@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package ai.scenar.iam.apikey.v1;
+
+import "ai/scenar/commons/apiresource/field_options.proto";
+import "google/protobuf/timestamp.proto";
+
+// ApiKeySpec defines the configuration of an ApiKey resource — the `spec` block
+// of the envelope (see api.proto). It holds the key's identifying material
+// (hash and fingerprint, both server-computed) and its expiration policy.
+//
+// The raw key value never lives in the spec. It exists only transiently in the
+// create response (see ApiKeyStatus.plaintext_key); only its hash and a short
+// fingerprint are persisted here.
+message ApiKeySpec {
+  // SHA-256 hash of the raw key. Computed by the backend at creation time and
+  // used to look the key up during authentication (see
+  // ApiKeyQueryController.getByKeyHash). The raw key is never recoverable from
+  // this value.
+  string key_hash = 1 [(ai.scenar.commons.apiresource.computed) = true];
+
+  // Short, non-secret fingerprint of the raw key (its trailing characters),
+  // shown in listings and the UI so a user can recognize which key is which
+  // without exposing the secret. Computed by the backend at creation time.
+  string fingerprint = 2 [(ai.scenar.commons.apiresource.computed) = true];
+
+  // Absolute moment at which the key stops being valid for authentication.
+  // Ignored when never_expires is true. When both expires_at and never_expires
+  // are unset, the key does not expire.
+  google.protobuf.Timestamp expires_at = 3;
+
+  // When true, the key never expires and expires_at is ignored. Defaults to
+  // false.
+  bool never_expires = 4;
+}

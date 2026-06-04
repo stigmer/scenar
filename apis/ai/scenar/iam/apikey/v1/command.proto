@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package ai.scenar.iam.apikey.v1;
+
+import "ai/scenar/commons/apiresource/io.proto";
+import "ai/scenar/commons/apiresource/rpc_service_options.proto";
+import "ai/scenar/iam/apikey/v1/api.proto";
+
+// ApiKeyCommandController provides the write operations for API key resources.
+// It is the contract the Scenar Cloud backend implements when keys are issued,
+// reconfigured, and revoked.
+//
+// There is intentionally no `apply` method (unlike most Scenar resources): a key
+// cannot be idempotently re-applied, because its secret is generated server-side
+// and revealed only once. Issuing a key is an explicit, non-idempotent `create`.
+//
+// Authorization note: per-RPC authorization options are intentionally absent.
+// Scenar has not yet adopted a neutral method-level auth contract (the
+// equivalent of the platform's commons/rpc/method_options). Until that lands,
+// these RPCs carry only the service-level resource-kind tag below; the Cloud
+// backend enforces authorization in its handlers. Method auth annotations will
+// be added here in a dedicated follow-up, not improvised per RPC.
+service ApiKeyCommandController {
+  // Tags this controller with the resource kind it manages so the platform's
+  // request pipeline can route and register it generically.
+  option (ai.scenar.commons.apiresource.api_resource_kind) = api_key;
+
+  // Create (issue) a new API key for the organization named in metadata.org.
+  // The backend generates the secret, persists only its hash and fingerprint,
+  // and returns the raw value once in status.plaintext_key on the response.
+  // Store it immediately — it cannot be retrieved again.
+  rpc create(ApiKey) returns (ApiKey);
+
+  // Update an existing API key, identified by metadata.id. Only the expiration
+  // policy and metadata are mutable; the key's secret cannot be changed (issue
+  // a new key instead). Returns an error if the key does not exist.
+  rpc update(ApiKey) returns (ApiKey);
+
+  // Delete (revoke) an API key. After deletion the key can no longer
+  // authenticate. Returns the deleted resource as it existed prior to removal,
+  // without the plaintext value. See ApiResourceDeleteInput for
+  // force/version_message semantics.
+  rpc delete(ai.scenar.commons.apiresource.ApiResourceDeleteInput) returns (ApiKey);
+}

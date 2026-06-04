@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package ai.scenar.iam.apikey.v1;
+
+import "buf/validate/validate.proto";
+
+// ListApiKeysRequest is the input for the API-key list query. API keys are
+// owned by an organization, so the request is scoped to a single org and carries
+// pagination.
+//
+// Pagination is defined per-resource here (rather than in commons) until the
+// platform settles on a shared pagination contract; the field shape
+// (page_size / page_token / next_page_token) is the conventional cursor model
+// and is intended to migrate to commons unchanged when that contract lands.
+message ListApiKeysRequest {
+  // Organization whose API keys to list. Required — keys are always scoped to
+  // their owning organization.
+  string org = 1 [(buf.validate.field).required = true];
+
+  // Maximum number of keys to return in one page. When 0 or unset, the server
+  // applies its default page size. The server may return fewer items than
+  // requested.
+  int32 page_size = 2 [(buf.validate.field).int32.gte = 0];
+
+  // Opaque cursor identifying the page to return. Empty fetches the first page.
+  // Pass the next_page_token from the previous ApiKeyList to continue.
+  string page_token = 3;
+}
+
+// ApiKeyByHashRequest is the input for looking up an API key by the SHA-256 hash
+// of its raw value. This is the authentication path: the backend hashes the key
+// presented by a caller and resolves it to its ApiKey record. See
+// ApiKeyQueryController.getByKeyHash.
+message ApiKeyByHashRequest {
+  // SHA-256 hash of the raw key (the value stored in ApiKeySpec.key_hash).
+  // Required.
+  string key_hash = 1 [(buf.validate.field).required = true];
+}
