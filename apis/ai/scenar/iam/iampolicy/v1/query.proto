@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package ai.scenar.iam.iampolicy.v1;
+
+import "ai/scenar/commons/apiresource/rpc_service_options.proto";
+import "ai/scenar/iam/iampolicy/v1/io.proto";
+
+// IamPolicyQueryController provides the read operations for IAM policies. It is
+// the authorization contract the Scenar Cloud backend implements on top of the
+// authorization backend (OpenFGA): answering whether a principal may act on a
+// resource, and enumerating the resources or principals bound by a relation.
+//
+// These RPCs are internal, in-process calls made by the Cloud backend's own
+// request pipeline (never exposed to external clients), so the controller
+// carries only the read operations the backend actually consumes today. Access
+// audit and role-listing reads (grouped-by-principal, grouped-by-role, counts)
+// are intentionally omitted until a concrete surface needs them, keeping the
+// OSS contract free of unused RPC surface.
+//
+// Authorization note: as with the scenario and api_key controllers, per-RPC
+// authorization options are intentionally absent until Scenar adopts a neutral
+// method-level auth contract. These RPCs carry only the service-level
+// resource-kind tag; the Cloud backend enforces read authorization in its
+// handlers. checkAuthorization in particular is deliberately self-exempt from
+// authorization in the handler to avoid recursion (an authorization check must
+// not itself require an authorization check).
+service IamPolicyQueryController {
+  // Tags this controller with the resource kind it manages so the platform's
+  // request pipeline can route and register it generically.
+  option (ai.scenar.commons.apiresource.api_resource_kind) = iam_policy;
+
+  // Answer the fundamental authorization question: "may this principal perform
+  // this relation on this resource?". Returns a boolean verdict computed from
+  // the complete authorization state (direct grants, inherited permissions,
+  // group memberships). This is the check the Cloud backend's request pipeline
+  // runs before processing a protected operation. See CheckAuthorizationInput
+  // and CheckAuthorizationResult.
+  rpc checkAuthorization(CheckAuthorizationInput) returns (CheckAuthorizationResult);
+
+  // List the ids of every resource of a given kind that a principal may access
+  // under a relation — the inverse-index read used to filter resource listings
+  // down to what the caller is allowed to see. See ListAuthorizedResourceIdsInput
+  // and AuthorizedResourceIdsList.
+  rpc listAuthorizedResourceIds(ListAuthorizedResourceIdsInput) returns (AuthorizedResourceIdsList);
+
+  // List the ids of every principal of a given kind that may access a resource
+  // under a relation — the access-audit complement of listAuthorizedResourceIds
+  // ("who can reach this resource?"). See ListAuthorizedPrincipalIdsInput and
+  // AuthorizedPrincipalIdsList.
+  rpc listAuthorizedPrincipalIds(ListAuthorizedPrincipalIdsInput) returns (AuthorizedPrincipalIdsList);
+}
