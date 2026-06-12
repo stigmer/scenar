@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package ai.scenar.deploy.v1;
+
+import "ai/scenar/deploy/v1/enum.proto";
+
+// edge.proto defines the serving-edge projection — the small, denormalized view
+// of a deploy that the Cloudflare Worker reads to serve a bundle. It is the
+// contract between the control plane (Java), which writes these messages to the
+// object store as protojson at publish/takedown, and the serving Worker
+// (TypeScript), which reads them on each request. Because both sides are
+// generated from this one file, the writer and reader can never silently drift.
+//
+// These messages are an internal projection, NOT an API resource: they have no
+// resource envelope (api_version/kind/metadata) and are never returned by an
+// RPC. Every field is derived from values that already exist on the Deploy and
+// its parent Scenario (DeploySpec.files, DeployStatus.state/object_key_prefix,
+// ScenarioStatus.current_deploy_id) plus one computed value, the CSP string.
+//
+// The objects live under a top-level `edge/` key namespace in the same bucket as
+// the bundles, disjoint from the `tenants/<org>/scenarios/<scenario>/deploys/...`
+// user content. The Worker only ever resolves request paths to keys under a
+// deploy's object_key_prefix, so it can never serve an `edge/` object back to a
+// visitor.
+//
+//   edge/deploys/<deployId>/manifest.json    -> EdgeDeployManifest  (immutable)
+//   edge/deploys/<deployId>/state.json       -> EdgeDeployState     (mutable)
+//   edge/scenarios/<scenarioId>/pointer.json -> EdgeScenarioPointer (mutable)
+
+// EdgeManifestFile is one servable file in a deploy's bundle, as the edge needs
+// to serve it: the exact content type to return and the integrity metadata. It
+// is keyed in EdgeDeployManifest.files by the file's bundle-relative path, so the
+// path itself is not repeated here.
+//
+// The set of EdgeManifestFile entries is the serving allowlist: the Worker
+// serves a request only if its canonicalized path is a key in the files map.
+// An object that exists in the store but is absent from the manifest is never
+// served — the manifest, authored by the control plane, is the source of truth
+// for what is reachable, not the bucket's contents.
+message EdgeManifestFile {
+  // Exact MIME type to return in the Content-Type header, paired with
+  // X-Content-Type-Options: nosniff. Taken verbatim from the deploy's declared
+  // and verified DeclaredFile.content_type — the edge never sniffs.
+  string content_type = 1;
+
+  // Size of the object in bytes. Informational/diagnostic; the Worker uses the
+  // object's actual length from the store for Content-Length and range math.
+  int64 size_bytes = 2;
+
+  // Lowercase hex SHA-256 of the file's bytes (the verified DeclaredFile.sha256).
+  // Served as a strong ETag so conditional requests and caches can validate
+  // against the deploy's immutable content.
+  string sha256 = 3;
+}
+
+// EdgeDeployManifest is the immutable serving description of one deploy: where
+// its objects live, what files are servable and how, and the security policy to
+// serve them under. Written once when a deploy goes active and never changed —
+// a new publication is a new deploy with its own manifest — so the Worker caches
+// it indefinitely.
+//
+// Mutable serving facts (is the deploy still active? which deploy is current for
+// a scenario?) deliberately live in EdgeDeployState and EdgeScenarioPointer, not
+// here, so this manifest can be cached forever while takedown and publish remain
+// instant.
+message EdgeDeployManifest {
+  // Projection schema version. Lets the Worker reject a manifest shape it does
+  // not understand rather than mis-serve it. Starts at 1.
+  int32 schema_version = 1;
+
+  // The deploy this manifest describes (Deploy.metadata.id). Matches the
+  // <deployId> in the manifest's own object key and in the per-deploy origin
+  // host d-<deployId>.<content-domain>.
+  string deploy_id = 2;
+
+  // The parent scenario (DeploySpec.scenario_id). Carried for diagnostics and to
+  // correlate a deploy origin back to its scenario.
+  string scenario_id = 3;
+
+  // Immutable object-store key prefix holding this deploy's bundle
+  // (tenants/<org>/scenarios/<scenario>/deploys/<deploy>/). The Worker forms an
+  // object key as object_key_prefix + <relative path> — the same composition the
+  // control plane used when it issued the upload targets.
+  string object_key_prefix = 4;
+
+  // The exact Content-Security-Policy header value to serve every response under
+  // this deploy's origin with. Computed by the control plane (DeployCspPolicy)
+  // so policy lives in one place and can be tightened centrally; the Worker
+  // applies it verbatim and never derives policy from the untrusted bundle.
+  string csp = 5;
+
+  // The servable files, keyed by bundle-relative path (e.g. "index.html",
+  // "assets/scenar.abc123.js", "narration/step-1.mp3"). This map is the serving
+  // allowlist; a path absent from it is a 404 even if the object exists.
+  map<string, EdgeManifestFile> files = 6;
+}
+
+// EdgeDeployState is the mutable serving gate for one deploy. The Worker reads it
+// fresh (uncached) on every request and serves bytes only while state is
+// `active`. Overwriting this object is how a deploy is taken down instantly,
+// without depending on any cache purge: the next request reads the new state and
+// stops serving.
+message EdgeDeployState {
+  // The deploy's current lifecycle phase (the same DeployState the control plane
+  // persists). The edge serves content only when this is `active`; `disabled_abuse`
+  // yields 410 Gone; anything else (or a missing state object) yields 404.
+  DeployState state = 1;
+
+  // Human-readable reason the deploy is not servable, when state is a takedown or
+  // failure phase (e.g. an abuse-takedown note). Empty on the happy path. Never
+  // surfaced to visitors verbatim; carried for operability.
+  string error_reason = 2;
+}
+
+// EdgeScenarioPointer is the resolver's mutable view of which deploy is current
+// for a scenario. The resolver host (embed.scenar.ai/s/<scenarioId>) reads it
+// uncached and 302-redirects to the current deploy's origin. It is the edge
+// projection of ScenarioStatus.current_deploy_id, written by the scenario
+// aggregate when the pointer is flipped (publish or rollback).
+message EdgeScenarioPointer {
+  // The scenario's currently published deploy (ScenarioStatus.current_deploy_id).
+  // Empty means the scenario has no active publication; the resolver returns 404.
+  string current_deploy_id = 1;
+
+  // The fully-qualified origin to redirect to, e.g.
+  // "https://d-<deployId>.<content-domain>/". Precomputed so the resolver needs
+  // no knowledge of the content-domain configuration.
+  string deploy_origin = 2;
+}
