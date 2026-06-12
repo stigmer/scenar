@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package ai.scenar.iam.identityaccount.v1;
+
+import "ai/scenar/commons/apiresource/rpc_service_options.proto";
+import "ai/scenar/iam/identityaccount/v1/api.proto";
+import "ai/scenar/iam/identityaccount/v1/io.proto";
+
+// IdentityAccountQueryController provides the read operations for identity
+// account resources. It is the contract the Scenar Cloud backend implements for
+// resolving accounts — at authentication time (idp_id / email lookups) and for
+// cache-proxy fallbacks (id lookups).
+//
+// These are internal, in-process calls. The controller carries the three
+// lookups the backend consumes:
+//
+//   - getById    : resolve by system id (metadata.id) — the cache-miss path.
+//   - getByIdpId : resolve by identity-provider subject (Auth0 user_id /
+//                  client_id) — the authentication path.
+//   - getByEmail : resolve by email address.
+//
+// There is no getActorInfo RPC: the lightweight actor projection (id + avatar)
+// is derived client-side from getById in the repo implementation, so the audit
+// surface stays free of a redundant RPC.
+//
+// Authorization note: per-RPC authorization options are intentionally absent
+// until Scenar adopts a neutral method-level auth contract. Each read enforces
+// a dual check in its handler — owner can_view on the specific
+// identity_account, falling back to platform-operator
+// can_manage_identity_accounts on the platform singleton — so both self-access
+// and system-level resolution (over the system channel) are permitted.
+service IdentityAccountQueryController {
+  // Tags this controller with the resource kind it manages so the platform's
+  // request pipeline can route and register it generically.
+  option (ai.scenar.commons.apiresource.api_resource_kind) = identity_account;
+
+  // Get an identity account by its system-generated id (metadata.id). The
+  // cache-miss resolution path for actor/identity proxies. See IdentityAccountId.
+  rpc getById(IdentityAccountId) returns (IdentityAccount);
+
+  // Resolve an identity account by its identity-provider id — the Auth0 subject
+  // (user_id for humans, client_id@clients for machine accounts). This is the
+  // authentication-time lookup. See IdpId.
+  rpc getByIdpId(IdpId) returns (IdentityAccount);
+
+  // Resolve an identity account by email address. See IdentityAccountEmail.
+  rpc getByEmail(IdentityAccountEmail) returns (IdentityAccount);
+}

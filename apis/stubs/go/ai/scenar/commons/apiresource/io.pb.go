@@ -9,6 +9,7 @@ package apiresource
 import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	apiresourcekind "github.com/stigmer/scenar/apis/stubs/go/ai/scenar/commons/apiresource/apiresourcekind"
+	rpc "github.com/stigmer/scenar/apis/stubs/go/ai/scenar/commons/rpc"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -194,6 +195,148 @@ func (x *ApiResourceByOrgBySlugRequest) GetSlug() string {
 	return ""
 }
 
+// FindApiResourcesRequest is the standard input for list/find operations over a
+// kind, scoped to an organization and paginated.
+type FindApiResourcesRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Organization to scope the listing to. Required.
+	Org string `protobuf:"bytes,1,opt,name=org,proto3" json:"org,omitempty"`
+	// Optional resource-kind filter (machine name, e.g. "scenario").
+	Kind string `protobuf:"bytes,3,opt,name=kind,proto3" json:"kind,omitempty"`
+	// Pagination parameters.
+	Page *rpc.PageInfo `protobuf:"bytes,4,opt,name=page,proto3" json:"page,omitempty"`
+	// Page number (1-indexed) — deprecated, use page.num.
+	PageNumber int32 `protobuf:"varint,5,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	// Number of items per page — deprecated, use page.size.
+	PageSize      int32 `protobuf:"varint,6,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FindApiResourcesRequest) Reset() {
+	*x = FindApiResourcesRequest{}
+	mi := &file_ai_scenar_commons_apiresource_io_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FindApiResourcesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FindApiResourcesRequest) ProtoMessage() {}
+
+func (x *FindApiResourcesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_commons_apiresource_io_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FindApiResourcesRequest.ProtoReflect.Descriptor instead.
+func (*FindApiResourcesRequest) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_commons_apiresource_io_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *FindApiResourcesRequest) GetOrg() string {
+	if x != nil {
+		return x.Org
+	}
+	return ""
+}
+
+func (x *FindApiResourcesRequest) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *FindApiResourcesRequest) GetPage() *rpc.PageInfo {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+func (x *FindApiResourcesRequest) GetPageNumber() int32 {
+	if x != nil {
+		return x.PageNumber
+	}
+	return 0
+}
+
+func (x *FindApiResourcesRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+// UpdateVisibilityInput is the shared input for changing the visibility of any
+// API resource. A resource-specific updateVisibility RPC accepts this input and
+// returns the full updated resource. Visibility transitions drive FGA tuple
+// management in Cloud mode (e.g. PRIVATE -> PUBLIC creates a wildcard viewer
+// tuple).
+type UpdateVisibilityInput struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Identifier of the resource whose visibility is changing. Required.
+	ResourceId string `protobuf:"bytes,1,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
+	// The new visibility setting. Must not be unspecified (0).
+	Visibility    ApiResourceVisibility `protobuf:"varint,2,opt,name=visibility,proto3,enum=ai.scenar.commons.apiresource.ApiResourceVisibility" json:"visibility,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateVisibilityInput) Reset() {
+	*x = UpdateVisibilityInput{}
+	mi := &file_ai_scenar_commons_apiresource_io_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateVisibilityInput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateVisibilityInput) ProtoMessage() {}
+
+func (x *UpdateVisibilityInput) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_commons_apiresource_io_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateVisibilityInput.ProtoReflect.Descriptor instead.
+func (*UpdateVisibilityInput) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_commons_apiresource_io_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *UpdateVisibilityInput) GetResourceId() string {
+	if x != nil {
+		return x.ResourceId
+	}
+	return ""
+}
+
+func (x *UpdateVisibilityInput) GetVisibility() ApiResourceVisibility {
+	if x != nil {
+		return x.Visibility
+	}
+	return ApiResourceVisibility_api_resource_visibility_unspecified
+}
+
 // ApiResourceReference is a portable reference to another API resource by its
 // (org, kind, slug) coordinates. Resources use it to point at other resources
 // (for example, to associate a scenario with the org that owns it). The
@@ -220,7 +363,7 @@ type ApiResourceReference struct {
 
 func (x *ApiResourceReference) Reset() {
 	*x = ApiResourceReference{}
-	mi := &file_ai_scenar_commons_apiresource_io_proto_msgTypes[3]
+	mi := &file_ai_scenar_commons_apiresource_io_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -232,7 +375,7 @@ func (x *ApiResourceReference) String() string {
 func (*ApiResourceReference) ProtoMessage() {}
 
 func (x *ApiResourceReference) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_commons_apiresource_io_proto_msgTypes[3]
+	mi := &file_ai_scenar_commons_apiresource_io_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -245,7 +388,7 @@ func (x *ApiResourceReference) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApiResourceReference.ProtoReflect.Descriptor instead.
 func (*ApiResourceReference) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_commons_apiresource_io_proto_rawDescGZIP(), []int{3}
+	return file_ai_scenar_commons_apiresource_io_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ApiResourceReference) GetOrg() string {
@@ -280,7 +423,7 @@ var File_ai_scenar_commons_apiresource_io_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_commons_apiresource_io_proto_rawDesc = "" +
 	"\n" +
-	"&ai/scenar/commons/apiresource/io.proto\x12\x1dai.scenar.commons.apiresource\x1aEai/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto\x1a\x1bbuf/validate/validate.proto\"-\n" +
+	"&ai/scenar/commons/apiresource/io.proto\x12\x1dai.scenar.commons.apiresource\x1aEai/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto\x1a(ai/scenar/commons/apiresource/enum.proto\x1a&ai/scenar/commons/rpc/pagination.proto\x1a\x1bbuf/validate/validate.proto\"-\n" +
 	"\rApiResourceId\x12\x1c\n" +
 	"\x05value\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05value\"\x80\x01\n" +
 	"\x16ApiResourceDeleteInput\x12'\n" +
@@ -290,7 +433,21 @@ const file_ai_scenar_commons_apiresource_io_proto_rawDesc = "" +
 	"\x05force\x18\x03 \x01(\bR\x05force\"U\n" +
 	"\x1dApiResourceByOrgBySlugRequest\x12\x18\n" +
 	"\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12\x1a\n" +
-	"\x04slug\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04slug\"\xaf\x02\n" +
+	"\x04slug\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04slug\"\xba\x01\n" +
+	"\x17FindApiResourcesRequest\x12\x18\n" +
+	"\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12\x12\n" +
+	"\x04kind\x18\x03 \x01(\tR\x04kind\x123\n" +
+	"\x04page\x18\x04 \x01(\v2\x1f.ai.scenar.commons.rpc.PageInfoR\x04page\x12\x1f\n" +
+	"\vpage_number\x18\x05 \x01(\x05R\n" +
+	"pageNumber\x12\x1b\n" +
+	"\tpage_size\x18\x06 \x01(\x05R\bpageSize\"\xa2\x01\n" +
+	"\x15UpdateVisibilityInput\x12'\n" +
+	"\vresource_id\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\n" +
+	"resourceId\x12`\n" +
+	"\n" +
+	"visibility\x18\x02 \x01(\x0e24.ai.scenar.commons.apiresource.ApiResourceVisibilityB\n" +
+	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\n" +
+	"visibility\"\xaf\x02\n" +
 	"\x14ApiResourceReference\x127\n" +
 	"\x03org\x18\x01 \x01(\tB%\xbaH\"r \x18?2\x1c^$|^[a-z][a-z0-9-]*[a-z0-9]$R\x03org\x12R\n" +
 	"\x04kind\x18\x02 \x01(\x0e2>.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindR\x04kind\x12;\n" +
@@ -310,21 +467,27 @@ func file_ai_scenar_commons_apiresource_io_proto_rawDescGZIP() []byte {
 	return file_ai_scenar_commons_apiresource_io_proto_rawDescData
 }
 
-var file_ai_scenar_commons_apiresource_io_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_ai_scenar_commons_apiresource_io_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_ai_scenar_commons_apiresource_io_proto_goTypes = []any{
 	(*ApiResourceId)(nil),                 // 0: ai.scenar.commons.apiresource.ApiResourceId
 	(*ApiResourceDeleteInput)(nil),        // 1: ai.scenar.commons.apiresource.ApiResourceDeleteInput
 	(*ApiResourceByOrgBySlugRequest)(nil), // 2: ai.scenar.commons.apiresource.ApiResourceByOrgBySlugRequest
-	(*ApiResourceReference)(nil),          // 3: ai.scenar.commons.apiresource.ApiResourceReference
-	(apiresourcekind.ApiResourceKind)(0),  // 4: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKind
+	(*FindApiResourcesRequest)(nil),       // 3: ai.scenar.commons.apiresource.FindApiResourcesRequest
+	(*UpdateVisibilityInput)(nil),         // 4: ai.scenar.commons.apiresource.UpdateVisibilityInput
+	(*ApiResourceReference)(nil),          // 5: ai.scenar.commons.apiresource.ApiResourceReference
+	(*rpc.PageInfo)(nil),                  // 6: ai.scenar.commons.rpc.PageInfo
+	(ApiResourceVisibility)(0),            // 7: ai.scenar.commons.apiresource.ApiResourceVisibility
+	(apiresourcekind.ApiResourceKind)(0),  // 8: ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKind
 }
 var file_ai_scenar_commons_apiresource_io_proto_depIdxs = []int32{
-	4, // 0: ai.scenar.commons.apiresource.ApiResourceReference.kind:type_name -> ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKind
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	6, // 0: ai.scenar.commons.apiresource.FindApiResourcesRequest.page:type_name -> ai.scenar.commons.rpc.PageInfo
+	7, // 1: ai.scenar.commons.apiresource.UpdateVisibilityInput.visibility:type_name -> ai.scenar.commons.apiresource.ApiResourceVisibility
+	8, // 2: ai.scenar.commons.apiresource.ApiResourceReference.kind:type_name -> ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKind
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_ai_scenar_commons_apiresource_io_proto_init() }
@@ -332,13 +495,14 @@ func file_ai_scenar_commons_apiresource_io_proto_init() {
 	if File_ai_scenar_commons_apiresource_io_proto != nil {
 		return
 	}
+	file_ai_scenar_commons_apiresource_enum_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_scenar_commons_apiresource_io_proto_rawDesc), len(file_ai_scenar_commons_apiresource_io_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

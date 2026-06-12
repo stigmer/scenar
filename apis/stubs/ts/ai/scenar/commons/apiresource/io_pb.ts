@@ -6,6 +6,10 @@ import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv1";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv1";
 import type { ApiResourceKind } from "./apiresourcekind/api_resource_kind_pb";
 import { file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind } from "./apiresourcekind/api_resource_kind_pb";
+import type { ApiResourceVisibility } from "./enum_pb";
+import { file_ai_scenar_commons_apiresource_enum } from "./enum_pb";
+import type { PageInfo } from "../rpc/pagination_pb";
+import { file_ai_scenar_commons_rpc_pagination } from "../rpc/pagination_pb";
 import { file_buf_validate_validate } from "../../../../buf/validate/validate_pb";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -13,7 +17,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/commons/apiresource/io.proto.
  */
 export const file_ai_scenar_commons_apiresource_io: GenFile = /*@__PURE__*/
-  fileDesc("CiZhaS9zY2VuYXIvY29tbW9ucy9hcGlyZXNvdXJjZS9pby5wcm90bxIdYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UiJgoNQXBpUmVzb3VyY2VJZBIVCgV2YWx1ZRgBIAEoCUIGukgDyAEBIl0KFkFwaVJlc291cmNlRGVsZXRlSW5wdXQSGwoLcmVzb3VyY2VfaWQYASABKAlCBrpIA8gBARIXCg92ZXJzaW9uX21lc3NhZ2UYAiABKAkSDQoFZm9yY2UYAyABKAgiSgodQXBpUmVzb3VyY2VCeU9yZ0J5U2x1Z1JlcXVlc3QSEwoDb3JnGAEgASgJQga6SAPIAQESFAoEc2x1ZxgCIAEoCUIGukgDyAEBIpUCChRBcGlSZXNvdXJjZVJlZmVyZW5jZRIyCgNvcmcYASABKAlCJbpIInIgGD8yHF4kfF5bYS16XVthLXowLTktXSpbYS16MC05XSQSTAoEa2luZBgCIAEoDjI+LmFpLnNjZW5hci5jb21tb25zLmFwaXJlc291cmNlLmFwaXJlc291cmNla2luZC5BcGlSZXNvdXJjZUtpbmQSNQoEc2x1ZxgDIAEoCUInukgkyAEBch8QAhg/MhleW2Etel1bYS16MC05LV0qW2EtejAtOV0kEkQKB3ZlcnNpb24YBCABKAlCM7pIMHIuMixeJHxebGF0ZXN0JHxeW2EtekEtWjAtOS5fLV0rJHxeW2EtZjAtOV17NjR9JGIGcHJvdG8z", [file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind, file_buf_validate_validate]);
+  fileDesc("CiZhaS9zY2VuYXIvY29tbW9ucy9hcGlyZXNvdXJjZS9pby5wcm90bxIdYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UiJgoNQXBpUmVzb3VyY2VJZBIVCgV2YWx1ZRgBIAEoCUIGukgDyAEBIl0KFkFwaVJlc291cmNlRGVsZXRlSW5wdXQSGwoLcmVzb3VyY2VfaWQYASABKAlCBrpIA8gBARIXCg92ZXJzaW9uX21lc3NhZ2UYAiABKAkSDQoFZm9yY2UYAyABKAgiSgodQXBpUmVzb3VyY2VCeU9yZ0J5U2x1Z1JlcXVlc3QSEwoDb3JnGAEgASgJQga6SAPIAQESFAoEc2x1ZxgCIAEoCUIGukgDyAEBIpMBChdGaW5kQXBpUmVzb3VyY2VzUmVxdWVzdBITCgNvcmcYASABKAlCBrpIA8gBARIMCgRraW5kGAMgASgJEi0KBHBhZ2UYBCABKAsyHy5haS5zY2VuYXIuY29tbW9ucy5ycGMuUGFnZUluZm8SEwoLcGFnZV9udW1iZXIYBSABKAUSEQoJcGFnZV9zaXplGAYgASgFIooBChVVcGRhdGVWaXNpYmlsaXR5SW5wdXQSGwoLcmVzb3VyY2VfaWQYASABKAlCBrpIA8gBARJUCgp2aXNpYmlsaXR5GAIgASgOMjQuYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuQXBpUmVzb3VyY2VWaXNpYmlsaXR5Qgq6SAeCAQQQASAAIpUCChRBcGlSZXNvdXJjZVJlZmVyZW5jZRIyCgNvcmcYASABKAlCJbpIInIgGD8yHF4kfF5bYS16XVthLXowLTktXSpbYS16MC05XSQSTAoEa2luZBgCIAEoDjI+LmFpLnNjZW5hci5jb21tb25zLmFwaXJlc291cmNlLmFwaXJlc291cmNla2luZC5BcGlSZXNvdXJjZUtpbmQSNQoEc2x1ZxgDIAEoCUInukgkyAEBch8QAhg/MhleW2Etel1bYS16MC05LV0qW2EtejAtOV0kEkQKB3ZlcnNpb24YBCABKAlCM7pIMHIuMixeJHxebGF0ZXN0JHxeW2EtekEtWjAtOS5fLV0rJHxeW2EtZjAtOV17NjR9JGIGcHJvdG8z", [file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind, file_ai_scenar_commons_apiresource_enum, file_ai_scenar_commons_rpc_pagination, file_buf_validate_validate]);
 
 /**
  * ApiResourceId wraps a system-generated resource identifier. Used as a
@@ -106,6 +110,88 @@ export const ApiResourceByOrgBySlugRequestSchema: GenMessage<ApiResourceByOrgByS
   messageDesc(file_ai_scenar_commons_apiresource_io, 2);
 
 /**
+ * FindApiResourcesRequest is the standard input for list/find operations over a
+ * kind, scoped to an organization and paginated.
+ *
+ * @generated from message ai.scenar.commons.apiresource.FindApiResourcesRequest
+ */
+export type FindApiResourcesRequest = Message<"ai.scenar.commons.apiresource.FindApiResourcesRequest"> & {
+  /**
+   * Organization to scope the listing to. Required.
+   *
+   * @generated from field: string org = 1;
+   */
+  org: string;
+
+  /**
+   * Optional resource-kind filter (machine name, e.g. "scenario").
+   *
+   * @generated from field: string kind = 3;
+   */
+  kind: string;
+
+  /**
+   * Pagination parameters.
+   *
+   * @generated from field: ai.scenar.commons.rpc.PageInfo page = 4;
+   */
+  page?: PageInfo;
+
+  /**
+   * Page number (1-indexed) — deprecated, use page.num.
+   *
+   * @generated from field: int32 page_number = 5;
+   */
+  pageNumber: number;
+
+  /**
+   * Number of items per page — deprecated, use page.size.
+   *
+   * @generated from field: int32 page_size = 6;
+   */
+  pageSize: number;
+};
+
+/**
+ * Describes the message ai.scenar.commons.apiresource.FindApiResourcesRequest.
+ * Use `create(FindApiResourcesRequestSchema)` to create a new message.
+ */
+export const FindApiResourcesRequestSchema: GenMessage<FindApiResourcesRequest> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_commons_apiresource_io, 3);
+
+/**
+ * UpdateVisibilityInput is the shared input for changing the visibility of any
+ * API resource. A resource-specific updateVisibility RPC accepts this input and
+ * returns the full updated resource. Visibility transitions drive FGA tuple
+ * management in Cloud mode (e.g. PRIVATE -> PUBLIC creates a wildcard viewer
+ * tuple).
+ *
+ * @generated from message ai.scenar.commons.apiresource.UpdateVisibilityInput
+ */
+export type UpdateVisibilityInput = Message<"ai.scenar.commons.apiresource.UpdateVisibilityInput"> & {
+  /**
+   * Identifier of the resource whose visibility is changing. Required.
+   *
+   * @generated from field: string resource_id = 1;
+   */
+  resourceId: string;
+
+  /**
+   * The new visibility setting. Must not be unspecified (0).
+   *
+   * @generated from field: ai.scenar.commons.apiresource.ApiResourceVisibility visibility = 2;
+   */
+  visibility: ApiResourceVisibility;
+};
+
+/**
+ * Describes the message ai.scenar.commons.apiresource.UpdateVisibilityInput.
+ * Use `create(UpdateVisibilityInputSchema)` to create a new message.
+ */
+export const UpdateVisibilityInputSchema: GenMessage<UpdateVisibilityInput> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_commons_apiresource_io, 4);
+
+/**
  * ApiResourceReference is a portable reference to another API resource by its
  * (org, kind, slug) coordinates. Resources use it to point at other resources
  * (for example, to associate a scenario with the org that owns it). The
@@ -154,5 +240,5 @@ export type ApiResourceReference = Message<"ai.scenar.commons.apiresource.ApiRes
  * Use `create(ApiResourceReferenceSchema)` to create a new message.
  */
 export const ApiResourceReferenceSchema: GenMessage<ApiResourceReference> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_commons_apiresource_io, 3);
+  messageDesc(file_ai_scenar_commons_apiresource_io, 5);
 

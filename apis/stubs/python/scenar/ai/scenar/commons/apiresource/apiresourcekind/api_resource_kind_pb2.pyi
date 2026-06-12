@@ -27,6 +27,7 @@ class PlatformIdValue(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
 class ApiResourceKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     api_resource_kind_unknown: _ClassVar[ApiResourceKind]
+    api_resource_version: _ClassVar[ApiResourceKind]
     scenario: _ClassVar[ApiResourceKind]
     organization: _ClassVar[ApiResourceKind]
     api_key: _ClassVar[ApiResourceKind]
@@ -41,6 +42,7 @@ cloud_only: ResourceTier
 platform_id_value_unspecified: PlatformIdValue
 scenar: PlatformIdValue
 api_resource_kind_unknown: ApiResourceKind
+api_resource_version: ApiResourceKind
 scenario: ApiResourceKind
 organization: ApiResourceKind
 api_key: ApiResourceKind

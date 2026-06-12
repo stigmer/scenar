@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package ai.scenar.iam.iampolicy.v1;
+
+import "ai/scenar/commons/apiresource/rpc_service_options.proto";
+import "ai/scenar/iam/iampolicy/v1/api.proto";
+import "ai/scenar/iam/iampolicy/v1/spec.proto";
+import "google/protobuf/empty.proto";
+
+// IamPolicyCommandController provides the write operations for IAM policies — the
+// authorization-mutation contract the Scenar Cloud backend implements on top of
+// the authorization backend (OpenFGA). Each policy persists to MongoDB and is
+// mirrored as an OpenFGA tuple, the form in which authorization is actually
+// enforced.
+//
+// Like the scenario, api_key, and iampolicy query controllers, these RPCs are
+// internal, in-process calls made by the Cloud backend's own request pipeline
+// (never exposed to external clients), so the controller carries only the write
+// operations the backend actually consumes today:
+//
+//   - bootstrapPolicy        : write the structural/owner/visibility tuples a
+//                              newly created resource needs, before any tuple
+//                              exists to authorize against (the create path).
+//   - delete                 : remove one specific tuple (the visibility-change
+//                              path, e.g. dropping a public viewer grant).
+//   - cleanupResourcePolicies: remove every tuple referencing a deleted
+//                              resource (the delete path).
+//
+// Two write operations from the platform's full IamPolicy surface are
+// intentionally omitted until a concrete caller needs them, keeping the OSS
+// contract free of unused RPC surface (the same discipline query.proto applies
+// to its omitted audit reads):
+//   - create        : explicit "share/grant access" — deferred until a sharing
+//                     surface (e.g. a grant-access UI) exists.
+//   - revokeOrgAccess: bulk org-membership revocation — deferred until the
+//                      federated-account / org-member-removal flow exists.
+//
+// Authorization note: as with the scenario and api_key controllers, per-RPC
+// authorization options are intentionally absent until Scenar adopts a neutral
+// method-level auth contract. These RPCs carry only the service-level
+// resource-kind tag; the Cloud backend enforces authorization in its handlers
+// (bootstrapPolicy/cleanupResourcePolicies require can_bootstrap_iam on the
+// platform singleton; delete requires can_grant_access on the policy's resource).
+service IamPolicyCommandController {
+  // Tags this controller with the resource kind it manages so the platform's
+  // request pipeline can route and register it generically.
+  option (ai.scenar.commons.apiresource.api_resource_kind) = iam_policy;
+
+  // Bootstrap a policy during resource creation, before standard authorization
+  // can apply. Resolves the chicken-and-egg problem where creating a resource's
+  // first tuple would itself require a tuple to authorize against. Persists the
+  // policy and writes the corresponding OpenFGA tuple. Idempotent: re-bootstrapping
+  // an identical policy is a no-op. The backend restricts this to the platform's
+  // machine principal (can_bootstrap_iam on the platform singleton). See
+  // IamPolicySpec and IamPolicy.
+  rpc bootstrapPolicy(IamPolicySpec) returns (IamPolicy);
+
+  // Delete a single policy identified by its exact (principal, relation, resource)
+  // triple — a surgical removal that leaves all other policies on the resource
+  // intact (e.g. revoking a public-viewer grant when visibility changes to
+  // private). Removes both the MongoDB record and the OpenFGA tuple. Idempotent:
+  // deleting a non-existent policy succeeds. Returns the deleted policy for audit.
+  // See IamPolicySpec and IamPolicy.
+  rpc delete(IamPolicySpec) returns (IamPolicy);
+
+  // Remove every policy that references a deleted resource, in either direction
+  // (where the resource is the object of a grant, or the principal holding a
+  // grant). Called after a resource is deleted to prevent orphaned OpenFGA
+  // tuples. Idempotent: succeeds when no policies exist. See ApiResourceRef.
+  rpc cleanupResourcePolicies(ApiResourceRef) returns (google.protobuf.Empty);
+}

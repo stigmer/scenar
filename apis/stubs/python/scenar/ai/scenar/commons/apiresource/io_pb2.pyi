@@ -1,8 +1,10 @@
 from ai.scenar.commons.apiresource.apiresourcekind import api_resource_kind_pb2 as _api_resource_kind_pb2
+from ai.scenar.commons.apiresource import enum_pb2 as _enum_pb2
+from ai.scenar.commons.rpc import pagination_pb2 as _pagination_pb2
 from buf.validate import validate_pb2 as _validate_pb2
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
+from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -29,6 +31,28 @@ class ApiResourceByOrgBySlugRequest(_message.Message):
     org: str
     slug: str
     def __init__(self, org: _Optional[str] = ..., slug: _Optional[str] = ...) -> None: ...
+
+class FindApiResourcesRequest(_message.Message):
+    __slots__ = ("org", "kind", "page", "page_number", "page_size")
+    ORG_FIELD_NUMBER: _ClassVar[int]
+    KIND_FIELD_NUMBER: _ClassVar[int]
+    PAGE_FIELD_NUMBER: _ClassVar[int]
+    PAGE_NUMBER_FIELD_NUMBER: _ClassVar[int]
+    PAGE_SIZE_FIELD_NUMBER: _ClassVar[int]
+    org: str
+    kind: str
+    page: _pagination_pb2.PageInfo
+    page_number: int
+    page_size: int
+    def __init__(self, org: _Optional[str] = ..., kind: _Optional[str] = ..., page: _Optional[_Union[_pagination_pb2.PageInfo, _Mapping]] = ..., page_number: _Optional[int] = ..., page_size: _Optional[int] = ...) -> None: ...
+
+class UpdateVisibilityInput(_message.Message):
+    __slots__ = ("resource_id", "visibility")
+    RESOURCE_ID_FIELD_NUMBER: _ClassVar[int]
+    VISIBILITY_FIELD_NUMBER: _ClassVar[int]
+    resource_id: str
+    visibility: _enum_pb2.ApiResourceVisibility
+    def __init__(self, resource_id: _Optional[str] = ..., visibility: _Optional[_Union[_enum_pb2.ApiResourceVisibility, str]] = ...) -> None: ...
 
 class ApiResourceReference(_message.Message):
     __slots__ = ("org", "kind", "slug", "version")

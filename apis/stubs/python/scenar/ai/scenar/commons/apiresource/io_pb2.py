@@ -23,10 +23,12 @@ _sym_db = _symbol_database.Default()
 
 
 from ai.scenar.commons.apiresource.apiresourcekind import api_resource_kind_pb2 as ai_dot_scenar_dot_commons_dot_apiresource_dot_apiresourcekind_dot_api__resource__kind__pb2
+from ai.scenar.commons.apiresource import enum_pb2 as ai_dot_scenar_dot_commons_dot_apiresource_dot_enum__pb2
+from ai.scenar.commons.rpc import pagination_pb2 as ai_dot_scenar_dot_commons_dot_rpc_dot_pagination__pb2
 from buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n&ai/scenar/commons/apiresource/io.proto\x12\x1d\x61i.scenar.commons.apiresource\x1a\x45\x61i/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto\x1a\x1b\x62uf/validate/validate.proto\"-\n\rApiResourceId\x12\x1c\n\x05value\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05value\"\x80\x01\n\x16\x41piResourceDeleteInput\x12\'\n\x0bresource_id\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\nresourceId\x12\'\n\x0fversion_message\x18\x02 \x01(\tR\x0eversionMessage\x12\x14\n\x05\x66orce\x18\x03 \x01(\x08R\x05\x66orce\"U\n\x1d\x41piResourceByOrgBySlugRequest\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12\x1a\n\x04slug\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04slug\"\xaf\x02\n\x14\x41piResourceReference\x12\x37\n\x03org\x18\x01 \x01(\tB%\xbaH\"r \x18?2\x1c^$|^[a-z][a-z0-9-]*[a-z0-9]$R\x03org\x12R\n\x04kind\x18\x02 \x01(\x0e\x32>.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindR\x04kind\x12;\n\x04slug\x18\x03 \x01(\tB\'\xbaH$r\x1f\x10\x02\x18?2\x19^[a-z][a-z0-9-]*[a-z0-9]$\xc8\x01\x01R\x04slug\x12M\n\x07version\x18\x04 \x01(\tB3\xbaH0r.2,^$|^latest$|^[a-zA-Z0-9._-]+$|^[a-f0-9]{64}$R\x07versionb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n&ai/scenar/commons/apiresource/io.proto\x12\x1d\x61i.scenar.commons.apiresource\x1a\x45\x61i/scenar/commons/apiresource/apiresourcekind/api_resource_kind.proto\x1a(ai/scenar/commons/apiresource/enum.proto\x1a&ai/scenar/commons/rpc/pagination.proto\x1a\x1b\x62uf/validate/validate.proto\"-\n\rApiResourceId\x12\x1c\n\x05value\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05value\"\x80\x01\n\x16\x41piResourceDeleteInput\x12\'\n\x0bresource_id\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\nresourceId\x12\'\n\x0fversion_message\x18\x02 \x01(\tR\x0eversionMessage\x12\x14\n\x05\x66orce\x18\x03 \x01(\x08R\x05\x66orce\"U\n\x1d\x41piResourceByOrgBySlugRequest\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12\x1a\n\x04slug\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04slug\"\xba\x01\n\x17\x46indApiResourcesRequest\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12\x12\n\x04kind\x18\x03 \x01(\tR\x04kind\x12\x33\n\x04page\x18\x04 \x01(\x0b\x32\x1f.ai.scenar.commons.rpc.PageInfoR\x04page\x12\x1f\n\x0bpage_number\x18\x05 \x01(\x05R\npageNumber\x12\x1b\n\tpage_size\x18\x06 \x01(\x05R\x08pageSize\"\xa2\x01\n\x15UpdateVisibilityInput\x12\'\n\x0bresource_id\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\nresourceId\x12`\n\nvisibility\x18\x02 \x01(\x0e\x32\x34.ai.scenar.commons.apiresource.ApiResourceVisibilityB\n\xbaH\x07\x82\x01\x04\x10\x01 \x00R\nvisibility\"\xaf\x02\n\x14\x41piResourceReference\x12\x37\n\x03org\x18\x01 \x01(\tB%\xbaH\"r \x18?2\x1c^$|^[a-z][a-z0-9-]*[a-z0-9]$R\x03org\x12R\n\x04kind\x18\x02 \x01(\x0e\x32>.ai.scenar.commons.apiresource.apiresourcekind.ApiResourceKindR\x04kind\x12;\n\x04slug\x18\x03 \x01(\tB\'\xbaH$r\x1f\x10\x02\x18?2\x19^[a-z][a-z0-9-]*[a-z0-9]$\xc8\x01\x01R\x04slug\x12M\n\x07version\x18\x04 \x01(\tB3\xbaH0r.2,^$|^latest$|^[a-zA-Z0-9._-]+$|^[a-f0-9]{64}$R\x07versionb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -41,18 +43,28 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_APIRESOURCEBYORGBYSLUGREQUEST'].fields_by_name['org']._serialized_options = b'\272H\003\310\001\001'
   _globals['_APIRESOURCEBYORGBYSLUGREQUEST'].fields_by_name['slug']._loaded_options = None
   _globals['_APIRESOURCEBYORGBYSLUGREQUEST'].fields_by_name['slug']._serialized_options = b'\272H\003\310\001\001'
+  _globals['_FINDAPIRESOURCESREQUEST'].fields_by_name['org']._loaded_options = None
+  _globals['_FINDAPIRESOURCESREQUEST'].fields_by_name['org']._serialized_options = b'\272H\003\310\001\001'
+  _globals['_UPDATEVISIBILITYINPUT'].fields_by_name['resource_id']._loaded_options = None
+  _globals['_UPDATEVISIBILITYINPUT'].fields_by_name['resource_id']._serialized_options = b'\272H\003\310\001\001'
+  _globals['_UPDATEVISIBILITYINPUT'].fields_by_name['visibility']._loaded_options = None
+  _globals['_UPDATEVISIBILITYINPUT'].fields_by_name['visibility']._serialized_options = b'\272H\007\202\001\004\020\001 \000'
   _globals['_APIRESOURCEREFERENCE'].fields_by_name['org']._loaded_options = None
   _globals['_APIRESOURCEREFERENCE'].fields_by_name['org']._serialized_options = b'\272H\"r \030?2\034^$|^[a-z][a-z0-9-]*[a-z0-9]$'
   _globals['_APIRESOURCEREFERENCE'].fields_by_name['slug']._loaded_options = None
   _globals['_APIRESOURCEREFERENCE'].fields_by_name['slug']._serialized_options = b'\272H$r\037\020\002\030?2\031^[a-z][a-z0-9-]*[a-z0-9]$\310\001\001'
   _globals['_APIRESOURCEREFERENCE'].fields_by_name['version']._loaded_options = None
   _globals['_APIRESOURCEREFERENCE'].fields_by_name['version']._serialized_options = b'\272H0r.2,^$|^latest$|^[a-zA-Z0-9._-]+$|^[a-f0-9]{64}$'
-  _globals['_APIRESOURCEID']._serialized_start=173
-  _globals['_APIRESOURCEID']._serialized_end=218
-  _globals['_APIRESOURCEDELETEINPUT']._serialized_start=221
-  _globals['_APIRESOURCEDELETEINPUT']._serialized_end=349
-  _globals['_APIRESOURCEBYORGBYSLUGREQUEST']._serialized_start=351
-  _globals['_APIRESOURCEBYORGBYSLUGREQUEST']._serialized_end=436
-  _globals['_APIRESOURCEREFERENCE']._serialized_start=439
-  _globals['_APIRESOURCEREFERENCE']._serialized_end=742
+  _globals['_APIRESOURCEID']._serialized_start=255
+  _globals['_APIRESOURCEID']._serialized_end=300
+  _globals['_APIRESOURCEDELETEINPUT']._serialized_start=303
+  _globals['_APIRESOURCEDELETEINPUT']._serialized_end=431
+  _globals['_APIRESOURCEBYORGBYSLUGREQUEST']._serialized_start=433
+  _globals['_APIRESOURCEBYORGBYSLUGREQUEST']._serialized_end=518
+  _globals['_FINDAPIRESOURCESREQUEST']._serialized_start=521
+  _globals['_FINDAPIRESOURCESREQUEST']._serialized_end=707
+  _globals['_UPDATEVISIBILITYINPUT']._serialized_start=710
+  _globals['_UPDATEVISIBILITYINPUT']._serialized_end=872
+  _globals['_APIRESOURCEREFERENCE']._serialized_start=875
+  _globals['_APIRESOURCEREFERENCE']._serialized_end=1178
 # @@protoc_insertion_point(module_scope)
