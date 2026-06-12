@@ -81,8 +81,9 @@ export async function buildPackManifest(outDir: string, scenarioId: string): Pro
     if (pathError) {
       throw new Error(
         `Bundle contains a file that the deploy allowlist would reject:\n  ${pathError}\n\n` +
-          "Keep the scenario allowlist-clean (only .html/.js/.css/.json/.mp3): avoid importing\n" +
-          "images or fonts as separate files for now (use CSS-drawn shells + inline SVG icons).",
+          "The deploy allowlist covers HTML/JS/CSS/JSON, MP3 narration, raster images\n" +
+          "(png/jpg/jpeg/gif/webp/avif), and woff2/woff fonts. SVG is not a served type:\n" +
+          "inline it as a React component or a data URI rather than emitting an .svg file.",
       );
     }
 

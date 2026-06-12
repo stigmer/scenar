@@ -119,9 +119,13 @@ export type DeclaredFile = Message<"ai.scenar.deploy.v1.DeclaredFile"> & {
 
   /**
    * MIME content type to store and later serve the object with (e.g.
-   * "text/html", "application/javascript", "audio/mpeg"). Bound into the
-   * presigned PUT; the serving edge returns exactly this type with
-   * X-Content-Type-Options: nosniff.
+   * "text/html", "image/png", "audio/mpeg"). Like sha256 and size_bytes, this
+   * is a declared-then-verified claim: it must be the canonical type for the
+   * file's extension, and completion rejects a deploy whose declared type
+   * disagrees (e.g. a .png declared as text/html). Bound into the presigned
+   * PUT; once verified, the serving edge returns exactly this type with
+   * X-Content-Type-Options: nosniff, so a content-type lie can never reach a
+   * browser.
    *
    * @generated from field: string content_type = 4;
    */

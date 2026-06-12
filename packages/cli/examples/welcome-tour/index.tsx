@@ -10,13 +10,17 @@ import {
   type SideNavItem,
 } from "@scenar/react";
 import type { TourStepData, TourScreen } from "./steps";
+// Vite resolves an asset import to its hashed URL at pack time. This logo is
+// larger than Vite's 4 KiB inline limit, so `scenar pack` emits it as a real
+// .png file — exercising the image path through the deploy allowlist end to end.
+import logoUrl from "./logo.png";
 
 /**
  * Maps one step's data to view elements. This is the contract `scenar render`
  * (Remotion) and `scenar pack` (ScenarioPlayer) both consume: a pure function
- * from (data, stepIndex) to a ReactNode. Everything below is CSS-drawn via
- * @scenar/react shells + inline-SVG lucide icons, so the packed bundle needs no
- * image or font files.
+ * from (data, stepIndex) to a ReactNode. The chrome is CSS-drawn via
+ * @scenar/react shells + inline-SVG lucide icons; the one bundled asset is the
+ * brand logo below, which demonstrates an image surviving pack and deploy.
  */
 export function renderStep(data: TourStepData, stepIndex: number): ReactNode {
   return (
@@ -67,9 +71,12 @@ function renderScreen(screen: TourScreen): ReactNode {
           sidebarItems={SIDEBAR}
         >
           <div className="p-5">
-            <h2 className="mb-4 text-[15px] font-semibold text-[var(--scenar-foreground)]">
-              Welcome back, Jordan
-            </h2>
+            <div className="mb-4 flex items-center gap-2">
+              <img src={logoUrl} alt="Acme Cloud" width={24} height={24} className="rounded" />
+              <h2 className="text-[15px] font-semibold text-[var(--scenar-foreground)]">
+                Welcome back, Jordan
+              </h2>
+            </div>
             <div className="grid grid-cols-3 gap-3">
               {[
                 { label: "Active projects", value: "12" },

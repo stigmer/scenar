@@ -41,7 +41,9 @@ export function registerPackCommand(program: Command): void {
         "The bundle contains index.html, hashed JS/CSS, a scenario.json\n" +
         "descriptor, and a pack-manifest.json listing every file with its\n" +
         "lowercase-hex sha256 and content type. Output stays within the\n" +
-        "deploy allowlist (.html/.js/.css/.json/.mp3).\n\n" +
+        "deploy allowlist: HTML/JS/CSS/JSON, MP3 narration, raster images\n" +
+        "(png/jpg/jpeg/gif/webp/avif), and woff2/woff fonts. SVG is not a\n" +
+        "served type — inline it as a component or data URI.\n\n" +
         "Output defaults to ./<scenario-id>-bundle. Use --out to override.",
     )
     .argument("<dir>", "path to a scenario directory (must contain steps.ts)")

@@ -6,22 +6,43 @@
  * and the server can never drift.
  *
  * Source of truth (kept in lockstep):
- *   - DeployManifestValidator.java  — extensions, path pattern, depth, dupes
+ *   - DeployContentTypes.java       — extension allowlist + canonical content type
+ *   - DeployManifestValidator.java  — path pattern, depth, dupes, content-type check
  *   - CompleteDeployUploadSessionHandler.java — sha256/size/content-type shape
  *   - ScenarioJsonValidator.java    — scenario.json rules
+ *
+ * The backend verifies each file's declared content type equals the canonical
+ * type for its extension (the same declared-then-verified contract as sha256 and
+ * size), so `CONTENT_TYPE_BY_EXTENSION` below must match the server's table
+ * exactly. svg is intentionally absent: it is active content (it can run script
+ * on direct same-origin navigation), so scenarios inline SVG (as a React
+ * component or a data URI) rather than emitting it as a served file.
  */
 
-/** Final-extension allowlist (lowercase, no dot). Matches the backend exactly. */
-export const ALLOWED_EXTENSIONS = ["html", "js", "css", "json", "mp3"] as const;
-
-/** Conventional content type per allowed extension. */
-export const CONTENT_TYPE_BY_EXTENSION: Record<(typeof ALLOWED_EXTENSIONS)[number], string> = {
+/** Conventional content type per allowed extension. Matches the backend exactly. */
+export const CONTENT_TYPE_BY_EXTENSION = {
+  // The application shell, its scenario descriptor, and narration audio.
   html: "text/html",
   js: "text/javascript",
   css: "text/css",
   json: "application/json",
   mp3: "audio/mpeg",
-};
+  // Raster web images.
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  avif: "image/avif",
+  // Modern web fonts (RFC 8081 top-level "font" types).
+  woff2: "font/woff2",
+  woff: "font/woff",
+} as const;
+
+/** Final-extension allowlist (lowercase, no dot). Derived from the content-type table. */
+export const ALLOWED_EXTENSIONS = Object.keys(
+  CONTENT_TYPE_BY_EXTENSION,
+) as (keyof typeof CONTENT_TYPE_BY_EXTENSION)[];
 
 /** A bundle-relative path: clean POSIX segments, no leading/trailing/double slash. */
 export const RELATIVE_PATH_PATTERN = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/;

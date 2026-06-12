@@ -47,6 +47,9 @@ export async function runViteBuild(input: ViteBuildInput): Promise<void> {
       emptyOutDir: true,
       cssCodeSplit: false, // one stylesheet, served under style-src 'self'.
       sourcemap: false, // .map is not in the deploy allowlist.
+      // Keep Vite's default assetsInlineLimit (4 KiB): small assets inline as data: URIs
+      // (allowed by the edge CSP's img-src/font-src 'self' data:), while larger images and
+      // fonts emit as hashed files — now first-class members of the deploy allowlist.
       manifest: false, // pack writes its own deploy-facing pack-manifest.json.
       // No inline modulepreload polyfill script — it would violate script-src 'self'.
       modulePreload: { polyfill: false },

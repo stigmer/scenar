@@ -79,9 +79,22 @@ describe("buildPackManifest", () => {
     expect(manifest2.files.map((f) => f.path)).not.toContain(PACK_MANIFEST_FILE);
   });
 
-  it("rejects a bundle with a disallowed extension (image/font case)", async () => {
+  it("includes raster images and fonts with their canonical content types", async () => {
     await seedCleanBundle();
-    await writeFile(join(dir, "assets", "logo-abc.png"), "binary", "utf-8");
+    await writeScenarioJson(dir, "welcome-tour", "0.0.1");
+    await writeFile(join(dir, "assets", "logo-abc.png"), "PNG-bytes", "utf-8");
+    await writeFile(join(dir, "assets", "brand-abc.woff2"), "WOFF2-bytes", "utf-8");
+
+    const manifest = await buildPackManifest(dir, "welcome-tour");
+    const byPath = new Map(manifest.files.map((f) => [f.path, f]));
+
+    expect(byPath.get("assets/logo-abc.png")?.contentType).toBe("image/png");
+    expect(byPath.get("assets/brand-abc.woff2")?.contentType).toBe("font/woff2");
+  });
+
+  it("rejects a bundle with a disallowed extension (svg active content)", async () => {
+    await seedCleanBundle();
+    await writeFile(join(dir, "assets", "icon-abc.svg"), "<svg/>", "utf-8");
     await expect(buildPackManifest(dir, "welcome-tour")).rejects.toThrow(/allowlist/);
   });
 });
