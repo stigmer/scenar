@@ -25,9 +25,10 @@ _sym_db = _symbol_database.Default()
 from ai.scenar.commons.apiresource import io_pb2 as ai_dot_scenar_dot_commons_dot_apiresource_dot_io__pb2
 from ai.scenar.commons.apiresource import rpc_service_options_pb2 as ai_dot_scenar_dot_commons_dot_apiresource_dot_rpc__service__options__pb2
 from ai.scenar.scenario.v1 import api_pb2 as ai_dot_scenar_dot_scenario_dot_v1_dot_api__pb2
+from ai.scenar.scenario.v1 import io_pb2 as ai_dot_scenar_dot_scenario_dot_v1_dot_io__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#ai/scenar/scenario/v1/command.proto\x12\x15\x61i.scenar.scenario.v1\x1a&ai/scenar/commons/apiresource/io.proto\x1a\x37\x61i/scenar/commons/apiresource/rpc_service_options.proto\x1a\x1f\x61i/scenar/scenario/v1/api.proto2\xe6\x02\n\x19ScenarioCommandController\x12I\n\x05\x61pply\x12\x1f.ai.scenar.scenario.v1.Scenario\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12J\n\x06\x63reate\x12\x1f.ai.scenar.scenario.v1.Scenario\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12J\n\x06update\x12\x1f.ai.scenar.scenario.v1.Scenario\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12`\n\x06\x64\x65lete\x12\x35.ai.scenar.commons.apiresource.ApiResourceDeleteInput\x1a\x1f.ai.scenar.scenario.v1.Scenario\x1a\x04\xa0\xff+\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#ai/scenar/scenario/v1/command.proto\x12\x15\x61i.scenar.scenario.v1\x1a&ai/scenar/commons/apiresource/io.proto\x1a\x37\x61i/scenar/commons/apiresource/rpc_service_options.proto\x1a\x1f\x61i/scenar/scenario/v1/api.proto\x1a\x1e\x61i/scenar/scenario/v1/io.proto2\xcb\x03\n\x19ScenarioCommandController\x12I\n\x05\x61pply\x12\x1f.ai.scenar.scenario.v1.Scenario\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12J\n\x06\x63reate\x12\x1f.ai.scenar.scenario.v1.Scenario\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12J\n\x06update\x12\x1f.ai.scenar.scenario.v1.Scenario\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12`\n\x06\x64\x65lete\x12\x35.ai.scenar.commons.apiresource.ApiResourceDeleteInput\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12\x63\n\x10setCurrentDeploy\x12..ai.scenar.scenario.v1.SetCurrentDeployRequest\x1a\x1f.ai.scenar.scenario.v1.Scenario\x1a\x04\xa0\xff+\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,6 +37,6 @@ if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_SCENARIOCOMMANDCONTROLLER']._loaded_options = None
   _globals['_SCENARIOCOMMANDCONTROLLER']._serialized_options = b'\240\377+\001'
-  _globals['_SCENARIOCOMMANDCONTROLLER']._serialized_start=193
-  _globals['_SCENARIOCOMMANDCONTROLLER']._serialized_end=551
+  _globals['_SCENARIOCOMMANDCONTROLLER']._serialized_start=225
+  _globals['_SCENARIOCOMMANDCONTROLLER']._serialized_end=684
 # @@protoc_insertion_point(module_scope)

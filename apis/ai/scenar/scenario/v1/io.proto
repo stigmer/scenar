@@ -25,3 +25,30 @@ message ListScenariosRequest {
   // page. Pass the next_page_token from the previous ScenarioList to continue.
   string page_token = 3;
 }
+
+// SetCurrentDeployRequest is the input for publishing a deploy: it flips a
+// scenario's status.current_deploy_id to point at a newly active deploy (or
+// back to a prior one, for rollback).
+//
+// This is the one operation that mutates the scenario's publication pointer.
+// It is owned by the scenario (the aggregate that holds current_deploy_id) and
+// is called in-process by the deploy upload session once a deploy is verified
+// and active — the deploy domain never writes the scenario's state directly.
+// The pointer write is a single atomic field update; the most recently
+// published deploy wins.
+message SetCurrentDeployRequest {
+  // Scenario whose current deploy pointer to set. Required; the caller must
+  // have can_edit on it.
+  string scenario_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 1
+  ];
+
+  // The deploy to make current. Required. Must be a deploy of this scenario in
+  // the active state; the backend validates the relationship and state before
+  // flipping the pointer.
+  string deploy_id = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 1
+  ];
+}

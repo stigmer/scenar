@@ -26,7 +26,7 @@ from ai.scenar.commons.apiresource import field_options_pb2 as ai_dot_scenar_dot
 from buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1e\x61i/scenar/deploy/v1/spec.proto\x12\x13\x61i.scenar.deploy.v1\x1a\x31\x61i/scenar/commons/apiresource/field_options.proto\x1a\x1b\x62uf/validate/validate.proto\":\n\nDeploySpec\x12,\n\x0bscenario_id\x18\x01 \x01(\tB\x0b\xbaH\x04r\x02\x10\x01\xd0\x85,\x01R\nscenarioIdb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1e\x61i/scenar/deploy/v1/spec.proto\x12\x13\x61i.scenar.deploy.v1\x1a\x31\x61i/scenar/commons/apiresource/field_options.proto\x1a\x1b\x62uf/validate/validate.proto\"y\n\nDeploySpec\x12,\n\x0bscenario_id\x18\x01 \x01(\tB\x0b\xbaH\x04r\x02\x10\x01\xd0\x85,\x01R\nscenarioId\x12=\n\x05\x66iles\x18\x02 \x03(\x0b\x32!.ai.scenar.deploy.v1.DeclaredFileB\x04\xd0\x85,\x01R\x05\x66iles\"\x85\x02\n\x0c\x44\x65\x63laredFile\x12V\n\rrelative_path\x18\x01 \x01(\tB1\xbaH.r)\x18\x80\x08\x32$^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$\xc8\x01\x01R\x0crelativePath\x12\x30\n\x06sha256\x18\x02 \x01(\tB\x18\xbaH\x15r\x10\x32\x0e^[a-f0-9]{64}$\xc8\x01\x01R\x06sha256\x12&\n\nsize_bytes\x18\x03 \x01(\x03\x42\x07\xbaH\x04\"\x02 \x00R\tsizeBytes\x12\x43\n\x0c\x63ontent_type\x18\x04 \x01(\tB \xbaH\x1dr\x18\x18\xff\x01\x32\x13^[\\w.+-]+/[\\w.+-]+$\xc8\x01\x01R\x0b\x63ontentTypeb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,6 +35,18 @@ if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_DEPLOYSPEC'].fields_by_name['scenario_id']._loaded_options = None
   _globals['_DEPLOYSPEC'].fields_by_name['scenario_id']._serialized_options = b'\272H\004r\002\020\001\320\205,\001'
+  _globals['_DEPLOYSPEC'].fields_by_name['files']._loaded_options = None
+  _globals['_DEPLOYSPEC'].fields_by_name['files']._serialized_options = b'\320\205,\001'
+  _globals['_DECLAREDFILE'].fields_by_name['relative_path']._loaded_options = None
+  _globals['_DECLAREDFILE'].fields_by_name['relative_path']._serialized_options = b'\272H.r)\030\200\0102$^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$\310\001\001'
+  _globals['_DECLAREDFILE'].fields_by_name['sha256']._loaded_options = None
+  _globals['_DECLAREDFILE'].fields_by_name['sha256']._serialized_options = b'\272H\025r\0202\016^[a-f0-9]{64}$\310\001\001'
+  _globals['_DECLAREDFILE'].fields_by_name['size_bytes']._loaded_options = None
+  _globals['_DECLAREDFILE'].fields_by_name['size_bytes']._serialized_options = b'\272H\004\"\002 \000'
+  _globals['_DECLAREDFILE'].fields_by_name['content_type']._loaded_options = None
+  _globals['_DECLAREDFILE'].fields_by_name['content_type']._serialized_options = b'\272H\035r\030\030\377\0012\023^[\\w.+-]+/[\\w.+-]+$\310\001\001'
   _globals['_DEPLOYSPEC']._serialized_start=135
-  _globals['_DEPLOYSPEC']._serialized_end=193
+  _globals['_DEPLOYSPEC']._serialized_end=256
+  _globals['_DECLAREDFILE']._serialized_start=259
+  _globals['_DECLAREDFILE']._serialized_end=520
 # @@protoc_insertion_point(module_scope)

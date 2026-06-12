@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/deploy/v1/spec.proto.
  */
 export const file_ai_scenar_deploy_v1_spec: GenFile = /*@__PURE__*/
-  fileDesc("Ch5haS9zY2VuYXIvZGVwbG95L3YxL3NwZWMucHJvdG8SE2FpLnNjZW5hci5kZXBsb3kudjEiLgoKRGVwbG95U3BlYxIgCgtzY2VuYXJpb19pZBgBIAEoCUILukgEcgIQAdCFLAFiBnByb3RvMw", [file_ai_scenar_commons_apiresource_field_options, file_buf_validate_validate]);
+  fileDesc("Ch5haS9zY2VuYXIvZGVwbG95L3YxL3NwZWMucHJvdG8SE2FpLnNjZW5hci5kZXBsb3kudjEiZgoKRGVwbG95U3BlYxIgCgtzY2VuYXJpb19pZBgBIAEoCUILukgEcgIQAdCFLAESNgoFZmlsZXMYAiADKAsyIS5haS5zY2VuYXIuZGVwbG95LnYxLkRlY2xhcmVkRmlsZUIE0IUsASLXAQoMRGVjbGFyZWRGaWxlEkgKDXJlbGF0aXZlX3BhdGgYASABKAlCMbpILsgBAXIpGIAIMiReW0EtWmEtejAtOS5fLV0rKC9bQS1aYS16MC05Ll8tXSspKiQSKAoGc2hhMjU2GAIgASgJQhi6SBXIAQFyEDIOXlthLWYwLTldezY0fSQSGwoKc2l6ZV9ieXRlcxgDIAEoA0IHukgEIgIgABI2Cgxjb250ZW50X3R5cGUYBCABKAlCILpIHcgBAXIYGP8BMhNeW1x3ListXSsvW1x3ListXSskYgZwcm90bzM", [file_ai_scenar_commons_apiresource_field_options, file_buf_validate_validate]);
 
 /**
  * DeploySpec defines the desired state of a Deploy resource — the `spec` block
@@ -28,11 +28,6 @@ export const file_ai_scenar_deploy_v1_spec: GenFile = /*@__PURE__*/
  * metadata declares deploy as PARENT-scoped to scenario via this field, so a
  * deploy inherits view/edit/delete from the scenario it snapshots.
  *
- * The inputs the two-phase upload session supplies at creation time (declared
- * object inventory, content hashes, source/CLI version) are added to this spec
- * alongside that session's command RPCs; the substrate models only the parent
- * link.
- *
  * @generated from message ai.scenar.deploy.v1.DeploySpec
  */
 export type DeploySpec = Message<"ai.scenar.deploy.v1.DeploySpec"> & {
@@ -44,6 +39,24 @@ export type DeploySpec = Message<"ai.scenar.deploy.v1.DeploySpec"> & {
    * @generated from field: string scenario_id = 1;
    */
   scenarioId: string;
+
+  /**
+   * The object inventory the two-phase upload session declared at creation —
+   * exactly the files the client promised to upload, captured verbatim from the
+   * CreateDeployUploadSession request. Immutable: a deploy is one immutable
+   * publication, so its declared contents never change.
+   *
+   * This is the authoritative record the completion phase verifies against: the
+   * backend issued one presigned PUT per entry (binding each file's content type
+   * and checksum), and at completion it re-checks every stored object's
+   * existence, size, and checksum against this declaration before the deploy may
+   * go active. Persisting the declaration here — rather than re-accepting it at
+   * completion — is what makes completion verify what was actually granted upload
+   * URLs, not whatever a later call might re-assert.
+   *
+   * @generated from field: repeated ai.scenar.deploy.v1.DeclaredFile files = 2;
+   */
+  files: DeclaredFile[];
 };
 
 /**
@@ -52,4 +65,73 @@ export type DeploySpec = Message<"ai.scenar.deploy.v1.DeploySpec"> & {
  */
 export const DeploySpecSchema: GenMessage<DeploySpec> = /*@__PURE__*/
   messageDesc(file_ai_scenar_deploy_v1_spec, 0);
+
+/**
+ * DeclaredFile is one file in a deploy's bundle, as the client declares it when
+ * opening an upload session — its bundle-relative path, content hash, size, and
+ * MIME type. It is both the create request's per-file input and the unit stored
+ * in DeploySpec.files, so the completion phase verifies the uploaded objects
+ * against the very same declaration the upload URLs were minted from.
+ *
+ * The declaration is a request, never trusted as truth. The backend treats the
+ * uploaded bundle as adversarial: completeDeployUploadSession re-verifies every
+ * object against the object store (existence, size, checksum) and validates the
+ * bundle's scenario.json independently before a deploy is ever published.
+ *
+ * buf.validate here enforces only the structural shape of a path (no leading
+ * slash, no control characters, single-slash segments); the semantic checks that
+ * depend on the bundle as a whole (rejecting ".." segments, the file-type
+ * allowlist, and per-bundle caps) are enforced by the backend at completion,
+ * where the untrusted bundle is validated in one place.
+ *
+ * @generated from message ai.scenar.deploy.v1.DeclaredFile
+ */
+export type DeclaredFile = Message<"ai.scenar.deploy.v1.DeclaredFile"> & {
+  /**
+   * Bundle-relative path of the file (e.g. "index.html",
+   * "assets/scenar.abc123.js", "narration/step-1.mp3"). Forward-slash
+   * separated, no leading or trailing slash, no empty or "//" segments. The
+   * backend maps this under the deploy's immutable object_key_prefix to form
+   * the object key.
+   *
+   * @generated from field: string relative_path = 1;
+   */
+  relativePath: string;
+
+  /**
+   * Lowercase hex SHA-256 of the file's bytes, taken from the CLI's
+   * pack-manifest.json. Bound into the presigned PUT so the object store
+   * rejects a body whose bytes do not hash to this value, and re-verified at
+   * completion. Exactly 64 hex characters.
+   *
+   * @generated from field: string sha256 = 2;
+   */
+  sha256: string;
+
+  /**
+   * Size of the file in bytes. Must be positive. The backend enforces per-file
+   * and total-size quota caps against this declared size and re-checks the
+   * actual stored object size at completion.
+   *
+   * @generated from field: int64 size_bytes = 3;
+   */
+  sizeBytes: bigint;
+
+  /**
+   * MIME content type to store and later serve the object with (e.g.
+   * "text/html", "application/javascript", "audio/mpeg"). Bound into the
+   * presigned PUT; the serving edge returns exactly this type with
+   * X-Content-Type-Options: nosniff.
+   *
+   * @generated from field: string content_type = 4;
+   */
+  contentType: string;
+};
+
+/**
+ * Describes the message ai.scenar.deploy.v1.DeclaredFile.
+ * Use `create(DeclaredFileSchema)` to create a new message.
+ */
+export const DeclaredFileSchema: GenMessage<DeclaredFile> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_deploy_v1_spec, 1);
 

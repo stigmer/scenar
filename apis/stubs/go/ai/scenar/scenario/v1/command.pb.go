@@ -25,29 +25,33 @@ var File_ai_scenar_scenario_v1_command_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_scenario_v1_command_proto_rawDesc = "" +
 	"\n" +
-	"#ai/scenar/scenario/v1/command.proto\x12\x15ai.scenar.scenario.v1\x1a&ai/scenar/commons/apiresource/io.proto\x1a7ai/scenar/commons/apiresource/rpc_service_options.proto\x1a\x1fai/scenar/scenario/v1/api.proto2\xe6\x02\n" +
+	"#ai/scenar/scenario/v1/command.proto\x12\x15ai.scenar.scenario.v1\x1a&ai/scenar/commons/apiresource/io.proto\x1a7ai/scenar/commons/apiresource/rpc_service_options.proto\x1a\x1fai/scenar/scenario/v1/api.proto\x1a\x1eai/scenar/scenario/v1/io.proto2\xcb\x03\n" +
 	"\x19ScenarioCommandController\x12I\n" +
 	"\x05apply\x12\x1f.ai.scenar.scenario.v1.Scenario\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12J\n" +
 	"\x06create\x12\x1f.ai.scenar.scenario.v1.Scenario\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12J\n" +
 	"\x06update\x12\x1f.ai.scenar.scenario.v1.Scenario\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12`\n" +
-	"\x06delete\x125.ai.scenar.commons.apiresource.ApiResourceDeleteInput\x1a\x1f.ai.scenar.scenario.v1.Scenario\x1a\x04\xa0\xff+\x01B\xea\x01\n" +
+	"\x06delete\x125.ai.scenar.commons.apiresource.ApiResourceDeleteInput\x1a\x1f.ai.scenar.scenario.v1.Scenario\x12c\n" +
+	"\x10setCurrentDeploy\x12..ai.scenar.scenario.v1.SetCurrentDeployRequest\x1a\x1f.ai.scenar.scenario.v1.Scenario\x1a\x04\xa0\xff+\x01B\xea\x01\n" +
 	"\x19com.ai.scenar.scenario.v1B\fCommandProtoP\x01ZHgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/scenario/v1;scenariov1\xa2\x02\x03ASS\xaa\x02\x15Ai.Scenar.Scenario.V1\xca\x02\x15Ai\\Scenar\\Scenario\\V1\xe2\x02!Ai\\Scenar\\Scenario\\V1\\GPBMetadata\xea\x02\x18Ai::Scenar::Scenario::V1b\x06proto3"
 
 var file_ai_scenar_scenario_v1_command_proto_goTypes = []any{
 	(*Scenario)(nil), // 0: ai.scenar.scenario.v1.Scenario
 	(*apiresource.ApiResourceDeleteInput)(nil), // 1: ai.scenar.commons.apiresource.ApiResourceDeleteInput
+	(*SetCurrentDeployRequest)(nil),            // 2: ai.scenar.scenario.v1.SetCurrentDeployRequest
 }
 var file_ai_scenar_scenario_v1_command_proto_depIdxs = []int32{
 	0, // 0: ai.scenar.scenario.v1.ScenarioCommandController.apply:input_type -> ai.scenar.scenario.v1.Scenario
 	0, // 1: ai.scenar.scenario.v1.ScenarioCommandController.create:input_type -> ai.scenar.scenario.v1.Scenario
 	0, // 2: ai.scenar.scenario.v1.ScenarioCommandController.update:input_type -> ai.scenar.scenario.v1.Scenario
 	1, // 3: ai.scenar.scenario.v1.ScenarioCommandController.delete:input_type -> ai.scenar.commons.apiresource.ApiResourceDeleteInput
-	0, // 4: ai.scenar.scenario.v1.ScenarioCommandController.apply:output_type -> ai.scenar.scenario.v1.Scenario
-	0, // 5: ai.scenar.scenario.v1.ScenarioCommandController.create:output_type -> ai.scenar.scenario.v1.Scenario
-	0, // 6: ai.scenar.scenario.v1.ScenarioCommandController.update:output_type -> ai.scenar.scenario.v1.Scenario
-	0, // 7: ai.scenar.scenario.v1.ScenarioCommandController.delete:output_type -> ai.scenar.scenario.v1.Scenario
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
+	2, // 4: ai.scenar.scenario.v1.ScenarioCommandController.setCurrentDeploy:input_type -> ai.scenar.scenario.v1.SetCurrentDeployRequest
+	0, // 5: ai.scenar.scenario.v1.ScenarioCommandController.apply:output_type -> ai.scenar.scenario.v1.Scenario
+	0, // 6: ai.scenar.scenario.v1.ScenarioCommandController.create:output_type -> ai.scenar.scenario.v1.Scenario
+	0, // 7: ai.scenar.scenario.v1.ScenarioCommandController.update:output_type -> ai.scenar.scenario.v1.Scenario
+	0, // 8: ai.scenar.scenario.v1.ScenarioCommandController.delete:output_type -> ai.scenar.scenario.v1.Scenario
+	0, // 9: ai.scenar.scenario.v1.ScenarioCommandController.setCurrentDeploy:output_type -> ai.scenar.scenario.v1.Scenario
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -59,6 +63,7 @@ func file_ai_scenar_scenario_v1_command_proto_init() {
 		return
 	}
 	file_ai_scenar_scenario_v1_api_proto_init()
+	file_ai_scenar_scenario_v1_io_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

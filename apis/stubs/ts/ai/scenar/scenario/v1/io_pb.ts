@@ -11,7 +11,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/scenario/v1/io.proto.
  */
 export const file_ai_scenar_scenario_v1_io: GenFile = /*@__PURE__*/
-  fileDesc("Ch5haS9zY2VuYXIvc2NlbmFyaW8vdjEvaW8ucHJvdG8SFWFpLnNjZW5hci5zY2VuYXJpby52MSJbChRMaXN0U2NlbmFyaW9zUmVxdWVzdBITCgNvcmcYASABKAlCBrpIA8gBARIaCglwYWdlX3NpemUYAiABKAVCB7pIBBoCKAASEgoKcGFnZV90b2tlbhgDIAEoCWIGcHJvdG8z", [file_buf_validate_validate]);
+  fileDesc("Ch5haS9zY2VuYXIvc2NlbmFyaW8vdjEvaW8ucHJvdG8SFWFpLnNjZW5hci5zY2VuYXJpby52MSJbChRMaXN0U2NlbmFyaW9zUmVxdWVzdBITCgNvcmcYASABKAlCBrpIA8gBARIaCglwYWdlX3NpemUYAiABKAVCB7pIBBoCKAASEgoKcGFnZV90b2tlbhgDIAEoCSJZChdTZXRDdXJyZW50RGVwbG95UmVxdWVzdBIfCgtzY2VuYXJpb19pZBgBIAEoCUIKukgHyAEBcgIQARIdCglkZXBsb3lfaWQYAiABKAlCCrpIB8gBAXICEAFiBnByb3RvMw", [file_buf_validate_validate]);
 
 /**
  * ListScenariosRequest is the input for the scenario list query. It scopes the
@@ -57,4 +57,44 @@ export type ListScenariosRequest = Message<"ai.scenar.scenario.v1.ListScenariosR
  */
 export const ListScenariosRequestSchema: GenMessage<ListScenariosRequest> = /*@__PURE__*/
   messageDesc(file_ai_scenar_scenario_v1_io, 0);
+
+/**
+ * SetCurrentDeployRequest is the input for publishing a deploy: it flips a
+ * scenario's status.current_deploy_id to point at a newly active deploy (or
+ * back to a prior one, for rollback).
+ *
+ * This is the one operation that mutates the scenario's publication pointer.
+ * It is owned by the scenario (the aggregate that holds current_deploy_id) and
+ * is called in-process by the deploy upload session once a deploy is verified
+ * and active — the deploy domain never writes the scenario's state directly.
+ * The pointer write is a single atomic field update; the most recently
+ * published deploy wins.
+ *
+ * @generated from message ai.scenar.scenario.v1.SetCurrentDeployRequest
+ */
+export type SetCurrentDeployRequest = Message<"ai.scenar.scenario.v1.SetCurrentDeployRequest"> & {
+  /**
+   * Scenario whose current deploy pointer to set. Required; the caller must
+   * have can_edit on it.
+   *
+   * @generated from field: string scenario_id = 1;
+   */
+  scenarioId: string;
+
+  /**
+   * The deploy to make current. Required. Must be a deploy of this scenario in
+   * the active state; the backend validates the relationship and state before
+   * flipping the pointer.
+   *
+   * @generated from field: string deploy_id = 2;
+   */
+  deployId: string;
+};
+
+/**
+ * Describes the message ai.scenar.scenario.v1.SetCurrentDeployRequest.
+ * Use `create(SetCurrentDeployRequestSchema)` to create a new message.
+ */
+export const SetCurrentDeployRequestSchema: GenMessage<SetCurrentDeployRequest> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_scenario_v1_io, 1);
 

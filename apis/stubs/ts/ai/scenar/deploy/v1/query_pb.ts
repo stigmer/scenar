@@ -25,13 +25,8 @@ export const file_ai_scenar_deploy_v1_query: GenFile = /*@__PURE__*/
  * the resolver that maps a scenario to its current deploy).
  *
  * Deploy's write surface — the two-phase upload session that creates a deploy,
- * advances it through verification, and publishes it (CreateDeployUploadSession /
- * CompleteDeployUploadSession and the lifecycle transitions) — is deliberately
- * omitted here until the object-storage data plane it depends on exists. It is
- * added as a sibling DeployCommandController alongside that wiring, keeping the
- * OSS contract free of RPC surface no caller can yet exercise — the same
- * discipline the iampolicy and identityaccount controllers apply to their
- * deferred operations.
+ * advances it through verification, and publishes it — lives in the sibling
+ * DeployCommandController (createDeployUploadSession / completeDeployUploadSession).
  *
  * Authorization note: as with the scenario controllers, per-RPC authorization
  * options are intentionally absent until Scenar adopts a neutral method-level

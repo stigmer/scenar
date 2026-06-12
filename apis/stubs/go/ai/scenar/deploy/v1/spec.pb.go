@@ -35,17 +35,25 @@ const (
 // scenario_id doubles as the resource's authorization parent: the resource-kind
 // metadata declares deploy as PARENT-scoped to scenario via this field, so a
 // deploy inherits view/edit/delete from the scenario it snapshots.
-//
-// The inputs the two-phase upload session supplies at creation time (declared
-// object inventory, content hashes, source/CLI version) are added to this spec
-// alongside that session's command RPCs; the substrate models only the parent
-// link.
 type DeploySpec struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The Scenario this deploy snapshots. Required and immutable — a deploy can
 	// never be reparented. This is the field the platform reads to resolve the
 	// authorization parent (see the deploy kind's AuthorizationConfig).
-	ScenarioId    string `protobuf:"bytes,1,opt,name=scenario_id,json=scenarioId,proto3" json:"scenario_id,omitempty"`
+	ScenarioId string `protobuf:"bytes,1,opt,name=scenario_id,json=scenarioId,proto3" json:"scenario_id,omitempty"`
+	// The object inventory the two-phase upload session declared at creation —
+	// exactly the files the client promised to upload, captured verbatim from the
+	// CreateDeployUploadSession request. Immutable: a deploy is one immutable
+	// publication, so its declared contents never change.
+	//
+	// This is the authoritative record the completion phase verifies against: the
+	// backend issued one presigned PUT per entry (binding each file's content type
+	// and checksum), and at completion it re-checks every stored object's
+	// existence, size, and checksum against this declaration before the deploy may
+	// go active. Persisting the declaration here — rather than re-accepting it at
+	// completion — is what makes completion verify what was actually granted upload
+	// URLs, not whatever a later call might re-assert.
+	Files         []*DeclaredFile `protobuf:"bytes,2,rep,name=files,proto3" json:"files,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -87,15 +95,129 @@ func (x *DeploySpec) GetScenarioId() string {
 	return ""
 }
 
+func (x *DeploySpec) GetFiles() []*DeclaredFile {
+	if x != nil {
+		return x.Files
+	}
+	return nil
+}
+
+// DeclaredFile is one file in a deploy's bundle, as the client declares it when
+// opening an upload session — its bundle-relative path, content hash, size, and
+// MIME type. It is both the create request's per-file input and the unit stored
+// in DeploySpec.files, so the completion phase verifies the uploaded objects
+// against the very same declaration the upload URLs were minted from.
+//
+// The declaration is a request, never trusted as truth. The backend treats the
+// uploaded bundle as adversarial: completeDeployUploadSession re-verifies every
+// object against the object store (existence, size, checksum) and validates the
+// bundle's scenario.json independently before a deploy is ever published.
+//
+// buf.validate here enforces only the structural shape of a path (no leading
+// slash, no control characters, single-slash segments); the semantic checks that
+// depend on the bundle as a whole (rejecting ".." segments, the file-type
+// allowlist, and per-bundle caps) are enforced by the backend at completion,
+// where the untrusted bundle is validated in one place.
+type DeclaredFile struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Bundle-relative path of the file (e.g. "index.html",
+	// "assets/scenar.abc123.js", "narration/step-1.mp3"). Forward-slash
+	// separated, no leading or trailing slash, no empty or "//" segments. The
+	// backend maps this under the deploy's immutable object_key_prefix to form
+	// the object key.
+	RelativePath string `protobuf:"bytes,1,opt,name=relative_path,json=relativePath,proto3" json:"relative_path,omitempty"`
+	// Lowercase hex SHA-256 of the file's bytes, taken from the CLI's
+	// pack-manifest.json. Bound into the presigned PUT so the object store
+	// rejects a body whose bytes do not hash to this value, and re-verified at
+	// completion. Exactly 64 hex characters.
+	Sha256 string `protobuf:"bytes,2,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	// Size of the file in bytes. Must be positive. The backend enforces per-file
+	// and total-size quota caps against this declared size and re-checks the
+	// actual stored object size at completion.
+	SizeBytes int64 `protobuf:"varint,3,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	// MIME content type to store and later serve the object with (e.g.
+	// "text/html", "application/javascript", "audio/mpeg"). Bound into the
+	// presigned PUT; the serving edge returns exactly this type with
+	// X-Content-Type-Options: nosniff.
+	ContentType   string `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeclaredFile) Reset() {
+	*x = DeclaredFile{}
+	mi := &file_ai_scenar_deploy_v1_spec_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeclaredFile) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeclaredFile) ProtoMessage() {}
+
+func (x *DeclaredFile) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_deploy_v1_spec_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeclaredFile.ProtoReflect.Descriptor instead.
+func (*DeclaredFile) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_deploy_v1_spec_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *DeclaredFile) GetRelativePath() string {
+	if x != nil {
+		return x.RelativePath
+	}
+	return ""
+}
+
+func (x *DeclaredFile) GetSha256() string {
+	if x != nil {
+		return x.Sha256
+	}
+	return ""
+}
+
+func (x *DeclaredFile) GetSizeBytes() int64 {
+	if x != nil {
+		return x.SizeBytes
+	}
+	return 0
+}
+
+func (x *DeclaredFile) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
 var File_ai_scenar_deploy_v1_spec_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_deploy_v1_spec_proto_rawDesc = "" +
 	"\n" +
-	"\x1eai/scenar/deploy/v1/spec.proto\x12\x13ai.scenar.deploy.v1\x1a1ai/scenar/commons/apiresource/field_options.proto\x1a\x1bbuf/validate/validate.proto\":\n" +
+	"\x1eai/scenar/deploy/v1/spec.proto\x12\x13ai.scenar.deploy.v1\x1a1ai/scenar/commons/apiresource/field_options.proto\x1a\x1bbuf/validate/validate.proto\"y\n" +
 	"\n" +
 	"DeploySpec\x12,\n" +
 	"\vscenario_id\x18\x01 \x01(\tB\v\xbaH\x04r\x02\x10\x01Ѕ,\x01R\n" +
-	"scenarioIdB\xd9\x01\n" +
+	"scenarioId\x12=\n" +
+	"\x05files\x18\x02 \x03(\v2!.ai.scenar.deploy.v1.DeclaredFileB\x04Ѕ,\x01R\x05files\"\x85\x02\n" +
+	"\fDeclaredFile\x12V\n" +
+	"\rrelative_path\x18\x01 \x01(\tB1\xbaH.\xc8\x01\x01r)\x18\x80\b2$^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$R\frelativePath\x120\n" +
+	"\x06sha256\x18\x02 \x01(\tB\x18\xbaH\x15\xc8\x01\x01r\x102\x0e^[a-f0-9]{64}$R\x06sha256\x12&\n" +
+	"\n" +
+	"size_bytes\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tsizeBytes\x12C\n" +
+	"\fcontent_type\x18\x04 \x01(\tB \xbaH\x1d\xc8\x01\x01r\x18\x18\xff\x012\x13^[\\w.+-]+/[\\w.+-]+$R\vcontentTypeB\xd9\x01\n" +
 	"\x17com.ai.scenar.deploy.v1B\tSpecProtoP\x01ZDgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/deploy/v1;deployv1\xa2\x02\x03ASD\xaa\x02\x13Ai.Scenar.Deploy.V1\xca\x02\x13Ai\\Scenar\\Deploy\\V1\xe2\x02\x1fAi\\Scenar\\Deploy\\V1\\GPBMetadata\xea\x02\x16Ai::Scenar::Deploy::V1b\x06proto3"
 
 var (
@@ -110,16 +232,18 @@ func file_ai_scenar_deploy_v1_spec_proto_rawDescGZIP() []byte {
 	return file_ai_scenar_deploy_v1_spec_proto_rawDescData
 }
 
-var file_ai_scenar_deploy_v1_spec_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_ai_scenar_deploy_v1_spec_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_ai_scenar_deploy_v1_spec_proto_goTypes = []any{
-	(*DeploySpec)(nil), // 0: ai.scenar.deploy.v1.DeploySpec
+	(*DeploySpec)(nil),   // 0: ai.scenar.deploy.v1.DeploySpec
+	(*DeclaredFile)(nil), // 1: ai.scenar.deploy.v1.DeclaredFile
 }
 var file_ai_scenar_deploy_v1_spec_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: ai.scenar.deploy.v1.DeploySpec.files:type_name -> ai.scenar.deploy.v1.DeclaredFile
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_ai_scenar_deploy_v1_spec_proto_init() }
@@ -133,7 +257,7 @@ func file_ai_scenar_deploy_v1_spec_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_scenar_deploy_v1_spec_proto_rawDesc), len(file_ai_scenar_deploy_v1_spec_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

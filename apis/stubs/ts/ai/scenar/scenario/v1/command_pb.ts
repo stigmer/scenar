@@ -9,12 +9,14 @@ import { file_ai_scenar_commons_apiresource_io } from "../../commons/apiresource
 import { file_ai_scenar_commons_apiresource_rpc_service_options } from "../../commons/apiresource/rpc_service_options_pb";
 import type { ScenarioSchema } from "./api_pb";
 import { file_ai_scenar_scenario_v1_api } from "./api_pb";
+import type { SetCurrentDeployRequestSchema } from "./io_pb";
+import { file_ai_scenar_scenario_v1_io } from "./io_pb";
 
 /**
  * Describes the file ai/scenar/scenario/v1/command.proto.
  */
 export const file_ai_scenar_scenario_v1_command: GenFile = /*@__PURE__*/
-  fileDesc("CiNhaS9zY2VuYXIvc2NlbmFyaW8vdjEvY29tbWFuZC5wcm90bxIVYWkuc2NlbmFyLnNjZW5hcmlvLnYxMuYCChlTY2VuYXJpb0NvbW1hbmRDb250cm9sbGVyEkkKBWFwcGx5Eh8uYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlNjZW5hcmlvGh8uYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlNjZW5hcmlvEkoKBmNyZWF0ZRIfLmFpLnNjZW5hci5zY2VuYXJpby52MS5TY2VuYXJpbxofLmFpLnNjZW5hci5zY2VuYXJpby52MS5TY2VuYXJpbxJKCgZ1cGRhdGUSHy5haS5zY2VuYXIuc2NlbmFyaW8udjEuU2NlbmFyaW8aHy5haS5zY2VuYXIuc2NlbmFyaW8udjEuU2NlbmFyaW8SYAoGZGVsZXRlEjUuYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuQXBpUmVzb3VyY2VEZWxldGVJbnB1dBofLmFpLnNjZW5hci5zY2VuYXJpby52MS5TY2VuYXJpbxoEoP8rAWIGcHJvdG8z", [file_ai_scenar_commons_apiresource_io, file_ai_scenar_commons_apiresource_rpc_service_options, file_ai_scenar_scenario_v1_api]);
+  fileDesc("CiNhaS9zY2VuYXIvc2NlbmFyaW8vdjEvY29tbWFuZC5wcm90bxIVYWkuc2NlbmFyLnNjZW5hcmlvLnYxMssDChlTY2VuYXJpb0NvbW1hbmRDb250cm9sbGVyEkkKBWFwcGx5Eh8uYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlNjZW5hcmlvGh8uYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlNjZW5hcmlvEkoKBmNyZWF0ZRIfLmFpLnNjZW5hci5zY2VuYXJpby52MS5TY2VuYXJpbxofLmFpLnNjZW5hci5zY2VuYXJpby52MS5TY2VuYXJpbxJKCgZ1cGRhdGUSHy5haS5zY2VuYXIuc2NlbmFyaW8udjEuU2NlbmFyaW8aHy5haS5zY2VuYXIuc2NlbmFyaW8udjEuU2NlbmFyaW8SYAoGZGVsZXRlEjUuYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuQXBpUmVzb3VyY2VEZWxldGVJbnB1dBofLmFpLnNjZW5hci5zY2VuYXJpby52MS5TY2VuYXJpbxJjChBzZXRDdXJyZW50RGVwbG95Ei4uYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlNldEN1cnJlbnREZXBsb3lSZXF1ZXN0Gh8uYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlNjZW5hcmlvGgSg/ysBYgZwcm90bzM", [file_ai_scenar_commons_apiresource_io, file_ai_scenar_commons_apiresource_rpc_service_options, file_ai_scenar_scenario_v1_api, file_ai_scenar_scenario_v1_io]);
 
 /**
  * ScenarioCommandController provides the write operations for scenario
@@ -80,6 +82,21 @@ export const ScenarioCommandController: GenService<{
   delete: {
     methodKind: "unary";
     input: typeof ApiResourceDeleteInputSchema;
+    output: typeof ScenarioSchema;
+  },
+  /**
+   * Publish a deploy by setting this scenario's status.current_deploy_id — the
+   * atomic publication pointer. Called in-process by the deploy upload session
+   * once a deploy is verified and active (and for rollback to a prior active
+   * deploy). The scenario owns this write because it owns the pointer; the
+   * deploy domain never mutates scenario state directly. Returns the updated
+   * scenario. See SetCurrentDeployRequest.
+   *
+   * @generated from rpc ai.scenar.scenario.v1.ScenarioCommandController.setCurrentDeploy
+   */
+  setCurrentDeploy: {
+    methodKind: "unary";
+    input: typeof SetCurrentDeployRequestSchema;
     output: typeof ScenarioSchema;
   },
 }> = /*@__PURE__*/

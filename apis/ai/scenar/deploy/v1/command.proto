@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package ai.scenar.deploy.v1;
+
+import "ai/scenar/commons/apiresource/rpc_service_options.proto";
+import "ai/scenar/deploy/v1/api.proto";
+import "ai/scenar/deploy/v1/io.proto";
+
+// DeployCommandController provides the write surface for deploy resources — the
+// two-phase, direct-to-object-storage upload session that creates a deploy,
+// verifies its uploaded bundle, and publishes it.
+//
+// The byte path never flows through this controller. A deploy's bundle (HTML,
+// JS, CSS, and audio — dominated by audio) is uploaded by the client directly
+// to the object store via presigned URLs the backend mints; the control plane
+// only orchestrates (authorize, enforce quota, create the record, issue
+// targets) and later verifies and publishes. This keeps the gRPC control plane
+// stateless with respect to large blobs and out of the bandwidth path (the
+// deploy upload design — DD-003).
+//
+// Two phases:
+//   - createDeployUploadSession   : authorize (can_edit on the parent
+//                                   scenario) + scope (deploy_create) + quota;
+//                                   create a deploy in pending_upload; return
+//                                   one presigned upload target per declared
+//                                   file.
+//   - completeDeployUploadSession : verify every object against the store,
+//                                   validate the untrusted scenario.json, scan,
+//                                   advance the deploy to active, and publish it
+//                                   by flipping the parent scenario's
+//                                   current_deploy_id pointer.
+//
+// Authorization note: as with the deploy query controller and every other
+// Scenar controller, per-RPC authorization options are intentionally absent
+// until Scenar adopts a neutral method-level auth contract. These RPCs carry
+// only the service-level resource-kind tag; the Cloud backend enforces
+// authorization in its handlers — against the parent scenario (a deploy has no
+// independent ACL; it inherits view/edit/delete from the scenario it snapshots)
+// plus the API-key scope the deploy surface requires.
+service DeployCommandController {
+  // Tags this controller with the resource kind it manages so the platform's
+  // request pipeline can route and register it generically.
+  option (ai.scenar.commons.apiresource.api_resource_kind) = deploy;
+
+  // Open a two-phase upload session: create a deploy in pending_upload and
+  // return presigned, per-file upload targets the client uploads directly to.
+  // See CreateDeployUploadSessionRequest / CreateDeployUploadSessionResponse.
+  rpc createDeployUploadSession(CreateDeployUploadSessionRequest) returns (CreateDeployUploadSessionResponse);
+
+  // Finalize an upload session: verify the uploaded objects, validate and scan
+  // the bundle, advance the deploy to active, and publish it by flipping the
+  // parent scenario's current_deploy_id. Returns the published deploy. See
+  // CompleteDeployUploadSessionRequest and Deploy.
+  rpc completeDeployUploadSession(CompleteDeployUploadSessionRequest) returns (Deploy);
+}

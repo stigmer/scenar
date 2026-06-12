@@ -5,6 +5,7 @@ package ai.scenar.scenario.v1;
 import "ai/scenar/commons/apiresource/io.proto";
 import "ai/scenar/commons/apiresource/rpc_service_options.proto";
 import "ai/scenar/scenario/v1/api.proto";
+import "ai/scenar/scenario/v1/io.proto";
 
 // ScenarioCommandController provides the write operations for scenario
 // resources. It is the contract the Scenar Cloud backend implements and the
@@ -43,4 +44,12 @@ service ScenarioCommandController {
   // Delete a scenario. Returns the deleted resource as it existed prior to
   // removal. See ApiResourceDeleteInput for force/version_message semantics.
   rpc delete(ai.scenar.commons.apiresource.ApiResourceDeleteInput) returns (Scenario);
+
+  // Publish a deploy by setting this scenario's status.current_deploy_id — the
+  // atomic publication pointer. Called in-process by the deploy upload session
+  // once a deploy is verified and active (and for rollback to a prior active
+  // deploy). The scenario owns this write because it owns the pointer; the
+  // deploy domain never mutates scenario state directly. Returns the updated
+  // scenario. See SetCurrentDeployRequest.
+  rpc setCurrentDeploy(SetCurrentDeployRequest) returns (Scenario);
 }

@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1e\x61i/scenar/scenario/v1/io.proto\x12\x15\x61i.scenar.scenario.v1\x1a\x1b\x62uf/validate/validate.proto\"u\n\x14ListScenariosRequest\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12$\n\tpage_size\x18\x02 \x01(\x05\x42\x07\xbaH\x04\x1a\x02(\x00R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageTokenb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1e\x61i/scenar/scenario/v1/io.proto\x12\x15\x61i.scenar.scenario.v1\x1a\x1b\x62uf/validate/validate.proto\"u\n\x14ListScenariosRequest\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12$\n\tpage_size\x18\x02 \x01(\x05\x42\x07\xbaH\x04\x1a\x02(\x00R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageToken\"o\n\x17SetCurrentDeployRequest\x12+\n\x0bscenario_id\x18\x01 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\nscenarioId\x12\'\n\tdeploy_id\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x08\x64\x65ployIdb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,6 +36,12 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_LISTSCENARIOSREQUEST'].fields_by_name['org']._serialized_options = b'\272H\003\310\001\001'
   _globals['_LISTSCENARIOSREQUEST'].fields_by_name['page_size']._loaded_options = None
   _globals['_LISTSCENARIOSREQUEST'].fields_by_name['page_size']._serialized_options = b'\272H\004\032\002(\000'
+  _globals['_SETCURRENTDEPLOYREQUEST'].fields_by_name['scenario_id']._loaded_options = None
+  _globals['_SETCURRENTDEPLOYREQUEST'].fields_by_name['scenario_id']._serialized_options = b'\272H\007r\002\020\001\310\001\001'
+  _globals['_SETCURRENTDEPLOYREQUEST'].fields_by_name['deploy_id']._loaded_options = None
+  _globals['_SETCURRENTDEPLOYREQUEST'].fields_by_name['deploy_id']._serialized_options = b'\272H\007r\002\020\001\310\001\001'
   _globals['_LISTSCENARIOSREQUEST']._serialized_start=86
   _globals['_LISTSCENARIOSREQUEST']._serialized_end=203
+  _globals['_SETCURRENTDEPLOYREQUEST']._serialized_start=205
+  _globals['_SETCURRENTDEPLOYREQUEST']._serialized_end=316
 # @@protoc_insertion_point(module_scope)

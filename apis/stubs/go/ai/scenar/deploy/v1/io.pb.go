@@ -98,18 +98,307 @@ func (x *ListDeploysRequest) GetPageToken() string {
 	return ""
 }
 
+// FileUploadTarget tells the client where and how to upload one declared file
+// directly to the object store, bypassing the control plane. The client issues
+// an HTTP PUT of the file's bytes to presigned_put_url with required_headers set
+// verbatim; the store validates the bound content type, length, and checksum and
+// rejects a mismatched body.
+type FileUploadTarget struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The bundle-relative path this target corresponds to, echoing the
+	// DeclaredFile.relative_path from the request so the client can correlate
+	// targets to its local files.
+	RelativePath string `protobuf:"bytes,1,opt,name=relative_path,json=relativePath,proto3" json:"relative_path,omitempty"`
+	// Full immutable object key the file will occupy (object_key_prefix +
+	// relative_path). Returned for observability; the client PUTs to
+	// presigned_put_url rather than addressing the key directly.
+	ObjectKey string `protobuf:"bytes,2,opt,name=object_key,json=objectKey,proto3" json:"object_key,omitempty"`
+	// Time-limited, single-object presigned URL the client PUTs the file bytes
+	// to. Scoped to exactly this object key, with the content type, length, and
+	// SHA-256 bound into the signature.
+	PresignedPutUrl string `protobuf:"bytes,3,opt,name=presigned_put_url,json=presignedPutUrl,proto3" json:"presigned_put_url,omitempty"`
+	// Headers the client MUST send verbatim on the PUT for the signature to
+	// validate (e.g. Content-Type, Content-Length, x-amz-checksum-sha256). Any
+	// deviation causes the store to reject the upload.
+	RequiredHeaders map[string]string `protobuf:"bytes,4,rep,name=required_headers,json=requiredHeaders,proto3" json:"required_headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *FileUploadTarget) Reset() {
+	*x = FileUploadTarget{}
+	mi := &file_ai_scenar_deploy_v1_io_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileUploadTarget) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileUploadTarget) ProtoMessage() {}
+
+func (x *FileUploadTarget) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_deploy_v1_io_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileUploadTarget.ProtoReflect.Descriptor instead.
+func (*FileUploadTarget) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_deploy_v1_io_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *FileUploadTarget) GetRelativePath() string {
+	if x != nil {
+		return x.RelativePath
+	}
+	return ""
+}
+
+func (x *FileUploadTarget) GetObjectKey() string {
+	if x != nil {
+		return x.ObjectKey
+	}
+	return ""
+}
+
+func (x *FileUploadTarget) GetPresignedPutUrl() string {
+	if x != nil {
+		return x.PresignedPutUrl
+	}
+	return ""
+}
+
+func (x *FileUploadTarget) GetRequiredHeaders() map[string]string {
+	if x != nil {
+		return x.RequiredHeaders
+	}
+	return nil
+}
+
+// CreateDeployUploadSessionRequest opens a two-phase upload session for a new
+// deploy of a scenario. The client declares the full set of files it intends to
+// upload; the backend authorizes, enforces quota, creates a deploy in
+// pending_upload, and returns one presigned upload target per file.
+type CreateDeployUploadSessionRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Scenario this deploy will publish. Required. Also the authorization parent
+	// (the caller must have can_edit on it) and the source of the deploy's
+	// inherited owning org.
+	ScenarioId string `protobuf:"bytes,1,opt,name=scenario_id,json=scenarioId,proto3" json:"scenario_id,omitempty"`
+	// The complete inventory of files the client will upload, from the CLI's
+	// pack-manifest.json. Must be non-empty. The backend mints one upload target
+	// per entry and, at completion, verifies the stored objects match this
+	// declaration exactly.
+	Files         []*DeclaredFile `protobuf:"bytes,2,rep,name=files,proto3" json:"files,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateDeployUploadSessionRequest) Reset() {
+	*x = CreateDeployUploadSessionRequest{}
+	mi := &file_ai_scenar_deploy_v1_io_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateDeployUploadSessionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateDeployUploadSessionRequest) ProtoMessage() {}
+
+func (x *CreateDeployUploadSessionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_deploy_v1_io_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateDeployUploadSessionRequest.ProtoReflect.Descriptor instead.
+func (*CreateDeployUploadSessionRequest) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_deploy_v1_io_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CreateDeployUploadSessionRequest) GetScenarioId() string {
+	if x != nil {
+		return x.ScenarioId
+	}
+	return ""
+}
+
+func (x *CreateDeployUploadSessionRequest) GetFiles() []*DeclaredFile {
+	if x != nil {
+		return x.Files
+	}
+	return nil
+}
+
+// CreateDeployUploadSessionResponse returns the created deploy's identity and the
+// per-file presigned upload targets. After uploading every file to its target,
+// the client calls completeDeployUploadSession with deploy_id.
+type CreateDeployUploadSessionResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// System-generated id (metadata.id) of the deploy created in pending_upload.
+	// Pass this to completeDeployUploadSession.
+	DeployId string `protobuf:"bytes,1,opt,name=deploy_id,json=deployId,proto3" json:"deploy_id,omitempty"`
+	// Immutable object-store key prefix all of this deploy's objects live under
+	// (tenants/<org>/scenarios/<scenario>/deploys/<deploy>/). Mirrors
+	// DeployStatus.object_key_prefix.
+	ObjectKeyPrefix string `protobuf:"bytes,2,opt,name=object_key_prefix,json=objectKeyPrefix,proto3" json:"object_key_prefix,omitempty"`
+	// One upload target per declared file, in the same order as the request's
+	// files. The client uploads each file to its target before completing.
+	UploadTargets []*FileUploadTarget `protobuf:"bytes,3,rep,name=upload_targets,json=uploadTargets,proto3" json:"upload_targets,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateDeployUploadSessionResponse) Reset() {
+	*x = CreateDeployUploadSessionResponse{}
+	mi := &file_ai_scenar_deploy_v1_io_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateDeployUploadSessionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateDeployUploadSessionResponse) ProtoMessage() {}
+
+func (x *CreateDeployUploadSessionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_deploy_v1_io_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateDeployUploadSessionResponse.ProtoReflect.Descriptor instead.
+func (*CreateDeployUploadSessionResponse) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_deploy_v1_io_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CreateDeployUploadSessionResponse) GetDeployId() string {
+	if x != nil {
+		return x.DeployId
+	}
+	return ""
+}
+
+func (x *CreateDeployUploadSessionResponse) GetObjectKeyPrefix() string {
+	if x != nil {
+		return x.ObjectKeyPrefix
+	}
+	return ""
+}
+
+func (x *CreateDeployUploadSessionResponse) GetUploadTargets() []*FileUploadTarget {
+	if x != nil {
+		return x.UploadTargets
+	}
+	return nil
+}
+
+// CompleteDeployUploadSessionRequest finalizes an upload session. The backend
+// verifies every declared object against the store, validates the bundle's
+// scenario.json as untrusted input, scans it, and on success publishes the
+// deploy by flipping the parent scenario's current_deploy_id pointer.
+type CompleteDeployUploadSessionRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The deploy to complete, as returned by createDeployUploadSession. Must be
+	// in pending_upload. Required.
+	DeployId      string `protobuf:"bytes,1,opt,name=deploy_id,json=deployId,proto3" json:"deploy_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompleteDeployUploadSessionRequest) Reset() {
+	*x = CompleteDeployUploadSessionRequest{}
+	mi := &file_ai_scenar_deploy_v1_io_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompleteDeployUploadSessionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompleteDeployUploadSessionRequest) ProtoMessage() {}
+
+func (x *CompleteDeployUploadSessionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_deploy_v1_io_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompleteDeployUploadSessionRequest.ProtoReflect.Descriptor instead.
+func (*CompleteDeployUploadSessionRequest) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_deploy_v1_io_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CompleteDeployUploadSessionRequest) GetDeployId() string {
+	if x != nil {
+		return x.DeployId
+	}
+	return ""
+}
+
 var File_ai_scenar_deploy_v1_io_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_deploy_v1_io_proto_rawDesc = "" +
 	"\n" +
-	"\x1cai/scenar/deploy/v1/io.proto\x12\x13ai.scenar.deploy.v1\x1a\x1bbuf/validate/validate.proto\"\x86\x01\n" +
+	"\x1cai/scenar/deploy/v1/io.proto\x12\x13ai.scenar.deploy.v1\x1a\x1eai/scenar/deploy/v1/spec.proto\x1a\x1bbuf/validate/validate.proto\"\x86\x01\n" +
 	"\x12ListDeploysRequest\x12+\n" +
 	"\vscenario_id\x18\x01 \x01(\tB\n" +
 	"\xbaH\a\xc8\x01\x01r\x02\x10\x01R\n" +
 	"scenarioId\x12$\n" +
 	"\tpage_size\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageTokenB\xd7\x01\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\"\xad\x02\n" +
+	"\x10FileUploadTarget\x12#\n" +
+	"\rrelative_path\x18\x01 \x01(\tR\frelativePath\x12\x1d\n" +
+	"\n" +
+	"object_key\x18\x02 \x01(\tR\tobjectKey\x12*\n" +
+	"\x11presigned_put_url\x18\x03 \x01(\tR\x0fpresignedPutUrl\x12e\n" +
+	"\x10required_headers\x18\x04 \x03(\v2:.ai.scenar.deploy.v1.FileUploadTarget.RequiredHeadersEntryR\x0frequiredHeaders\x1aB\n" +
+	"\x14RequiredHeadersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x92\x01\n" +
+	" CreateDeployUploadSessionRequest\x12+\n" +
+	"\vscenario_id\x18\x01 \x01(\tB\n" +
+	"\xbaH\a\xc8\x01\x01r\x02\x10\x01R\n" +
+	"scenarioId\x12A\n" +
+	"\x05files\x18\x02 \x03(\v2!.ai.scenar.deploy.v1.DeclaredFileB\b\xbaH\x05\x92\x01\x02\b\x01R\x05files\"\xba\x01\n" +
+	"!CreateDeployUploadSessionResponse\x12\x1b\n" +
+	"\tdeploy_id\x18\x01 \x01(\tR\bdeployId\x12*\n" +
+	"\x11object_key_prefix\x18\x02 \x01(\tR\x0fobjectKeyPrefix\x12L\n" +
+	"\x0eupload_targets\x18\x03 \x03(\v2%.ai.scenar.deploy.v1.FileUploadTargetR\ruploadTargets\"M\n" +
+	"\"CompleteDeployUploadSessionRequest\x12'\n" +
+	"\tdeploy_id\x18\x01 \x01(\tB\n" +
+	"\xbaH\a\xc8\x01\x01r\x02\x10\x01R\bdeployIdB\xd7\x01\n" +
 	"\x17com.ai.scenar.deploy.v1B\aIoProtoP\x01ZDgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/deploy/v1;deployv1\xa2\x02\x03ASD\xaa\x02\x13Ai.Scenar.Deploy.V1\xca\x02\x13Ai\\Scenar\\Deploy\\V1\xe2\x02\x1fAi\\Scenar\\Deploy\\V1\\GPBMetadata\xea\x02\x16Ai::Scenar::Deploy::V1b\x06proto3"
 
 var (
@@ -124,16 +413,25 @@ func file_ai_scenar_deploy_v1_io_proto_rawDescGZIP() []byte {
 	return file_ai_scenar_deploy_v1_io_proto_rawDescData
 }
 
-var file_ai_scenar_deploy_v1_io_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_ai_scenar_deploy_v1_io_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_ai_scenar_deploy_v1_io_proto_goTypes = []any{
-	(*ListDeploysRequest)(nil), // 0: ai.scenar.deploy.v1.ListDeploysRequest
+	(*ListDeploysRequest)(nil),                 // 0: ai.scenar.deploy.v1.ListDeploysRequest
+	(*FileUploadTarget)(nil),                   // 1: ai.scenar.deploy.v1.FileUploadTarget
+	(*CreateDeployUploadSessionRequest)(nil),   // 2: ai.scenar.deploy.v1.CreateDeployUploadSessionRequest
+	(*CreateDeployUploadSessionResponse)(nil),  // 3: ai.scenar.deploy.v1.CreateDeployUploadSessionResponse
+	(*CompleteDeployUploadSessionRequest)(nil), // 4: ai.scenar.deploy.v1.CompleteDeployUploadSessionRequest
+	nil,                  // 5: ai.scenar.deploy.v1.FileUploadTarget.RequiredHeadersEntry
+	(*DeclaredFile)(nil), // 6: ai.scenar.deploy.v1.DeclaredFile
 }
 var file_ai_scenar_deploy_v1_io_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	5, // 0: ai.scenar.deploy.v1.FileUploadTarget.required_headers:type_name -> ai.scenar.deploy.v1.FileUploadTarget.RequiredHeadersEntry
+	6, // 1: ai.scenar.deploy.v1.CreateDeployUploadSessionRequest.files:type_name -> ai.scenar.deploy.v1.DeclaredFile
+	1, // 2: ai.scenar.deploy.v1.CreateDeployUploadSessionResponse.upload_targets:type_name -> ai.scenar.deploy.v1.FileUploadTarget
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_ai_scenar_deploy_v1_io_proto_init() }
@@ -141,13 +439,14 @@ func file_ai_scenar_deploy_v1_io_proto_init() {
 	if File_ai_scenar_deploy_v1_io_proto != nil {
 		return
 	}
+	file_ai_scenar_deploy_v1_spec_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_scenar_deploy_v1_io_proto_rawDesc), len(file_ai_scenar_deploy_v1_io_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

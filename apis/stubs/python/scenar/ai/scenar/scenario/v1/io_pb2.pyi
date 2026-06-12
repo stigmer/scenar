@@ -14,3 +14,11 @@ class ListScenariosRequest(_message.Message):
     page_size: int
     page_token: str
     def __init__(self, org: _Optional[str] = ..., page_size: _Optional[int] = ..., page_token: _Optional[str] = ...) -> None: ...
+
+class SetCurrentDeployRequest(_message.Message):
+    __slots__ = ("scenario_id", "deploy_id")
+    SCENARIO_ID_FIELD_NUMBER: _ClassVar[int]
+    DEPLOY_ID_FIELD_NUMBER: _ClassVar[int]
+    scenario_id: str
+    deploy_id: str
+    def __init__(self, scenario_id: _Optional[str] = ..., deploy_id: _Optional[str] = ...) -> None: ...

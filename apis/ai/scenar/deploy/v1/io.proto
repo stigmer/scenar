@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package ai.scenar.deploy.v1;
 
+import "ai/scenar/deploy/v1/spec.proto";
 import "buf/validate/validate.proto";
 
 // ListDeploysRequest is the input for the deploy list query. It scopes the
@@ -29,4 +30,82 @@ message ListDeploysRequest {
   // Opaque cursor identifying the page to return. Empty fetches the first page.
   // Pass the next_page_token from the previous DeployList to continue.
   string page_token = 3;
+}
+
+// FileUploadTarget tells the client where and how to upload one declared file
+// directly to the object store, bypassing the control plane. The client issues
+// an HTTP PUT of the file's bytes to presigned_put_url with required_headers set
+// verbatim; the store validates the bound content type, length, and checksum and
+// rejects a mismatched body.
+message FileUploadTarget {
+  // The bundle-relative path this target corresponds to, echoing the
+  // DeclaredFile.relative_path from the request so the client can correlate
+  // targets to its local files.
+  string relative_path = 1;
+
+  // Full immutable object key the file will occupy (object_key_prefix +
+  // relative_path). Returned for observability; the client PUTs to
+  // presigned_put_url rather than addressing the key directly.
+  string object_key = 2;
+
+  // Time-limited, single-object presigned URL the client PUTs the file bytes
+  // to. Scoped to exactly this object key, with the content type, length, and
+  // SHA-256 bound into the signature.
+  string presigned_put_url = 3;
+
+  // Headers the client MUST send verbatim on the PUT for the signature to
+  // validate (e.g. Content-Type, Content-Length, x-amz-checksum-sha256). Any
+  // deviation causes the store to reject the upload.
+  map<string, string> required_headers = 4;
+}
+
+// CreateDeployUploadSessionRequest opens a two-phase upload session for a new
+// deploy of a scenario. The client declares the full set of files it intends to
+// upload; the backend authorizes, enforces quota, creates a deploy in
+// pending_upload, and returns one presigned upload target per file.
+message CreateDeployUploadSessionRequest {
+  // Scenario this deploy will publish. Required. Also the authorization parent
+  // (the caller must have can_edit on it) and the source of the deploy's
+  // inherited owning org.
+  string scenario_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 1
+  ];
+
+  // The complete inventory of files the client will upload, from the CLI's
+  // pack-manifest.json. Must be non-empty. The backend mints one upload target
+  // per entry and, at completion, verifies the stored objects match this
+  // declaration exactly.
+  repeated DeclaredFile files = 2 [(buf.validate.field).repeated.min_items = 1];
+}
+
+// CreateDeployUploadSessionResponse returns the created deploy's identity and the
+// per-file presigned upload targets. After uploading every file to its target,
+// the client calls completeDeployUploadSession with deploy_id.
+message CreateDeployUploadSessionResponse {
+  // System-generated id (metadata.id) of the deploy created in pending_upload.
+  // Pass this to completeDeployUploadSession.
+  string deploy_id = 1;
+
+  // Immutable object-store key prefix all of this deploy's objects live under
+  // (tenants/<org>/scenarios/<scenario>/deploys/<deploy>/). Mirrors
+  // DeployStatus.object_key_prefix.
+  string object_key_prefix = 2;
+
+  // One upload target per declared file, in the same order as the request's
+  // files. The client uploads each file to its target before completing.
+  repeated FileUploadTarget upload_targets = 3;
+}
+
+// CompleteDeployUploadSessionRequest finalizes an upload session. The backend
+// verifies every declared object against the store, validates the bundle's
+// scenario.json as untrusted input, scans it, and on success publishes the
+// deploy by flipping the parent scenario's current_deploy_id pointer.
+message CompleteDeployUploadSessionRequest {
+  // The deploy to complete, as returned by createDeployUploadSession. Must be
+  // in pending_upload. Required.
+  string deploy_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 1
+  ];
 }

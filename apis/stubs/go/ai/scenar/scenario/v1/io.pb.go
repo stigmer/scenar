@@ -96,6 +96,73 @@ func (x *ListScenariosRequest) GetPageToken() string {
 	return ""
 }
 
+// SetCurrentDeployRequest is the input for publishing a deploy: it flips a
+// scenario's status.current_deploy_id to point at a newly active deploy (or
+// back to a prior one, for rollback).
+//
+// This is the one operation that mutates the scenario's publication pointer.
+// It is owned by the scenario (the aggregate that holds current_deploy_id) and
+// is called in-process by the deploy upload session once a deploy is verified
+// and active — the deploy domain never writes the scenario's state directly.
+// The pointer write is a single atomic field update; the most recently
+// published deploy wins.
+type SetCurrentDeployRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Scenario whose current deploy pointer to set. Required; the caller must
+	// have can_edit on it.
+	ScenarioId string `protobuf:"bytes,1,opt,name=scenario_id,json=scenarioId,proto3" json:"scenario_id,omitempty"`
+	// The deploy to make current. Required. Must be a deploy of this scenario in
+	// the active state; the backend validates the relationship and state before
+	// flipping the pointer.
+	DeployId      string `protobuf:"bytes,2,opt,name=deploy_id,json=deployId,proto3" json:"deploy_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetCurrentDeployRequest) Reset() {
+	*x = SetCurrentDeployRequest{}
+	mi := &file_ai_scenar_scenario_v1_io_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetCurrentDeployRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetCurrentDeployRequest) ProtoMessage() {}
+
+func (x *SetCurrentDeployRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_scenario_v1_io_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetCurrentDeployRequest.ProtoReflect.Descriptor instead.
+func (*SetCurrentDeployRequest) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_scenario_v1_io_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *SetCurrentDeployRequest) GetScenarioId() string {
+	if x != nil {
+		return x.ScenarioId
+	}
+	return ""
+}
+
+func (x *SetCurrentDeployRequest) GetDeployId() string {
+	if x != nil {
+		return x.DeployId
+	}
+	return ""
+}
+
 var File_ai_scenar_scenario_v1_io_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_scenario_v1_io_proto_rawDesc = "" +
@@ -105,7 +172,13 @@ const file_ai_scenar_scenario_v1_io_proto_rawDesc = "" +
 	"\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12$\n" +
 	"\tpage_size\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageTokenB\xe5\x01\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\"o\n" +
+	"\x17SetCurrentDeployRequest\x12+\n" +
+	"\vscenario_id\x18\x01 \x01(\tB\n" +
+	"\xbaH\a\xc8\x01\x01r\x02\x10\x01R\n" +
+	"scenarioId\x12'\n" +
+	"\tdeploy_id\x18\x02 \x01(\tB\n" +
+	"\xbaH\a\xc8\x01\x01r\x02\x10\x01R\bdeployIdB\xe5\x01\n" +
 	"\x19com.ai.scenar.scenario.v1B\aIoProtoP\x01ZHgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/scenario/v1;scenariov1\xa2\x02\x03ASS\xaa\x02\x15Ai.Scenar.Scenario.V1\xca\x02\x15Ai\\Scenar\\Scenario\\V1\xe2\x02!Ai\\Scenar\\Scenario\\V1\\GPBMetadata\xea\x02\x18Ai::Scenar::Scenario::V1b\x06proto3"
 
 var (
@@ -120,9 +193,10 @@ func file_ai_scenar_scenario_v1_io_proto_rawDescGZIP() []byte {
 	return file_ai_scenar_scenario_v1_io_proto_rawDescData
 }
 
-var file_ai_scenar_scenario_v1_io_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_ai_scenar_scenario_v1_io_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_ai_scenar_scenario_v1_io_proto_goTypes = []any{
-	(*ListScenariosRequest)(nil), // 0: ai.scenar.scenario.v1.ListScenariosRequest
+	(*ListScenariosRequest)(nil),    // 0: ai.scenar.scenario.v1.ListScenariosRequest
+	(*SetCurrentDeployRequest)(nil), // 1: ai.scenar.scenario.v1.SetCurrentDeployRequest
 }
 var file_ai_scenar_scenario_v1_io_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -143,7 +217,7 @@ func file_ai_scenar_scenario_v1_io_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_scenar_scenario_v1_io_proto_rawDesc), len(file_ai_scenar_scenario_v1_io_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

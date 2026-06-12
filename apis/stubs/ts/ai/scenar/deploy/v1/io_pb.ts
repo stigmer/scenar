@@ -4,6 +4,8 @@
 
 import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv1";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv1";
+import type { DeclaredFile } from "./spec_pb";
+import { file_ai_scenar_deploy_v1_spec } from "./spec_pb";
 import { file_buf_validate_validate } from "../../../../buf/validate/validate_pb";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -11,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/deploy/v1/io.proto.
  */
 export const file_ai_scenar_deploy_v1_io: GenFile = /*@__PURE__*/
-  fileDesc("ChxhaS9zY2VuYXIvZGVwbG95L3YxL2lvLnByb3RvEhNhaS5zY2VuYXIuZGVwbG95LnYxImUKEkxpc3REZXBsb3lzUmVxdWVzdBIfCgtzY2VuYXJpb19pZBgBIAEoCUIKukgHyAEBcgIQARIaCglwYWdlX3NpemUYAiABKAVCB7pIBBoCKAASEgoKcGFnZV90b2tlbhgDIAEoCWIGcHJvdG8z", [file_buf_validate_validate]);
+  fileDesc("ChxhaS9zY2VuYXIvZGVwbG95L3YxL2lvLnByb3RvEhNhaS5zY2VuYXIuZGVwbG95LnYxImUKEkxpc3REZXBsb3lzUmVxdWVzdBIfCgtzY2VuYXJpb19pZBgBIAEoCUIKukgHyAEBcgIQARIaCglwYWdlX3NpemUYAiABKAVCB7pIBBoCKAASEgoKcGFnZV90b2tlbhgDIAEoCSLmAQoQRmlsZVVwbG9hZFRhcmdldBIVCg1yZWxhdGl2ZV9wYXRoGAEgASgJEhIKCm9iamVjdF9rZXkYAiABKAkSGQoRcHJlc2lnbmVkX3B1dF91cmwYAyABKAkSVAoQcmVxdWlyZWRfaGVhZGVycxgEIAMoCzI6LmFpLnNjZW5hci5kZXBsb3kudjEuRmlsZVVwbG9hZFRhcmdldC5SZXF1aXJlZEhlYWRlcnNFbnRyeRo2ChRSZXF1aXJlZEhlYWRlcnNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIn8KIENyZWF0ZURlcGxveVVwbG9hZFNlc3Npb25SZXF1ZXN0Eh8KC3NjZW5hcmlvX2lkGAEgASgJQgq6SAfIAQFyAhABEjoKBWZpbGVzGAIgAygLMiEuYWkuc2NlbmFyLmRlcGxveS52MS5EZWNsYXJlZEZpbGVCCLpIBZIBAggBIpABCiFDcmVhdGVEZXBsb3lVcGxvYWRTZXNzaW9uUmVzcG9uc2USEQoJZGVwbG95X2lkGAEgASgJEhkKEW9iamVjdF9rZXlfcHJlZml4GAIgASgJEj0KDnVwbG9hZF90YXJnZXRzGAMgAygLMiUuYWkuc2NlbmFyLmRlcGxveS52MS5GaWxlVXBsb2FkVGFyZ2V0IkMKIkNvbXBsZXRlRGVwbG95VXBsb2FkU2Vzc2lvblJlcXVlc3QSHQoJZGVwbG95X2lkGAEgASgJQgq6SAfIAQFyAhABYgZwcm90bzM", [file_ai_scenar_deploy_v1_spec, file_buf_validate_validate]);
 
 /**
  * ListDeploysRequest is the input for the deploy list query. It scopes the
@@ -59,4 +61,160 @@ export type ListDeploysRequest = Message<"ai.scenar.deploy.v1.ListDeploysRequest
  */
 export const ListDeploysRequestSchema: GenMessage<ListDeploysRequest> = /*@__PURE__*/
   messageDesc(file_ai_scenar_deploy_v1_io, 0);
+
+/**
+ * FileUploadTarget tells the client where and how to upload one declared file
+ * directly to the object store, bypassing the control plane. The client issues
+ * an HTTP PUT of the file's bytes to presigned_put_url with required_headers set
+ * verbatim; the store validates the bound content type, length, and checksum and
+ * rejects a mismatched body.
+ *
+ * @generated from message ai.scenar.deploy.v1.FileUploadTarget
+ */
+export type FileUploadTarget = Message<"ai.scenar.deploy.v1.FileUploadTarget"> & {
+  /**
+   * The bundle-relative path this target corresponds to, echoing the
+   * DeclaredFile.relative_path from the request so the client can correlate
+   * targets to its local files.
+   *
+   * @generated from field: string relative_path = 1;
+   */
+  relativePath: string;
+
+  /**
+   * Full immutable object key the file will occupy (object_key_prefix +
+   * relative_path). Returned for observability; the client PUTs to
+   * presigned_put_url rather than addressing the key directly.
+   *
+   * @generated from field: string object_key = 2;
+   */
+  objectKey: string;
+
+  /**
+   * Time-limited, single-object presigned URL the client PUTs the file bytes
+   * to. Scoped to exactly this object key, with the content type, length, and
+   * SHA-256 bound into the signature.
+   *
+   * @generated from field: string presigned_put_url = 3;
+   */
+  presignedPutUrl: string;
+
+  /**
+   * Headers the client MUST send verbatim on the PUT for the signature to
+   * validate (e.g. Content-Type, Content-Length, x-amz-checksum-sha256). Any
+   * deviation causes the store to reject the upload.
+   *
+   * @generated from field: map<string, string> required_headers = 4;
+   */
+  requiredHeaders: { [key: string]: string };
+};
+
+/**
+ * Describes the message ai.scenar.deploy.v1.FileUploadTarget.
+ * Use `create(FileUploadTargetSchema)` to create a new message.
+ */
+export const FileUploadTargetSchema: GenMessage<FileUploadTarget> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_deploy_v1_io, 1);
+
+/**
+ * CreateDeployUploadSessionRequest opens a two-phase upload session for a new
+ * deploy of a scenario. The client declares the full set of files it intends to
+ * upload; the backend authorizes, enforces quota, creates a deploy in
+ * pending_upload, and returns one presigned upload target per file.
+ *
+ * @generated from message ai.scenar.deploy.v1.CreateDeployUploadSessionRequest
+ */
+export type CreateDeployUploadSessionRequest = Message<"ai.scenar.deploy.v1.CreateDeployUploadSessionRequest"> & {
+  /**
+   * Scenario this deploy will publish. Required. Also the authorization parent
+   * (the caller must have can_edit on it) and the source of the deploy's
+   * inherited owning org.
+   *
+   * @generated from field: string scenario_id = 1;
+   */
+  scenarioId: string;
+
+  /**
+   * The complete inventory of files the client will upload, from the CLI's
+   * pack-manifest.json. Must be non-empty. The backend mints one upload target
+   * per entry and, at completion, verifies the stored objects match this
+   * declaration exactly.
+   *
+   * @generated from field: repeated ai.scenar.deploy.v1.DeclaredFile files = 2;
+   */
+  files: DeclaredFile[];
+};
+
+/**
+ * Describes the message ai.scenar.deploy.v1.CreateDeployUploadSessionRequest.
+ * Use `create(CreateDeployUploadSessionRequestSchema)` to create a new message.
+ */
+export const CreateDeployUploadSessionRequestSchema: GenMessage<CreateDeployUploadSessionRequest> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_deploy_v1_io, 2);
+
+/**
+ * CreateDeployUploadSessionResponse returns the created deploy's identity and the
+ * per-file presigned upload targets. After uploading every file to its target,
+ * the client calls completeDeployUploadSession with deploy_id.
+ *
+ * @generated from message ai.scenar.deploy.v1.CreateDeployUploadSessionResponse
+ */
+export type CreateDeployUploadSessionResponse = Message<"ai.scenar.deploy.v1.CreateDeployUploadSessionResponse"> & {
+  /**
+   * System-generated id (metadata.id) of the deploy created in pending_upload.
+   * Pass this to completeDeployUploadSession.
+   *
+   * @generated from field: string deploy_id = 1;
+   */
+  deployId: string;
+
+  /**
+   * Immutable object-store key prefix all of this deploy's objects live under
+   * (tenants/<org>/scenarios/<scenario>/deploys/<deploy>/). Mirrors
+   * DeployStatus.object_key_prefix.
+   *
+   * @generated from field: string object_key_prefix = 2;
+   */
+  objectKeyPrefix: string;
+
+  /**
+   * One upload target per declared file, in the same order as the request's
+   * files. The client uploads each file to its target before completing.
+   *
+   * @generated from field: repeated ai.scenar.deploy.v1.FileUploadTarget upload_targets = 3;
+   */
+  uploadTargets: FileUploadTarget[];
+};
+
+/**
+ * Describes the message ai.scenar.deploy.v1.CreateDeployUploadSessionResponse.
+ * Use `create(CreateDeployUploadSessionResponseSchema)` to create a new message.
+ */
+export const CreateDeployUploadSessionResponseSchema: GenMessage<CreateDeployUploadSessionResponse> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_deploy_v1_io, 3);
+
+/**
+ * CompleteDeployUploadSessionRequest finalizes an upload session. The backend
+ * verifies every declared object against the store, validates the bundle's
+ * scenario.json as untrusted input, scans it, and on success publishes the
+ * deploy by flipping the parent scenario's current_deploy_id pointer.
+ *
+ * @generated from message ai.scenar.deploy.v1.CompleteDeployUploadSessionRequest
+ */
+export type CompleteDeployUploadSessionRequest = Message<"ai.scenar.deploy.v1.CompleteDeployUploadSessionRequest"> & {
+  /**
+   * The deploy to complete, as returned by createDeployUploadSession. Must be
+   * in pending_upload. Required.
+   *
+   * @generated from field: string deploy_id = 1;
+   */
+  deployId: string;
+};
+
+/**
+ * Describes the message ai.scenar.deploy.v1.CompleteDeployUploadSessionRequest.
+ * Use `create(CompleteDeployUploadSessionRequestSchema)` to create a new message.
+ */
+export const CompleteDeployUploadSessionRequestSchema: GenMessage<CompleteDeployUploadSessionRequest> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_deploy_v1_io, 4);
 

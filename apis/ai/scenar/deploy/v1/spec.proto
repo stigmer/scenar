@@ -17,11 +17,6 @@ import "buf/validate/validate.proto";
 // scenario_id doubles as the resource's authorization parent: the resource-kind
 // metadata declares deploy as PARENT-scoped to scenario via this field, so a
 // deploy inherits view/edit/delete from the scenario it snapshots.
-//
-// The inputs the two-phase upload session supplies at creation time (declared
-// object inventory, content hashes, source/CLI version) are added to this spec
-// alongside that session's command RPCs; the substrate models only the parent
-// link.
 message DeploySpec {
   // The Scenario this deploy snapshots. Required and immutable — a deploy can
   // never be reparented. This is the field the platform reads to resolve the
@@ -29,5 +24,72 @@ message DeploySpec {
   string scenario_id = 1 [
     (buf.validate.field).string.min_len = 1,
     (ai.scenar.commons.apiresource.immutable) = true
+  ];
+
+  // The object inventory the two-phase upload session declared at creation —
+  // exactly the files the client promised to upload, captured verbatim from the
+  // CreateDeployUploadSession request. Immutable: a deploy is one immutable
+  // publication, so its declared contents never change.
+  //
+  // This is the authoritative record the completion phase verifies against: the
+  // backend issued one presigned PUT per entry (binding each file's content type
+  // and checksum), and at completion it re-checks every stored object's
+  // existence, size, and checksum against this declaration before the deploy may
+  // go active. Persisting the declaration here — rather than re-accepting it at
+  // completion — is what makes completion verify what was actually granted upload
+  // URLs, not whatever a later call might re-assert.
+  repeated DeclaredFile files = 2 [(ai.scenar.commons.apiresource.immutable) = true];
+}
+
+// DeclaredFile is one file in a deploy's bundle, as the client declares it when
+// opening an upload session — its bundle-relative path, content hash, size, and
+// MIME type. It is both the create request's per-file input and the unit stored
+// in DeploySpec.files, so the completion phase verifies the uploaded objects
+// against the very same declaration the upload URLs were minted from.
+//
+// The declaration is a request, never trusted as truth. The backend treats the
+// uploaded bundle as adversarial: completeDeployUploadSession re-verifies every
+// object against the object store (existence, size, checksum) and validates the
+// bundle's scenario.json independently before a deploy is ever published.
+//
+// buf.validate here enforces only the structural shape of a path (no leading
+// slash, no control characters, single-slash segments); the semantic checks that
+// depend on the bundle as a whole (rejecting ".." segments, the file-type
+// allowlist, and per-bundle caps) are enforced by the backend at completion,
+// where the untrusted bundle is validated in one place.
+message DeclaredFile {
+  // Bundle-relative path of the file (e.g. "index.html",
+  // "assets/scenar.abc123.js", "narration/step-1.mp3"). Forward-slash
+  // separated, no leading or trailing slash, no empty or "//" segments. The
+  // backend maps this under the deploy's immutable object_key_prefix to form
+  // the object key.
+  string relative_path = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 1024,
+    (buf.validate.field).string.pattern = "^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$"
+  ];
+
+  // Lowercase hex SHA-256 of the file's bytes, taken from the CLI's
+  // pack-manifest.json. Bound into the presigned PUT so the object store
+  // rejects a body whose bytes do not hash to this value, and re-verified at
+  // completion. Exactly 64 hex characters.
+  string sha256 = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.pattern = "^[a-f0-9]{64}$"
+  ];
+
+  // Size of the file in bytes. Must be positive. The backend enforces per-file
+  // and total-size quota caps against this declared size and re-checks the
+  // actual stored object size at completion.
+  int64 size_bytes = 3 [(buf.validate.field).int64.gt = 0];
+
+  // MIME content type to store and later serve the object with (e.g.
+  // "text/html", "application/javascript", "audio/mpeg"). Bound into the
+  // presigned PUT; the serving edge returns exactly this type with
+  // X-Content-Type-Options: nosniff.
+  string content_type = 4 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 255,
+    (buf.validate.field).string.pattern = "^[\\w.+-]+/[\\w.+-]+$"
   ];
 }

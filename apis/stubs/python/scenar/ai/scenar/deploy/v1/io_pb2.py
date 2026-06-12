@@ -22,10 +22,11 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from ai.scenar.deploy.v1 import spec_pb2 as ai_dot_scenar_dot_deploy_dot_v1_dot_spec__pb2
 from buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x61i/scenar/deploy/v1/io.proto\x12\x13\x61i.scenar.deploy.v1\x1a\x1b\x62uf/validate/validate.proto\"\x86\x01\n\x12ListDeploysRequest\x12+\n\x0bscenario_id\x18\x01 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\nscenarioId\x12$\n\tpage_size\x18\x02 \x01(\x05\x42\x07\xbaH\x04\x1a\x02(\x00R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageTokenb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x61i/scenar/deploy/v1/io.proto\x12\x13\x61i.scenar.deploy.v1\x1a\x1e\x61i/scenar/deploy/v1/spec.proto\x1a\x1b\x62uf/validate/validate.proto\"\x86\x01\n\x12ListDeploysRequest\x12+\n\x0bscenario_id\x18\x01 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\nscenarioId\x12$\n\tpage_size\x18\x02 \x01(\x05\x42\x07\xbaH\x04\x1a\x02(\x00R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageToken\"\xad\x02\n\x10\x46ileUploadTarget\x12#\n\rrelative_path\x18\x01 \x01(\tR\x0crelativePath\x12\x1d\n\nobject_key\x18\x02 \x01(\tR\tobjectKey\x12*\n\x11presigned_put_url\x18\x03 \x01(\tR\x0fpresignedPutUrl\x12\x65\n\x10required_headers\x18\x04 \x03(\x0b\x32:.ai.scenar.deploy.v1.FileUploadTarget.RequiredHeadersEntryR\x0frequiredHeaders\x1a\x42\n\x14RequiredHeadersEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\x92\x01\n CreateDeployUploadSessionRequest\x12+\n\x0bscenario_id\x18\x01 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\nscenarioId\x12\x41\n\x05\x66iles\x18\x02 \x03(\x0b\x32!.ai.scenar.deploy.v1.DeclaredFileB\x08\xbaH\x05\x92\x01\x02\x08\x01R\x05\x66iles\"\xba\x01\n!CreateDeployUploadSessionResponse\x12\x1b\n\tdeploy_id\x18\x01 \x01(\tR\x08\x64\x65ployId\x12*\n\x11object_key_prefix\x18\x02 \x01(\tR\x0fobjectKeyPrefix\x12L\n\x0eupload_targets\x18\x03 \x03(\x0b\x32%.ai.scenar.deploy.v1.FileUploadTargetR\ruploadTargets\"M\n\"CompleteDeployUploadSessionRequest\x12\'\n\tdeploy_id\x18\x01 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x08\x64\x65ployIdb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,6 +37,24 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_LISTDEPLOYSREQUEST'].fields_by_name['scenario_id']._serialized_options = b'\272H\007r\002\020\001\310\001\001'
   _globals['_LISTDEPLOYSREQUEST'].fields_by_name['page_size']._loaded_options = None
   _globals['_LISTDEPLOYSREQUEST'].fields_by_name['page_size']._serialized_options = b'\272H\004\032\002(\000'
-  _globals['_LISTDEPLOYSREQUEST']._serialized_start=83
-  _globals['_LISTDEPLOYSREQUEST']._serialized_end=217
+  _globals['_FILEUPLOADTARGET_REQUIREDHEADERSENTRY']._loaded_options = None
+  _globals['_FILEUPLOADTARGET_REQUIREDHEADERSENTRY']._serialized_options = b'8\001'
+  _globals['_CREATEDEPLOYUPLOADSESSIONREQUEST'].fields_by_name['scenario_id']._loaded_options = None
+  _globals['_CREATEDEPLOYUPLOADSESSIONREQUEST'].fields_by_name['scenario_id']._serialized_options = b'\272H\007r\002\020\001\310\001\001'
+  _globals['_CREATEDEPLOYUPLOADSESSIONREQUEST'].fields_by_name['files']._loaded_options = None
+  _globals['_CREATEDEPLOYUPLOADSESSIONREQUEST'].fields_by_name['files']._serialized_options = b'\272H\005\222\001\002\010\001'
+  _globals['_COMPLETEDEPLOYUPLOADSESSIONREQUEST'].fields_by_name['deploy_id']._loaded_options = None
+  _globals['_COMPLETEDEPLOYUPLOADSESSIONREQUEST'].fields_by_name['deploy_id']._serialized_options = b'\272H\007r\002\020\001\310\001\001'
+  _globals['_LISTDEPLOYSREQUEST']._serialized_start=115
+  _globals['_LISTDEPLOYSREQUEST']._serialized_end=249
+  _globals['_FILEUPLOADTARGET']._serialized_start=252
+  _globals['_FILEUPLOADTARGET']._serialized_end=553
+  _globals['_FILEUPLOADTARGET_REQUIREDHEADERSENTRY']._serialized_start=487
+  _globals['_FILEUPLOADTARGET_REQUIREDHEADERSENTRY']._serialized_end=553
+  _globals['_CREATEDEPLOYUPLOADSESSIONREQUEST']._serialized_start=556
+  _globals['_CREATEDEPLOYUPLOADSESSIONREQUEST']._serialized_end=702
+  _globals['_CREATEDEPLOYUPLOADSESSIONRESPONSE']._serialized_start=705
+  _globals['_CREATEDEPLOYUPLOADSESSIONRESPONSE']._serialized_end=891
+  _globals['_COMPLETEDEPLOYUPLOADSESSIONREQUEST']._serialized_start=893
+  _globals['_COMPLETEDEPLOYUPLOADSESSIONREQUEST']._serialized_end=970
 # @@protoc_insertion_point(module_scope)
