@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
+    { "path": "apis/stubs/ts" },
     { "path": "packages/core" },
     { "path": "packages/cli" },
     { "path": "packages/react" },

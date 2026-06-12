@@ -4,6 +4,10 @@ plugins:
     out: stubs/ts
     opt:
       - target=ts
+      # Emit explicit .js extensions on relative imports so the compiled stubs
+      # resolve under Node's native ESM (the CLI runs the built output directly,
+      # not through a bundler).
+      - import_extension=js
     include_imports: true
 inputs:
   - directory: .

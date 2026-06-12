@@ -18,9 +18,13 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@bufbuild/protobuf": "^2.2.2",
+    "@connectrpc/connect": "^2.0.0",
+    "@connectrpc/connect-node": "^2.0.0",
     "@scenar/core": "workspace:*",
     "@scenar/preview": "workspace:*",
     "@scenar/sdk": "workspace:*",
+    "@scenar/stubs": "workspace:*",
     "commander": "^13.0.0",
     "yaml": "^2.7.0"
   },
@@ -29,7 +33,9 @@
     "edge-tts-universal": ">=1.0.0",
     "remotion": "4.0.448",
     "@remotion/renderer": "4.0.448",
-    "@remotion/bundler": "4.0.448"
+    "@remotion/bundler": "4.0.448",
+    "vite": ">=6.0.0",
+    "@vitejs/plugin-react": ">=4.3.0"
   },
   "peerDependenciesMeta": {
     "echogarden": {
@@ -46,10 +52,19 @@
     },
     "@remotion/bundler": {
       "optional": true
+    },
+    "vite": {
+      "optional": true
+    },
+    "@vitejs/plugin-react": {
+      "optional": true
     }
   },
   "devDependencies": {
-    "edge-tts-universal": "^1.4.0"
+    "@scenar/react": "workspace:*",
+    "edge-tts-universal": "^1.4.0",
+    "vite": "^6.0.0",
+    "@vitejs/plugin-react": "^4.3.0"
   },
   "repository": {
     "type": "git",

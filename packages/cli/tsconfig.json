@@ -10,6 +10,7 @@
   "references": [
     { "path": "../core" },
     { "path": "../sdk" },
-    { "path": "../preview" }
+    { "path": "../preview" },
+    { "path": "../../apis/stubs/ts" }
   ]
 }
