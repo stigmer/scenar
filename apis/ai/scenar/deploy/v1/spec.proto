@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package ai.scenar.deploy.v1;
+
+import "ai/scenar/commons/apiresource/field_options.proto";
+import "buf/validate/validate.proto";
+
+// DeploySpec defines the desired state of a Deploy resource — the `spec` block
+// of the envelope (see api.proto).
+//
+// A deploy is a child of exactly one Scenario and is **immutable**: it captures
+// one publication of that scenario's bundle. The only author-determined input is
+// the parent scenario it belongs to; everything else about a deploy (its objects,
+// hashes, serving URL, and lifecycle state) is computed by the backend and lives
+// in DeployStatus.
+//
+// scenario_id doubles as the resource's authorization parent: the resource-kind
+// metadata declares deploy as PARENT-scoped to scenario via this field, so a
+// deploy inherits view/edit/delete from the scenario it snapshots.
+//
+// The inputs the two-phase upload session supplies at creation time (declared
+// object inventory, content hashes, source/CLI version) are added to this spec
+// alongside that session's command RPCs; the substrate models only the parent
+// link.
+message DeploySpec {
+  // The Scenario this deploy snapshots. Required and immutable — a deploy can
+  // never be reparented. This is the field the platform reads to resolve the
+  // authorization parent (see the deploy kind's AuthorizationConfig).
+  string scenario_id = 1 [
+    (buf.validate.field).string.min_len = 1,
+    (ai.scenar.commons.apiresource.immutable) = true
+  ];
+}

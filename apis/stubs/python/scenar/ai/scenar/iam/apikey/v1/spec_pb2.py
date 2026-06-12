@@ -23,10 +23,11 @@ _sym_db = _symbol_database.Default()
 
 
 from ai.scenar.commons.apiresource import field_options_pb2 as ai_dot_scenar_dot_commons_dot_apiresource_dot_field__options__pb2
+from ai.scenar.iam.apikey.v1 import enum_pb2 as ai_dot_scenar_dot_iam_dot_apikey_dot_v1_dot_enum__pb2
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"ai/scenar/iam/apikey/v1/spec.proto\x12\x17\x61i.scenar.iam.apikey.v1\x1a\x31\x61i/scenar/commons/apiresource/field_options.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb5\x01\n\nApiKeySpec\x12\x1f\n\x08key_hash\x18\x01 \x01(\tB\x04\xc8\x85,\x01R\x07keyHash\x12&\n\x0b\x66ingerprint\x18\x02 \x01(\tB\x04\xc8\x85,\x01R\x0b\x66ingerprint\x12\x39\n\nexpires_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\texpiresAt\x12#\n\rnever_expires\x18\x04 \x01(\x08R\x0cneverExpiresb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"ai/scenar/iam/apikey/v1/spec.proto\x12\x17\x61i.scenar.iam.apikey.v1\x1a\x31\x61i/scenar/commons/apiresource/field_options.proto\x1a\"ai/scenar/iam/apikey/v1/enum.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf3\x01\n\nApiKeySpec\x12\x1f\n\x08key_hash\x18\x01 \x01(\tB\x04\xc8\x85,\x01R\x07keyHash\x12&\n\x0b\x66ingerprint\x18\x02 \x01(\tB\x04\xc8\x85,\x01R\x0b\x66ingerprint\x12\x39\n\nexpires_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\texpiresAt\x12#\n\rnever_expires\x18\x04 \x01(\x08R\x0cneverExpires\x12<\n\x06scopes\x18\x05 \x03(\x0e\x32$.ai.scenar.iam.apikey.v1.ApiKeyScopeR\x06scopesb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -37,6 +38,6 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_APIKEYSPEC'].fields_by_name['key_hash']._serialized_options = b'\310\205,\001'
   _globals['_APIKEYSPEC'].fields_by_name['fingerprint']._loaded_options = None
   _globals['_APIKEYSPEC'].fields_by_name['fingerprint']._serialized_options = b'\310\205,\001'
-  _globals['_APIKEYSPEC']._serialized_start=148
-  _globals['_APIKEYSPEC']._serialized_end=329
+  _globals['_APIKEYSPEC']._serialized_start=184
+  _globals['_APIKEYSPEC']._serialized_end=427
 # @@protoc_insertion_point(module_scope)

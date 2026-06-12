@@ -7,13 +7,15 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class ScenarioStatus(_message.Message):
-    __slots__ = ("embed_url", "package_url", "has_narration", "audit")
+    __slots__ = ("embed_url", "package_url", "has_narration", "current_deploy_id", "audit")
     EMBED_URL_FIELD_NUMBER: _ClassVar[int]
     PACKAGE_URL_FIELD_NUMBER: _ClassVar[int]
     HAS_NARRATION_FIELD_NUMBER: _ClassVar[int]
+    CURRENT_DEPLOY_ID_FIELD_NUMBER: _ClassVar[int]
     AUDIT_FIELD_NUMBER: _ClassVar[int]
     embed_url: str
     package_url: str
     has_narration: bool
+    current_deploy_id: str
     audit: _status_pb2.ApiResourceAudit
-    def __init__(self, embed_url: _Optional[str] = ..., package_url: _Optional[str] = ..., has_narration: bool = ..., audit: _Optional[_Union[_status_pb2.ApiResourceAudit, _Mapping]] = ...) -> None: ...
+    def __init__(self, embed_url: _Optional[str] = ..., package_url: _Optional[str] = ..., has_narration: bool = ..., current_deploy_id: _Optional[str] = ..., audit: _Optional[_Union[_status_pb2.ApiResourceAudit, _Mapping]] = ...) -> None: ...

@@ -40,6 +40,12 @@ type ScenarioStatus struct {
 	// presence of narration assets produced during packaging. Lets clients
 	// render the correct playback affordances without inspecting the spec.
 	HasNarration bool `protobuf:"varint,3,opt,name=has_narration,json=hasNarration,proto3" json:"has_narration,omitempty"`
+	// Id of the Deploy this scenario currently serves — the atomic publication
+	// pointer. Publishing a new deploy flips this to a newly `active` deploy;
+	// rollback flips it back to a prior `active` deploy. Empty until the scenario
+	// has been deployed at least once. The serving resolver reads this to map a
+	// stable scenario URL to the current immutable deploy.
+	CurrentDeployId string `protobuf:"bytes,4,opt,name=current_deploy_id,json=currentDeployId,proto3" json:"current_deploy_id,omitempty"`
 	// Standard creation/modification audit information. The high field number
 	// keeps audit at a stable, conventional location and leaves room below for
 	// future scenario-specific status fields.
@@ -105,6 +111,13 @@ func (x *ScenarioStatus) GetHasNarration() bool {
 	return false
 }
 
+func (x *ScenarioStatus) GetCurrentDeployId() string {
+	if x != nil {
+		return x.CurrentDeployId
+	}
+	return ""
+}
+
 func (x *ScenarioStatus) GetAudit() *apiresource.ApiResourceAudit {
 	if x != nil {
 		return x.Audit
@@ -116,12 +129,13 @@ var File_ai_scenar_scenario_v1_status_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_scenario_v1_status_proto_rawDesc = "" +
 	"\n" +
-	"\"ai/scenar/scenario/v1/status.proto\x12\x15ai.scenar.scenario.v1\x1a1ai/scenar/commons/apiresource/field_options.proto\x1a*ai/scenar/commons/apiresource/status.proto\"\xcc\x01\n" +
+	"\"ai/scenar/scenario/v1/status.proto\x12\x15ai.scenar.scenario.v1\x1a1ai/scenar/commons/apiresource/field_options.proto\x1a*ai/scenar/commons/apiresource/status.proto\"\xfe\x01\n" +
 	"\x0eScenarioStatus\x12!\n" +
 	"\tembed_url\x18\x01 \x01(\tB\x04ȅ,\x01R\bembedUrl\x12%\n" +
 	"\vpackage_url\x18\x02 \x01(\tB\x04ȅ,\x01R\n" +
 	"packageUrl\x12)\n" +
-	"\rhas_narration\x18\x03 \x01(\bB\x04ȅ,\x01R\fhasNarration\x12E\n" +
+	"\rhas_narration\x18\x03 \x01(\bB\x04ȅ,\x01R\fhasNarration\x120\n" +
+	"\x11current_deploy_id\x18\x04 \x01(\tB\x04ȅ,\x01R\x0fcurrentDeployId\x12E\n" +
 	"\x05audit\x18c \x01(\v2/.ai.scenar.commons.apiresource.ApiResourceAuditR\x05auditB\xe9\x01\n" +
 	"\x19com.ai.scenar.scenario.v1B\vStatusProtoP\x01ZHgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/scenario/v1;scenariov1\xa2\x02\x03ASS\xaa\x02\x15Ai.Scenar.Scenario.V1\xca\x02\x15Ai\\Scenar\\Scenario\\V1\xe2\x02!Ai\\Scenar\\Scenario\\V1\\GPBMetadata\xea\x02\x18Ai::Scenar::Scenario::V1b\x06proto3"
 

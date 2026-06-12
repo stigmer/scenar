@@ -190,6 +190,13 @@ const (
 	ApiResourceKind_api_resource_version ApiResourceKind = 4
 	// A scenario: the choreography of a visual product walkthrough.
 	ApiResourceKind_scenario ApiResourceKind = 1
+	// A deploy: one immutable publication of a scenario's bundle, served at a
+	// per-deploy origin. A child of scenario — it inherits view/edit/delete from
+	// the scenario it snapshots (PARENT scope via spec.scenario_id; owner is
+	// computed from the parent, so no owner tuple is written and no roles are
+	// independently grantable). Cloud-only: created by the deploy/serving path,
+	// never authored in the OSS/local CLI.
+	ApiResourceKind_deploy ApiResourceKind = 5
 	// An organization: the top-level tenant that owns and manages resources.
 	ApiResourceKind_organization ApiResourceKind = 2
 	// An API key: a credential for programmatic access (e.g. CLI deploys).
@@ -208,6 +215,7 @@ var (
 		0:  "api_resource_kind_unknown",
 		4:  "api_resource_version",
 		1:  "scenario",
+		5:  "deploy",
 		2:  "organization",
 		3:  "api_key",
 		10: "iam_policy",
@@ -218,6 +226,7 @@ var (
 		"api_resource_kind_unknown": 0,
 		"api_resource_version":      4,
 		"scenario":                  1,
+		"deploy":                    5,
 		"organization":              2,
 		"api_key":                   3,
 		"iam_policy":                10,
@@ -421,11 +430,13 @@ const file_ai_scenar_commons_apiresource_apiresourcekind_api_resource_kind_proto
 	"\x0fPlatformIdValue\x12!\n" +
 	"\x1dplatform_id_value_unspecified\x10\x00\x12\n" +
 	"\n" +
-	"\x06scenar\x10\x01*\x9c\x04\n" +
+	"\x06scenar\x10\x01*\xf4\x04\n" +
 	"\x0fApiResourceKind\x12\x1d\n" +
 	"\x19api_resource_kind_unknown\x10\x00\x12[\n" +
 	"\x14api_resource_version\x10\x04\x1aA\xaa\xff+=\b\x02\x10\x01\x1a\x12ApiResourceVersion\"\x14API Resource Version*\x03ver8\x01@\x02J\x04\b\x05\x10\x04\x12?\n" +
-	"\bscenario\x10\x01\x1a1\xaa\xff+-\b\x01\x10\x01\x1a\bScenario\"\bScenario*\x03scn@\x01J\f\b\x02\x10\x01*\x02\b\x01:\x02\x01\x04\x12I\n" +
+	"\bscenario\x10\x01\x1a1\xaa\xff+-\b\x01\x10\x01\x1a\bScenario\"\bScenario*\x03scn@\x01J\f\b\x02\x10\x01*\x02\b\x01:\x02\x01\x04\x12V\n" +
+	"\x06deploy\x10\x05\x1aJ\xaa\xff+F\b\x01\x10\x01\x1a\x06Deploy\"\x06Deploy*\x03dep8\x01@\x02J'\b\x03\x10\x02\x1a!\n" +
+	"\bscenario\x12\bscenario\x1a\vscenario_id\x12I\n" +
 	"\forganization\x10\x02\x1a7\xaa\xff+3\b\x02\x10\x01\x1a\fOrganization\"\fOrganization*\x03org@\x01J\n" +
 	"\b\x04\x10\x01:\x04\x01\x02\x03\x04\x125\n" +
 	"\aapi_key\x10\x03\x1a(\xaa\xff+$\b\x03\x10\x01\x1a\x06ApiKey\"\aAPI Key*\x03key8\x01@\x02J\x04\b\x04\x10\x01\x12?\n" +

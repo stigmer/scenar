@@ -3,6 +3,7 @@ syntax = "proto3";
 package ai.scenar.iam.apikey.v1;
 
 import "ai/scenar/commons/apiresource/field_options.proto";
+import "ai/scenar/iam/apikey/v1/enum.proto";
 import "google/protobuf/timestamp.proto";
 
 // ApiKeySpec defines the configuration of an ApiKey resource — the `spec` block
@@ -32,4 +33,11 @@ message ApiKeySpec {
   // When true, the key never expires and expires_at is ignored. Defaults to
   // false.
   bool never_expires = 4;
+
+  // Capabilities this key is granted, least-privilege. A key authenticates to
+  // its owning principal and is authorized by OpenFGA; its scopes further gate
+  // which scoped operations it may perform (e.g. a CLI deploy key carries only
+  // the deploy scopes). Set at creation; an empty set authorizes no scoped
+  // operation. See ApiKeyScope.
+  repeated ApiKeyScope scopes = 5;
 }

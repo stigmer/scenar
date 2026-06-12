@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package ai.scenar.iam.apikey.v1;
+
+// ApiKeyScope enumerates the capabilities an ApiKey may be granted. Scopes
+// narrow what a key can do beyond what its owning principal is authorized for:
+// authentication resolves a presented key to its non-human principal, OpenFGA
+// authorizes that principal against the target resource, and the key's scopes
+// further gate which operations the key itself is permitted to perform.
+//
+// Scopes are least-privilege by design — a CLI deploy key carries only the
+// deploy scopes, never broad account access. The set is intentionally small and
+// grows with the operation surface (the deploy scopes below back `scenar
+// deploy`). Scope *enforcement* is applied by the operations that consume a key
+// (the deploy command surface); this enum and ApiKeySpec.scopes are the contract
+// those checks read.
+enum ApiKeyScope {
+  // Default value. A key with no scopes can authenticate but is authorized for
+  // no scoped operation; must not be used to imply "all scopes".
+  api_key_scope_unspecified = 0;
+
+  // Create a deploy for a scenario (open a two-phase upload session). Maps to
+  // the `deploy:create` capability.
+  deploy_create = 1;
+
+  // Upload a deploy's bundle objects (complete an open upload session). Maps to
+  // the `deploy:upload` capability.
+  deploy_upload = 2;
+}

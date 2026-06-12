@@ -125,6 +125,32 @@ enum ApiResourceKind {
     }
   }];
 
+  // A deploy: one immutable publication of a scenario's bundle, served at a
+  // per-deploy origin. A child of scenario — it inherits view/edit/delete from
+  // the scenario it snapshots (PARENT scope via spec.scenario_id; owner is
+  // computed from the parent, so no owner tuple is written and no roles are
+  // independently grantable). Cloud-only: created by the deploy/serving path,
+  // never authored in the OSS/local CLI.
+  deploy = 5 [(kind_meta) = {
+    group: studio
+    version: v1
+    name: "Deploy"
+    display_name: "Deploy"
+    id_prefix: "dep"
+    is_versioned: false
+    not_search_indexed: true
+    tier: cloud_only
+    authorization: {
+      scope_type: AUTHORIZATION_SCOPE_TYPE_PARENT
+      owner_type: OWNER_ATTRIBUTION_TYPE_INHERITED
+      parent: {
+        kind: "scenario"
+        relation: "scenario"
+        spec_field: "scenario_id"
+      }
+    }
+  }];
+
   // An organization: the top-level tenant that owns and manages resources.
   organization = 2 [(kind_meta) = {
     group: tenancy

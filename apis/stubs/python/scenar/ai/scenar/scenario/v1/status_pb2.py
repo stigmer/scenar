@@ -26,7 +26,7 @@ from ai.scenar.commons.apiresource import field_options_pb2 as ai_dot_scenar_dot
 from ai.scenar.commons.apiresource import status_pb2 as ai_dot_scenar_dot_commons_dot_apiresource_dot_status__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"ai/scenar/scenario/v1/status.proto\x12\x15\x61i.scenar.scenario.v1\x1a\x31\x61i/scenar/commons/apiresource/field_options.proto\x1a*ai/scenar/commons/apiresource/status.proto\"\xcc\x01\n\x0eScenarioStatus\x12!\n\tembed_url\x18\x01 \x01(\tB\x04\xc8\x85,\x01R\x08\x65mbedUrl\x12%\n\x0bpackage_url\x18\x02 \x01(\tB\x04\xc8\x85,\x01R\npackageUrl\x12)\n\rhas_narration\x18\x03 \x01(\x08\x42\x04\xc8\x85,\x01R\x0chasNarration\x12\x45\n\x05\x61udit\x18\x63 \x01(\x0b\x32/.ai.scenar.commons.apiresource.ApiResourceAuditR\x05\x61uditb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"ai/scenar/scenario/v1/status.proto\x12\x15\x61i.scenar.scenario.v1\x1a\x31\x61i/scenar/commons/apiresource/field_options.proto\x1a*ai/scenar/commons/apiresource/status.proto\"\xfe\x01\n\x0eScenarioStatus\x12!\n\tembed_url\x18\x01 \x01(\tB\x04\xc8\x85,\x01R\x08\x65mbedUrl\x12%\n\x0bpackage_url\x18\x02 \x01(\tB\x04\xc8\x85,\x01R\npackageUrl\x12)\n\rhas_narration\x18\x03 \x01(\x08\x42\x04\xc8\x85,\x01R\x0chasNarration\x12\x30\n\x11\x63urrent_deploy_id\x18\x04 \x01(\tB\x04\xc8\x85,\x01R\x0f\x63urrentDeployId\x12\x45\n\x05\x61udit\x18\x63 \x01(\x0b\x32/.ai.scenar.commons.apiresource.ApiResourceAuditR\x05\x61uditb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -39,6 +39,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_SCENARIOSTATUS'].fields_by_name['package_url']._serialized_options = b'\310\205,\001'
   _globals['_SCENARIOSTATUS'].fields_by_name['has_narration']._loaded_options = None
   _globals['_SCENARIOSTATUS'].fields_by_name['has_narration']._serialized_options = b'\310\205,\001'
+  _globals['_SCENARIOSTATUS'].fields_by_name['current_deploy_id']._loaded_options = None
+  _globals['_SCENARIOSTATUS'].fields_by_name['current_deploy_id']._serialized_options = b'\310\205,\001'
   _globals['_SCENARIOSTATUS']._serialized_start=157
-  _globals['_SCENARIOSTATUS']._serialized_end=361
+  _globals['_SCENARIOSTATUS']._serialized_end=411
 # @@protoc_insertion_point(module_scope)

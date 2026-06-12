@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/scenario/v1/status.proto.
  */
 export const file_ai_scenar_scenario_v1_status: GenFile = /*@__PURE__*/
-  fileDesc("CiJhaS9zY2VuYXIvc2NlbmFyaW8vdjEvc3RhdHVzLnByb3RvEhVhaS5zY2VuYXIuc2NlbmFyaW8udjEioQEKDlNjZW5hcmlvU3RhdHVzEhcKCWVtYmVkX3VybBgBIAEoCUIEyIUsARIZCgtwYWNrYWdlX3VybBgCIAEoCUIEyIUsARIbCg1oYXNfbmFycmF0aW9uGAMgASgIQgTIhSwBEj4KBWF1ZGl0GGMgASgLMi8uYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuQXBpUmVzb3VyY2VBdWRpdGIGcHJvdG8z", [file_ai_scenar_commons_apiresource_field_options, file_ai_scenar_commons_apiresource_status]);
+  fileDesc("CiJhaS9zY2VuYXIvc2NlbmFyaW8vdjEvc3RhdHVzLnByb3RvEhVhaS5zY2VuYXIuc2NlbmFyaW8udjEiwgEKDlNjZW5hcmlvU3RhdHVzEhcKCWVtYmVkX3VybBgBIAEoCUIEyIUsARIZCgtwYWNrYWdlX3VybBgCIAEoCUIEyIUsARIbCg1oYXNfbmFycmF0aW9uGAMgASgIQgTIhSwBEh8KEWN1cnJlbnRfZGVwbG95X2lkGAQgASgJQgTIhSwBEj4KBWF1ZGl0GGMgASgLMi8uYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuQXBpUmVzb3VyY2VBdWRpdGIGcHJvdG8z", [file_ai_scenar_commons_apiresource_field_options, file_ai_scenar_commons_apiresource_status]);
 
 /**
  * ScenarioStatus is the observed state of a Scenario resource — the `status`
@@ -50,6 +50,17 @@ export type ScenarioStatus = Message<"ai.scenar.scenario.v1.ScenarioStatus"> & {
    * @generated from field: bool has_narration = 3;
    */
   hasNarration: boolean;
+
+  /**
+   * Id of the Deploy this scenario currently serves — the atomic publication
+   * pointer. Publishing a new deploy flips this to a newly `active` deploy;
+   * rollback flips it back to a prior `active` deploy. Empty until the scenario
+   * has been deployed at least once. The serving resolver reads this to map a
+   * stable scenario URL to the current immutable deploy.
+   *
+   * @generated from field: string current_deploy_id = 4;
+   */
+  currentDeployId: string;
 
   /**
    * Standard creation/modification audit information. The high field number

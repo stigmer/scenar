@@ -5,6 +5,8 @@
 import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv1";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv1";
 import { file_ai_scenar_commons_apiresource_field_options } from "../../../commons/apiresource/field_options_pb";
+import type { ApiKeyScope } from "./enum_pb";
+import { file_ai_scenar_iam_apikey_v1_enum } from "./enum_pb";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
 import type { Message } from "@bufbuild/protobuf";
@@ -13,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/iam/apikey/v1/spec.proto.
  */
 export const file_ai_scenar_iam_apikey_v1_spec: GenFile = /*@__PURE__*/
-  fileDesc("CiJhaS9zY2VuYXIvaWFtL2FwaWtleS92MS9zcGVjLnByb3RvEhdhaS5zY2VuYXIuaWFtLmFwaWtleS52MSKGAQoKQXBpS2V5U3BlYxIWCghrZXlfaGFzaBgBIAEoCUIEyIUsARIZCgtmaW5nZXJwcmludBgCIAEoCUIEyIUsARIuCgpleHBpcmVzX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIVCg1uZXZlcl9leHBpcmVzGAQgASgIYgZwcm90bzM", [file_ai_scenar_commons_apiresource_field_options, file_google_protobuf_timestamp]);
+  fileDesc("CiJhaS9zY2VuYXIvaWFtL2FwaWtleS92MS9zcGVjLnByb3RvEhdhaS5zY2VuYXIuaWFtLmFwaWtleS52MSK8AQoKQXBpS2V5U3BlYxIWCghrZXlfaGFzaBgBIAEoCUIEyIUsARIZCgtmaW5nZXJwcmludBgCIAEoCUIEyIUsARIuCgpleHBpcmVzX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIVCg1uZXZlcl9leHBpcmVzGAQgASgIEjQKBnNjb3BlcxgFIAMoDjIkLmFpLnNjZW5hci5pYW0uYXBpa2V5LnYxLkFwaUtleVNjb3BlYgZwcm90bzM", [file_ai_scenar_commons_apiresource_field_options, file_ai_scenar_iam_apikey_v1_enum, file_google_protobuf_timestamp]);
 
 /**
  * ApiKeySpec defines the configuration of an ApiKey resource — the `spec` block
@@ -62,6 +64,17 @@ export type ApiKeySpec = Message<"ai.scenar.iam.apikey.v1.ApiKeySpec"> & {
    * @generated from field: bool never_expires = 4;
    */
   neverExpires: boolean;
+
+  /**
+   * Capabilities this key is granted, least-privilege. A key authenticates to
+   * its owning principal and is authorized by OpenFGA; its scopes further gate
+   * which scoped operations it may perform (e.g. a CLI deploy key carries only
+   * the deploy scopes). Set at creation; an empty set authorizes no scoped
+   * operation. See ApiKeyScope.
+   *
+   * @generated from field: repeated ai.scenar.iam.apikey.v1.ApiKeyScope scopes = 5;
+   */
+  scopes: ApiKeyScope[];
 };
 
 /**

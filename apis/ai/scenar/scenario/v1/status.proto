@@ -25,6 +25,13 @@ message ScenarioStatus {
   // render the correct playback affordances without inspecting the spec.
   bool has_narration = 3 [(ai.scenar.commons.apiresource.computed) = true];
 
+  // Id of the Deploy this scenario currently serves — the atomic publication
+  // pointer. Publishing a new deploy flips this to a newly `active` deploy;
+  // rollback flips it back to a prior `active` deploy. Empty until the scenario
+  // has been deployed at least once. The serving resolver reads this to map a
+  // stable scenario URL to the current immutable deploy.
+  string current_deploy_id = 4 [(ai.scenar.commons.apiresource.computed) = true];
+
   // Standard creation/modification audit information. The high field number
   // keeps audit at a stable, conventional location and leaves room below for
   // future scenario-specific status fields.

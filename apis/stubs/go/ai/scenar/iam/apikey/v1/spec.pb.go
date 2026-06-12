@@ -47,7 +47,13 @@ type ApiKeySpec struct {
 	ExpiresAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	// When true, the key never expires and expires_at is ignored. Defaults to
 	// false.
-	NeverExpires  bool `protobuf:"varint,4,opt,name=never_expires,json=neverExpires,proto3" json:"never_expires,omitempty"`
+	NeverExpires bool `protobuf:"varint,4,opt,name=never_expires,json=neverExpires,proto3" json:"never_expires,omitempty"`
+	// Capabilities this key is granted, least-privilege. A key authenticates to
+	// its owning principal and is authorized by OpenFGA; its scopes further gate
+	// which scoped operations it may perform (e.g. a CLI deploy key carries only
+	// the deploy scopes). Set at creation; an empty set authorizes no scoped
+	// operation. See ApiKeyScope.
+	Scopes        []ApiKeyScope `protobuf:"varint,5,rep,packed,name=scopes,proto3,enum=ai.scenar.iam.apikey.v1.ApiKeyScope" json:"scopes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -110,18 +116,26 @@ func (x *ApiKeySpec) GetNeverExpires() bool {
 	return false
 }
 
+func (x *ApiKeySpec) GetScopes() []ApiKeyScope {
+	if x != nil {
+		return x.Scopes
+	}
+	return nil
+}
+
 var File_ai_scenar_iam_apikey_v1_spec_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_iam_apikey_v1_spec_proto_rawDesc = "" +
 	"\n" +
-	"\"ai/scenar/iam/apikey/v1/spec.proto\x12\x17ai.scenar.iam.apikey.v1\x1a1ai/scenar/commons/apiresource/field_options.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb5\x01\n" +
+	"\"ai/scenar/iam/apikey/v1/spec.proto\x12\x17ai.scenar.iam.apikey.v1\x1a1ai/scenar/commons/apiresource/field_options.proto\x1a\"ai/scenar/iam/apikey/v1/enum.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf3\x01\n" +
 	"\n" +
 	"ApiKeySpec\x12\x1f\n" +
 	"\bkey_hash\x18\x01 \x01(\tB\x04ȅ,\x01R\akeyHash\x12&\n" +
 	"\vfingerprint\x18\x02 \x01(\tB\x04ȅ,\x01R\vfingerprint\x129\n" +
 	"\n" +
 	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12#\n" +
-	"\rnever_expires\x18\x04 \x01(\bR\fneverExpiresB\xf3\x01\n" +
+	"\rnever_expires\x18\x04 \x01(\bR\fneverExpires\x12<\n" +
+	"\x06scopes\x18\x05 \x03(\x0e2$.ai.scenar.iam.apikey.v1.ApiKeyScopeR\x06scopesB\xf3\x01\n" +
 	"\x1bcom.ai.scenar.iam.apikey.v1B\tSpecProtoP\x01ZHgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/iam/apikey/v1;apikeyv1\xa2\x02\x04ASIA\xaa\x02\x17Ai.Scenar.Iam.Apikey.V1\xca\x02\x17Ai\\Scenar\\Iam\\Apikey\\V1\xe2\x02#Ai\\Scenar\\Iam\\Apikey\\V1\\GPBMetadata\xea\x02\x1bAi::Scenar::Iam::Apikey::V1b\x06proto3"
 
 var (
@@ -140,14 +154,16 @@ var file_ai_scenar_iam_apikey_v1_spec_proto_msgTypes = make([]protoimpl.MessageI
 var file_ai_scenar_iam_apikey_v1_spec_proto_goTypes = []any{
 	(*ApiKeySpec)(nil),            // 0: ai.scenar.iam.apikey.v1.ApiKeySpec
 	(*timestamppb.Timestamp)(nil), // 1: google.protobuf.Timestamp
+	(ApiKeyScope)(0),              // 2: ai.scenar.iam.apikey.v1.ApiKeyScope
 }
 var file_ai_scenar_iam_apikey_v1_spec_proto_depIdxs = []int32{
 	1, // 0: ai.scenar.iam.apikey.v1.ApiKeySpec.expires_at:type_name -> google.protobuf.Timestamp
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: ai.scenar.iam.apikey.v1.ApiKeySpec.scopes:type_name -> ai.scenar.iam.apikey.v1.ApiKeyScope
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_ai_scenar_iam_apikey_v1_spec_proto_init() }
@@ -155,6 +171,7 @@ func file_ai_scenar_iam_apikey_v1_spec_proto_init() {
 	if File_ai_scenar_iam_apikey_v1_spec_proto != nil {
 		return
 	}
+	file_ai_scenar_iam_apikey_v1_enum_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

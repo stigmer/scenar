@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package ai.scenar.deploy.v1;
+
+import "buf/validate/validate.proto";
+
+// ListDeploysRequest is the input for the deploy list query. It scopes the
+// listing to a single parent scenario and pages results with an opaque cursor.
+//
+// Listing is parent-scoped rather than org-scoped because deploys are children
+// of a scenario: the caller is authorized by `can_view` on the parent scenario,
+// and every returned deploy belongs to it. Pagination uses the conventional
+// cursor model (page_size / page_token / next_page_token), matching
+// ListScenariosRequest, and is intended to migrate to a shared commons
+// contract unchanged when that lands.
+message ListDeploysRequest {
+  // Parent scenario whose deploys to list. Required — deploy listings are
+  // always scoped to a single scenario, which is also the authorization parent.
+  string scenario_id = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 1
+  ];
+
+  // Maximum number of deploys to return in one page. When 0 or unset, the
+  // server applies its default page size. The server may return fewer items
+  // than requested.
+  int32 page_size = 2 [(buf.validate.field).int32.gte = 0];
+
+  // Opaque cursor identifying the page to return. Empty fetches the first page.
+  // Pass the next_page_token from the previous DeployList to continue.
+  string page_token = 3;
+}

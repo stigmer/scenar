@@ -29,6 +29,7 @@ class ApiResourceKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     api_resource_kind_unknown: _ClassVar[ApiResourceKind]
     api_resource_version: _ClassVar[ApiResourceKind]
     scenario: _ClassVar[ApiResourceKind]
+    deploy: _ClassVar[ApiResourceKind]
     organization: _ClassVar[ApiResourceKind]
     api_key: _ClassVar[ApiResourceKind]
     iam_policy: _ClassVar[ApiResourceKind]
@@ -44,6 +45,7 @@ scenar: PlatformIdValue
 api_resource_kind_unknown: ApiResourceKind
 api_resource_version: ApiResourceKind
 scenario: ApiResourceKind
+deploy: ApiResourceKind
 organization: ApiResourceKind
 api_key: ApiResourceKind
 iam_policy: ApiResourceKind

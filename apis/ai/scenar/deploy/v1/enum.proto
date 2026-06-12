@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package ai.scenar.deploy.v1;
+
+// DeployState is the lifecycle phase of a Deploy — the single immutable
+// snapshot of a scenario that the platform packages, verifies, and serves.
+//
+// A deploy advances through these states linearly during publication, with two
+// terminal/operational off-ramps (abuse takedown and deletion). The serving
+// edge (the Cloudflare Worker) checks this state before returning content, so a
+// deploy is only ever reachable while it is `active`.
+//
+// The legal transitions are enforced by the backend's DeployStateMachine:
+//   pending_upload -> uploaded -> scanning -> active
+//   <any non-terminal> -> disabled_abuse        (immediate takedown)
+//   disabled_abuse     -> active                 (re-enable after review)
+//   <any>              -> deleted                (terminal)
+//
+// The actual transition operations (driven by the two-phase upload session)
+// land with the Deploy command surface; this enum is the contract they move a
+// deploy through.
+enum DeployState {
+  // Default value. Must not be used for a persisted deploy.
+  deploy_state_unspecified = 0;
+
+  // The deploy record exists and an upload target has been issued, but the
+  // bundle has not yet been fully uploaded. A deploy is created in this state
+  // by the upload session; it is never servable here.
+  pending_upload = 1;
+
+  // The client has finished uploading and the upload session has been
+  // completed. The backend has accepted the object inventory but has not yet
+  // verified/scanned it. Not servable.
+  uploaded = 2;
+
+  // The uploaded bundle is being verified and scanned (object/size/checksum
+  // verification, manifest validation, optional malware scan). Not servable.
+  scanning = 3;
+
+  // The deploy passed verification and is live. This is the only servable
+  // state. Publication makes a deploy current by flipping the parent
+  // Scenario's current_deploy_id pointer to an `active` deploy.
+  active = 4;
+
+  // The deploy was taken down for abuse. The serving edge returns
+  // 404/410 immediately, independent of cache purges. A disabled deploy may be
+  // re-enabled to `active` after review.
+  disabled_abuse = 5;
+
+  // The deploy was deleted. Terminal — its objects are eligible for garbage
+  // collection and it is never served again.
+  deleted = 6;
+}
