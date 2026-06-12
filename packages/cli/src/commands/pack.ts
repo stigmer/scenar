@@ -115,10 +115,11 @@ export function registerPackCommand(program: Command): void {
         process.stderr.write("Bundling embed with Vite...\n");
         await runViteBuild({ root: tempDir, outDir, entryHtmlPath });
 
-        // 3. Copy narration audio (the manifest timing is baked into the JS,
-        //    but the player fetches each clip by its relative src at runtime).
+        // 3. Copy the narration manifest + audio. The embed fetches
+        //    ./narration/manifest.json at runtime and resolves each clip's
+        //    relative src against it, so both must ship in the bundle.
         if (hasNarration) {
-          await copyNarrationAudio(scenarioDir, outDir);
+          await copyNarration(scenarioDir, outDir);
         }
 
         // 4. Write the required scenario.json descriptor at the bundle root.
@@ -147,14 +148,20 @@ export function registerPackCommand(program: Command): void {
     });
 }
 
-/** Copy every *.mp3 from <scenarioDir>/narration into <outDir>/narration. */
-async function copyNarrationAudio(scenarioDir: string, outDir: string): Promise<void> {
+/**
+ * Copy the narration manifest and every *.mp3 from <scenarioDir>/narration
+ * into <outDir>/narration. The manifest is the runtime index the embed fetches;
+ * the mp3s are the clips it references by relative src.
+ */
+async function copyNarration(scenarioDir: string, outDir: string): Promise<void> {
   const srcDir = join(scenarioDir, "narration");
   const destDir = join(outDir, "narration");
   await mkdir(destDir, { recursive: true });
   const entries = await readdir(srcDir, { withFileTypes: true });
   for (const entry of entries) {
-    if (entry.isFile() && entry.name.toLowerCase().endsWith(".mp3")) {
+    if (!entry.isFile()) continue;
+    const name = entry.name.toLowerCase();
+    if (name === "manifest.json" || name.endsWith(".mp3")) {
       await copyFile(join(srcDir, entry.name), join(destDir, entry.name));
     }
   }

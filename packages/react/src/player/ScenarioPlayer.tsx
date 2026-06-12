@@ -6,8 +6,9 @@ import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
 import { useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
-import { ScenarioPauseOverlay, ScenarioPoster } from "./ScenarioPoster.js";
+import { ScenarioAudioNotice, ScenarioPauseOverlay, ScenarioPoster } from "./ScenarioPoster.js";
 import { ScenarioControls } from "./ScenarioControls.js";
+import { useScenarEmbedBridge } from "../embed/useScenarEmbedBridge.js";
 
 /** Delay before auto-hiding the control bar during playback. */
 const CONTROLS_HIDE_DELAY_MS = 3_000;
@@ -32,6 +33,13 @@ interface ScenarioPlayerProps<T> {
   narrationManifest?: NarrationManifest;
   /** Show a speed selector in the control bar. Defaults to true. */
   showSpeedControl?: boolean;
+  /**
+   * Enable the cross-origin embed bridge (postMessage events + host commands +
+   * resize reporting). Intended for the packed iframe embed; leave `false` for
+   * normal in-app embedding so the host never receives unexpected messages. The
+   * bridge stays inert unless the player is also running inside a frame.
+   */
+  embed?: boolean;
 }
 
 /**
@@ -53,6 +61,7 @@ export function ScenarioPlayer<T>({
   onStepChange,
   narrationManifest: manifestProp,
   showSpeedControl = true,
+  embed = false,
 }: ScenarioPlayerProps<T>) {
   const steps = stepsProp ?? bundle?.steps;
   const narrationManifest = manifestProp ?? bundle?.narrationManifest;
@@ -118,7 +127,9 @@ export function ScenarioPlayer<T>({
     return () => observer.disconnect();
   }, [isVideoExport, playing, pause]);
 
-  const { muted, toggleMute, audioRef, seekToStep } = useNarrationPlayback({
+  const {
+    muted, toggleMute, audioRef, seekToStep, audioBlocked, unlock, setVolume, prefetch,
+  } = useNarrationPlayback({
     manifest: narrationManifest,
     stepIndex,
     playing,
@@ -170,11 +181,15 @@ export function ScenarioPlayer<T>({
   }, [playbackState, scheduleHide]);
 
   const handlePlay = useCallback(() => {
+    // Start narration synchronously in the click's call stack — this is what
+    // unlocks audio on iOS Safari. `play()` then flips playback state and the
+    // narration effects take over.
+    unlock();
     play();
     if (coordinatorRef.current) {
       PlaybackCoordinator.notifyPlaying(coordinatorRef.current.id);
     }
-  }, [play]);
+  }, [play, unlock]);
 
   const handleSeekToTime = useCallback(
     (timeMs: number) => {
@@ -196,6 +211,11 @@ export function ScenarioPlayer<T>({
     togglePlay();
   }, [playbackState, togglePlay]);
 
+  // Retry narration inside a fresh gesture after the browser blocked it.
+  const handleEnableAudio = useCallback(() => {
+    unlock();
+  }, [unlock]);
+
   // Progress bar refs
   const progressTrackRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
@@ -213,10 +233,33 @@ export function ScenarioPlayer<T>({
     seekGeneration,
   );
 
+  // Cross-origin embed bridge: inert unless `embed` is set and we are framed.
+  useScenarEmbedBridge({
+    enabled: embed,
+    containerRef,
+    playbackState,
+    stepIndex,
+    totalSteps: steps.length,
+    stepTimeline,
+    hasNarration: !!narrationManifest,
+    audioBlocked,
+    controls: {
+      play: handlePlay,
+      pause,
+      seekToTime: handleSeekToTime,
+      setMuted: (next: boolean) => {
+        if (muted !== next) toggleMute();
+      },
+      setVolume,
+      prefetch,
+    },
+  });
+
   const caption = steps[stepIndex]!.caption;
   const showPoster = playbackState === "idle" && !isVideoExport && !prefersReducedMotion;
   const showPauseOverlay = playbackState === "paused" && !isVideoExport;
   const showControlBar = playbackState !== "idle" && !hideControls;
+  const showAudioNotice = audioBlocked && !isVideoExport && playbackState !== "idle";
 
   return (
     <div
@@ -225,6 +268,7 @@ export function ScenarioPlayer<T>({
       data-demo-step={stepIndex}
       data-demo-state={playbackState}
       data-demo-total-steps={steps.length}
+      data-demo-audio-blocked={audioBlocked ? "" : undefined}
       onMouseMove={showControlBar ? revealControls : undefined}
     >
       <div
@@ -235,8 +279,11 @@ export function ScenarioPlayer<T>({
         {children(steps[stepIndex]!.data, stepIndex)}
 
         <AnimatePresence>
-          {showPoster && <ScenarioPoster onPlay={handlePlay} />}
+          {showPoster && (
+            <ScenarioPoster onPlay={handlePlay} hasNarration={!!narrationManifest} />
+          )}
           {showPauseOverlay && <ScenarioPauseOverlay onResume={handlePlay} />}
+          {showAudioNotice && <ScenarioAudioNotice onEnableAudio={handleEnableAudio} />}
         </AnimatePresence>
       </div>
 

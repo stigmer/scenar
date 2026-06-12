@@ -36,21 +36,40 @@ interface UseNarrationPlaybackResult {
    * Used by `seekToTime` to keep narration in sync with continuous bar seek.
    */
   seekToStep: (targetStepIndex: number, offsetMs: number) => void;
+  /**
+   * True when the browser blocked audio playback (autoplay policy). The player
+   * keeps its play affordance visible so the viewer can retry inside a gesture.
+   */
+  audioBlocked: boolean;
+  /**
+   * Start narration from within a user gesture (the poster/resume click).
+   * Calling `play()` synchronously in the gesture's call stack is what lets
+   * iOS Safari unlock the audio element for the rest of the session. No-op when
+   * muted or when the current step has no clip.
+   */
+  unlock: () => void;
+  /** Set narration volume (0–1, clamped). Persists across clips. */
+  setVolume: (volume: number) => void;
+  /** Warm the HTTP cache for every clip without playing them. */
+  prefetch: () => void;
 }
 
-function safePlay(audio: HTMLAudioElement): void {
+/**
+ * Call `play()` and normalize its return into a promise. Browsers return a
+ * promise that rejects when playback is blocked (autoplay policy); older ones
+ * return `undefined`. Callers attach `.then/.catch` to drive the blocked state.
+ */
+function safePlay(audio: HTMLAudioElement): Promise<void> {
   const result = audio.play();
-  if (result !== undefined) {
-    result.catch(() => {});
-  }
+  return result instanceof Promise ? result : Promise.resolve();
 }
 
-function playClip(audio: HTMLAudioElement, src: string, rate = 1): void {
+function playClip(audio: HTMLAudioElement, src: string, rate = 1): Promise<void> {
   audio.src = src;
   audio.defaultPlaybackRate = rate;
   audio.load();
   audio.playbackRate = rate;
-  safePlay(audio);
+  return safePlay(audio);
 }
 
 function seekClip(audio: HTMLAudioElement, src: string, offsetSec: number, rate = 1): void {
@@ -61,7 +80,7 @@ function seekClip(audio: HTMLAudioElement, src: string, offsetSec: number, rate 
 
   const applySeek = () => {
     audio.currentTime = offsetSec;
-    safePlay(audio);
+    void safePlay(audio).catch(() => {});
   };
 
   if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
@@ -102,8 +121,20 @@ export function useNarrationPlayback({
   onClipEnded,
 }: UseNarrationPlaybackOptions): UseNarrationPlaybackResult {
   const [muted, setMuted] = useState(initialMuted);
+  const [audioBlocked, setAudioBlocked] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const prefetchedRef = useRef(false);
+
+  /**
+   * Drive `audioBlocked` from a play() promise: a rejection means the browser
+   * blocked playback (autoplay policy); a resolution means audio is running.
+   */
+  const track = useCallback((playback: Promise<void>) => {
+    playback.then(
+      () => setAudioBlocked(false),
+      () => setAudioBlocked(true),
+    );
+  }, []);
 
   const mutedRef = useRef(muted);
   mutedRef.current = muted;
@@ -173,8 +204,8 @@ export function useNarrationPlayback({
       return;
     }
 
-    playClip(audio, entrySrc, playbackRateRef.current);
-  }, [stepIndex, entrySrc, manifest]);
+    track(playClip(audio, entrySrc, playbackRateRef.current));
+  }, [stepIndex, entrySrc, manifest, track]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -184,12 +215,12 @@ export function useNarrationPlayback({
       audio.pause();
     } else if (entrySrc) {
       if (audio.src) {
-        safePlay(audio);
+        track(safePlay(audio));
       } else {
-        playClip(audio, entrySrc, playbackRateRef.current);
+        track(playClip(audio, entrySrc, playbackRateRef.current));
       }
     }
-  }, [playing, entrySrc, manifest]);
+  }, [playing, entrySrc, manifest, track]);
 
   const toggleMute = useCallback(() => {
     setMuted((prev) => {
@@ -199,19 +230,48 @@ export function useNarrationPlayback({
 
       if (next) {
         stopAudio(audio);
+        setAudioBlocked(false);
       } else {
         if (manifest && !prefetchedRef.current) {
           prefetchManifestClips(manifest);
           prefetchedRef.current = true;
         }
         if (entrySrc) {
-          playClip(audio, entrySrc, playbackRateRef.current);
+          track(playClip(audio, entrySrc, playbackRateRef.current));
         }
       }
 
       return next;
     });
-  }, [entrySrc, manifest]);
+  }, [entrySrc, manifest, track]);
+
+  /**
+   * Start narration inside the poster/resume gesture. Doing the first `play()`
+   * synchronously in the gesture is what unlocks audio on iOS Safari for the
+   * rest of the session; the subsequent step/playing effects then resume
+   * normally. No-op when muted or when the current step has no clip.
+   */
+  const unlock = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || mutedRef.current || !entrySrc) return;
+    if (manifest && !prefetchedRef.current) {
+      prefetchManifestClips(manifest);
+      prefetchedRef.current = true;
+    }
+    track(playClip(audio, entrySrc, playbackRateRef.current));
+  }, [entrySrc, manifest, track]);
+
+  const setVolume = useCallback((volume: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = Math.max(0, Math.min(volume, 1));
+  }, []);
+
+  const prefetch = useCallback(() => {
+    if (!manifest || prefetchedRef.current) return;
+    prefetchManifestClips(manifest);
+    prefetchedRef.current = true;
+  }, [manifest]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -227,5 +287,5 @@ export function useNarrationPlayback({
     };
   }, []);
 
-  return { muted, toggleMute, audioRef, seekToStep };
+  return { muted, toggleMute, audioRef, seekToStep, audioBlocked, unlock, setVolume, prefetch };
 }

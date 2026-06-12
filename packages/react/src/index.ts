@@ -39,7 +39,10 @@ export { VideoExportProvider, useVideoExport } from "./video/VideoExportContext.
 export { register as registerPlayer, notifyPlaying } from "./playback/PlaybackCoordinator.js";
 
 // Narration
-export { useNarrationManifest } from "./narration/useNarrationManifest.js";
+export {
+  useNarrationManifest,
+  resolveNarrationManifestUrls,
+} from "./narration/useNarrationManifest.js";
 export { useNarrationPlayback } from "./narration/useNarrationPlayback.js";
 
 // Cursor
@@ -51,7 +54,7 @@ export { DemoViewport } from "./viewport/DemoViewport.js";
 
 // Player
 export { ScenarioPlayer } from "./player/ScenarioPlayer.js";
-export { ScenarioPoster, ScenarioPauseOverlay } from "./player/ScenarioPoster.js";
+export { ScenarioPoster, ScenarioPauseOverlay, ScenarioAudioNotice } from "./player/ScenarioPoster.js";
 export { ScenarioControls } from "./player/ScenarioControls.js";
 export { SpeedMenu } from "./player/SpeedMenu.js";
 export { useStepProgression } from "./player/useStepProgression.js";
@@ -59,6 +62,27 @@ export { usePlaybackProgress } from "./player/usePlaybackProgress.js";
 
 // Step interactions
 export { useStepInteractions } from "./interactions/useStepInteractions.js";
+
+// Embed bridge (cross-origin iframe postMessage protocol)
+export { useScenarEmbedBridge } from "./embed/useScenarEmbedBridge.js";
+export type {
+  ScenarEmbedControls,
+  UseScenarEmbedBridgeOptions,
+} from "./embed/useScenarEmbedBridge.js";
+export {
+  SCENAR_EMBED_SOURCE,
+  SCENAR_EMBED_PROTOCOL_VERSION,
+  frameEmbedEvent,
+  frameEmbedCommand,
+  parseEmbedCommand,
+  parseEmbedEvent,
+} from "./embed/protocol.js";
+export type {
+  ScenarEmbedEvent,
+  ScenarEmbedCommand,
+  ScenarEmbedEventMessage,
+  ScenarEmbedCommandMessage,
+} from "./embed/protocol.js";
 
 // Theme
 export { SCENAR_CLASS } from "./theme/index.js";

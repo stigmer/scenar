@@ -18,7 +18,7 @@ describe("generateEmbedEntry", () => {
     expect(src).toContain('import { createRoot } from "react-dom/client";');
     expect(src).toContain('import { ScenarioPlayer, DemoViewport, SCENAR_CLASS } from "@scenar/react";');
     expect(src).toContain('import { renderStep } from "/proj/scenarios/welcome-tour/index";');
-    expect(src).toContain("<ScenarioPlayer bundle={_bundle}>");
+    expect(src).toContain("<ScenarioPlayer bundle={_bundle} embed>");
     expect(src).toContain("renderStep(data, stepIndex)");
     expect(src).toContain('getElementById("root")');
   });
@@ -36,14 +36,25 @@ describe("generateEmbedEntry", () => {
     expect(src).toContain("shellHeight={480}");
   });
 
-  it("imports the narration manifest only when present", () => {
+  it("fetches the narration manifest at runtime only when present", () => {
     const without = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
-    expect(without).toContain("const _manifest = undefined;");
+    expect(without).toContain("narrationManifest: undefined,");
+    expect(without).not.toContain("useNarrationManifest");
+    expect(without).not.toContain("import _manifest");
 
     const withNarration = generateEmbedEntry({ ...BASE, hasNarration: true, providersPath: null });
+    // Never inlines the manifest as a build-time JSON import.
+    expect(withNarration).not.toContain("import _manifest");
+    // Imports the hook and fetches the manifest from its own relative location,
+    // so clip src values resolve against ./narration/ at runtime.
     expect(withNarration).toContain(
-      'import _manifest from "/proj/scenarios/welcome-tour/narration/manifest.json";',
+      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, useNarrationManifest } from "@scenar/react";',
     );
+    expect(withNarration).toContain('const _resolveManifestUrl = () => "./narration/manifest.json";');
+    expect(withNarration).toContain(
+      'const _manifest = useNarrationManifest("welcome-tour", _resolveManifestUrl);',
+    );
+    expect(withNarration).toContain("narrationManifest: _manifest,");
   });
 
   it("wraps in PreviewProviders only when a providers file exists", () => {

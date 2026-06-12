@@ -44,18 +44,14 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
 
   // --- Imports ---
   lines.push(`import { createRoot } from "react-dom/client";`);
-  lines.push(`import { ScenarioPlayer, DemoViewport, SCENAR_CLASS } from "@scenar/react";`);
+  const reactImports = input.hasNarration
+    ? `ScenarioPlayer, DemoViewport, SCENAR_CLASS, useNarrationManifest`
+    : `ScenarioPlayer, DemoViewport, SCENAR_CLASS`;
+  lines.push(`import { ${reactImports} } from "@scenar/react";`);
   lines.push(`import "@scenar/react/theme.css";`);
   lines.push(`import "@scenar/react/styles.css";`);
   lines.push(`import { renderStep } from ${JSON.stringify(renderImport)};`);
   lines.push(`import * as _stepsModule from ${JSON.stringify(stepsImport)};`);
-
-  if (input.hasNarration) {
-    const manifestPath = `${scenarioPath}/narration/manifest.json`;
-    lines.push(`import _manifest from ${JSON.stringify(manifestPath)};`);
-  } else {
-    lines.push(`const _manifest = undefined;`);
-  }
 
   if (input.providersPath) {
     const providersImport = toPosix(input.providersPath).replace(/\.[^.]+$/, "");
@@ -81,24 +77,33 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(``);
   lines.push(`const _steps: any = _findSteps(_stepsModule as unknown as Record<string, unknown>);`);
 
-  // --- Bundle ---
-  lines.push(``);
-  lines.push(`const _bundle = {`);
-  lines.push(`  id: ${JSON.stringify(input.scenarioId)},`);
-  lines.push(`  steps: _steps,`);
-  lines.push(`  narrationManifest: _manifest,`);
-  lines.push(`};`);
+  // --- Narration manifest URL resolver (stable module-level reference) ---
+  // The manifest is fetched at runtime from its own relative location so that
+  // useNarrationManifest resolves each clip src against it (audio lives under
+  // ./narration/). A stable resolver avoids refetch-on-every-render.
+  if (input.hasNarration) {
+    lines.push(``);
+    lines.push(`const _resolveManifestUrl = () => "./narration/manifest.json";`);
+  }
 
   // --- App tree ---
   lines.push(``);
   lines.push(`function _App() {`);
+  if (input.hasNarration) {
+    lines.push(`  const _manifest = useNarrationManifest(${JSON.stringify(input.scenarioId)}, _resolveManifestUrl);`);
+  }
+  lines.push(`  const _bundle = {`);
+  lines.push(`    id: ${JSON.stringify(input.scenarioId)},`);
+  lines.push(`    steps: _steps,`);
+  lines.push(`    narrationManifest: ${input.hasNarration ? "_manifest" : "undefined"},`);
+  lines.push(`  };`);
   const open = input.providersPath ? `<_Providers>` : ``;
   const close = input.providersPath ? `</_Providers>` : ``;
   lines.push(`  return (`);
   lines.push(`    <div className={SCENAR_CLASS}>`);
   lines.push(`      ${open}`);
   lines.push(`      <DemoViewport canonicalWidth={${input.canonicalWidth}} shellHeight={${input.shellHeight}}>`);
-  lines.push(`        <ScenarioPlayer bundle={_bundle}>`);
+  lines.push(`        <ScenarioPlayer bundle={_bundle} embed>`);
   lines.push(`          {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
   lines.push(`        </ScenarioPlayer>`);
   lines.push(`      </DemoViewport>`);
