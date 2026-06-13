@@ -7,23 +7,28 @@ import { fileDesc, serviceDesc } from "@bufbuild/protobuf/codegenv1";
 import { file_ai_scenar_commons_apiresource_rpc_service_options } from "../../../commons/apiresource/rpc_service_options_pb.js";
 import type { IdentityAccountSchema } from "./api_pb.js";
 import { file_ai_scenar_iam_identityaccount_v1_api } from "./api_pb.js";
-import type { IdentityAccountEmailSchema, IdentityAccountIdSchema, IdpIdSchema } from "./io_pb.js";
+import type { CurrentSessionSchema, IdentityAccountEmailSchema, IdentityAccountIdSchema, IdpIdSchema } from "./io_pb.js";
 import { file_ai_scenar_iam_identityaccount_v1_io } from "./io_pb.js";
+import type { EmptySchema } from "@bufbuild/protobuf/wkt";
+import { file_google_protobuf_empty } from "@bufbuild/protobuf/wkt";
 
 /**
  * Describes the file ai/scenar/iam/identityaccount/v1/query.proto.
  */
 export const file_ai_scenar_iam_identityaccount_v1_query: GenFile = /*@__PURE__*/
-  fileDesc("CixhaS9zY2VuYXIvaWFtL2lkZW50aXR5YWNjb3VudC92MS9xdWVyeS5wcm90bxIgYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEy/AIKHklkZW50aXR5QWNjb3VudFF1ZXJ5Q29udHJvbGxlchJxCgdnZXRCeUlkEjMuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50SWQaMS5haS5zY2VuYXIuaWFtLmlkZW50aXR5YWNjb3VudC52MS5JZGVudGl0eUFjY291bnQSaAoKZ2V0QnlJZHBJZBInLmFpLnNjZW5hci5pYW0uaWRlbnRpdHlhY2NvdW50LnYxLklkcElkGjEuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50EncKCmdldEJ5RW1haWwSNi5haS5zY2VuYXIuaWFtLmlkZW50aXR5YWNjb3VudC52MS5JZGVudGl0eUFjY291bnRFbWFpbBoxLmFpLnNjZW5hci5pYW0uaWRlbnRpdHlhY2NvdW50LnYxLklkZW50aXR5QWNjb3VudBoEoP8rC2IGcHJvdG8z", [file_ai_scenar_commons_apiresource_rpc_service_options, file_ai_scenar_iam_identityaccount_v1_api, file_ai_scenar_iam_identityaccount_v1_io]);
+  fileDesc("CixhaS9zY2VuYXIvaWFtL2lkZW50aXR5YWNjb3VudC92MS9xdWVyeS5wcm90bxIgYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEy0AMKHklkZW50aXR5QWNjb3VudFF1ZXJ5Q29udHJvbGxlchJxCgdnZXRCeUlkEjMuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50SWQaMS5haS5zY2VuYXIuaWFtLmlkZW50aXR5YWNjb3VudC52MS5JZGVudGl0eUFjY291bnQSaAoKZ2V0QnlJZHBJZBInLmFpLnNjZW5hci5pYW0uaWRlbnRpdHlhY2NvdW50LnYxLklkcElkGjEuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50EncKCmdldEJ5RW1haWwSNi5haS5zY2VuYXIuaWFtLmlkZW50aXR5YWNjb3VudC52MS5JZGVudGl0eUFjY291bnRFbWFpbBoxLmFpLnNjZW5hci5pYW0uaWRlbnRpdHlhY2NvdW50LnYxLklkZW50aXR5QWNjb3VudBJSCgZ3aG9BbUkSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaMC5haS5zY2VuYXIuaWFtLmlkZW50aXR5YWNjb3VudC52MS5DdXJyZW50U2Vzc2lvbhoEoP8rC2IGcHJvdG8z", [file_ai_scenar_commons_apiresource_rpc_service_options, file_ai_scenar_iam_identityaccount_v1_api, file_ai_scenar_iam_identityaccount_v1_io, file_google_protobuf_empty]);
 
 /**
  * IdentityAccountQueryController provides the read operations for identity
- * account resources. It is the contract the Scenar Cloud backend implements for
- * resolving accounts — at authentication time (idp_id / email lookups) and for
- * cache-proxy fallbacks (id lookups).
+ * account resources. It serves two distinct audiences:
  *
- * These are internal, in-process calls. The controller carries the three
- * lookups the backend consumes:
+ *   - getById / getByIdpId / getByEmail are internal, in-process calls the
+ *     backend makes to resolve accounts at authentication time (idp_id / email
+ *     lookups) and for cache-proxy fallbacks (id lookups).
+ *   - whoAmI is the one client-facing read on this controller: the web console
+ *     calls it across the network to learn who the authenticated caller is.
+ *
+ * The lookup trio carries the three resolutions the backend consumes:
  *
  *   - getById    : resolve by system id (metadata.id) — the cache-miss path.
  *   - getByIdpId : resolve by identity-provider subject (Auth0 user_id /
@@ -35,11 +40,13 @@ export const file_ai_scenar_iam_identityaccount_v1_query: GenFile = /*@__PURE__*
  * surface stays free of a redundant RPC.
  *
  * Authorization note: per-RPC authorization options are intentionally absent
- * until Scenar adopts a neutral method-level auth contract. Each read enforces
- * a dual check in its handler — owner can_view on the specific
+ * until Scenar adopts a neutral method-level auth contract. The lookup trio
+ * enforces a dual check in its handler — owner can_view on the specific
  * identity_account, falling back to platform-operator
  * can_manage_identity_accounts on the platform singleton — so both self-access
- * and system-level resolution (over the system channel) are permitted.
+ * and system-level resolution (over the system channel) are permitted. whoAmI
+ * is self-scoped: it acts only on the authenticated caller, so it requires
+ * authentication but no FGA authorization step.
  *
  * @generated from service ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController
  */
@@ -76,6 +83,23 @@ export const IdentityAccountQueryController: GenService<{
     methodKind: "unary";
     input: typeof IdentityAccountEmailSchema;
     output: typeof IdentityAccountSchema;
+  },
+  /**
+   * Resolve the authenticated caller to its own session — the identity account
+   * plus the organizations it can act in. The web console calls this on load to
+   * decide what to render.
+   *
+   * Identity comes entirely from the authenticated request context (the verified
+   * JWT subject); there is no request payload. Returns NOT_FOUND when the caller
+   * has authenticated but has no identity account yet — the signal the console
+   * uses to call provisionMyAccount (first login). See CurrentSession.
+   *
+   * @generated from rpc ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.whoAmI
+   */
+  whoAmI: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof CurrentSessionSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_ai_scenar_iam_identityaccount_v1_query, 0);

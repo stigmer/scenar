@@ -1,6 +1,7 @@
 from ai.scenar.commons.apiresource import io_pb2 as _io_pb2
 from ai.scenar.commons.rpc import pagination_pb2 as _pagination_pb2
 from ai.scenar.iam.identityaccount.v1 import api_pb2 as _api_pb2
+from ai.scenar.tenancy.organization.v1 import api_pb2 as _api_pb2_1
 from buf.validate import validate_pb2 as _validate_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
@@ -14,6 +15,16 @@ class IdentityAccounts(_message.Message):
     ENTRIES_FIELD_NUMBER: _ClassVar[int]
     entries: _containers.RepeatedCompositeFieldContainer[_api_pb2.IdentityAccount]
     def __init__(self, entries: _Optional[_Iterable[_Union[_api_pb2.IdentityAccount, _Mapping]]] = ...) -> None: ...
+
+class CurrentSession(_message.Message):
+    __slots__ = ("identity_account", "organizations", "active_organization_id")
+    IDENTITY_ACCOUNT_FIELD_NUMBER: _ClassVar[int]
+    ORGANIZATIONS_FIELD_NUMBER: _ClassVar[int]
+    ACTIVE_ORGANIZATION_ID_FIELD_NUMBER: _ClassVar[int]
+    identity_account: _api_pb2.IdentityAccount
+    organizations: _containers.RepeatedCompositeFieldContainer[_api_pb2_1.Organization]
+    active_organization_id: str
+    def __init__(self, identity_account: _Optional[_Union[_api_pb2.IdentityAccount, _Mapping]] = ..., organizations: _Optional[_Iterable[_Union[_api_pb2_1.Organization, _Mapping]]] = ..., active_organization_id: _Optional[str] = ...) -> None: ...
 
 class IdentityAccountId(_message.Message):
     __slots__ = ("value",)

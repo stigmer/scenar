@@ -10,6 +10,7 @@ import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	apiresource "github.com/stigmer/scenar/apis/stubs/go/ai/scenar/commons/apiresource"
 	rpc "github.com/stigmer/scenar/apis/stubs/go/ai/scenar/commons/rpc"
+	v1 "github.com/stigmer/scenar/apis/stubs/go/ai/scenar/tenancy/organization/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -70,6 +71,85 @@ func (x *IdentityAccounts) GetEntries() []*IdentityAccount {
 	return nil
 }
 
+// CurrentSession is the authenticated caller's view of itself: who they are and
+// the organizations they can act in. It is the response of the two client-facing
+// onboarding RPCs — whoAmI (read) and provisionMyAccount (first-login write) —
+// and the single payload the web console gates its UI on.
+//
+// Unlike the other messages in this controller's surface (which are internal,
+// in-process backend calls), this one crosses the network to the browser, so it
+// is shaped for the console's needs: the identity, the accessible organizations,
+// and which one is active. Organization membership is not a field on the
+// IdentityAccount resource — it is derived from the authorization graph — so it
+// is projected here rather than onto the account itself.
+type CurrentSession struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The caller's own identity account. Always populated on a successful response.
+	IdentityAccount *IdentityAccount `protobuf:"bytes,1,opt,name=identity_account,json=identityAccount,proto3" json:"identity_account,omitempty"`
+	// The organizations the caller can access (any org on which they hold at least
+	// view permission), in stable server-defined order. After first-login
+	// provisioning this holds exactly the caller's starter organization; it grows
+	// as the caller is granted access to more organizations.
+	Organizations []*v1.Organization `protobuf:"bytes,2,rep,name=organizations,proto3" json:"organizations,omitempty"`
+	// The id of the organization the console should treat as active. References one
+	// of the entries in organizations. Empty only in the degenerate case where the
+	// caller can access no organization at all.
+	ActiveOrganizationId string `protobuf:"bytes,3,opt,name=active_organization_id,json=activeOrganizationId,proto3" json:"active_organization_id,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *CurrentSession) Reset() {
+	*x = CurrentSession{}
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CurrentSession) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CurrentSession) ProtoMessage() {}
+
+func (x *CurrentSession) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CurrentSession.ProtoReflect.Descriptor instead.
+func (*CurrentSession) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *CurrentSession) GetIdentityAccount() *IdentityAccount {
+	if x != nil {
+		return x.IdentityAccount
+	}
+	return nil
+}
+
+func (x *CurrentSession) GetOrganizations() []*v1.Organization {
+	if x != nil {
+		return x.Organizations
+	}
+	return nil
+}
+
+func (x *CurrentSession) GetActiveOrganizationId() string {
+	if x != nil {
+		return x.ActiveOrganizationId
+	}
+	return ""
+}
+
 // IdentityAccountId identifies an identity account by its unique identifier.
 type IdentityAccountId struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -81,7 +161,7 @@ type IdentityAccountId struct {
 
 func (x *IdentityAccountId) Reset() {
 	*x = IdentityAccountId{}
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[1]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -93,7 +173,7 @@ func (x *IdentityAccountId) String() string {
 func (*IdentityAccountId) ProtoMessage() {}
 
 func (x *IdentityAccountId) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[1]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -106,7 +186,7 @@ func (x *IdentityAccountId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IdentityAccountId.ProtoReflect.Descriptor instead.
 func (*IdentityAccountId) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{1}
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *IdentityAccountId) GetValue() string {
@@ -127,7 +207,7 @@ type IdentityAccountEmail struct {
 
 func (x *IdentityAccountEmail) Reset() {
 	*x = IdentityAccountEmail{}
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[2]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -139,7 +219,7 @@ func (x *IdentityAccountEmail) String() string {
 func (*IdentityAccountEmail) ProtoMessage() {}
 
 func (x *IdentityAccountEmail) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[2]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -152,7 +232,7 @@ func (x *IdentityAccountEmail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IdentityAccountEmail.ProtoReflect.Descriptor instead.
 func (*IdentityAccountEmail) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{2}
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *IdentityAccountEmail) GetValue() string {
@@ -173,7 +253,7 @@ type IdpId struct {
 
 func (x *IdpId) Reset() {
 	*x = IdpId{}
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[3]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -185,7 +265,7 @@ func (x *IdpId) String() string {
 func (*IdpId) ProtoMessage() {}
 
 func (x *IdpId) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[3]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -198,7 +278,7 @@ func (x *IdpId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IdpId.ProtoReflect.Descriptor instead.
 func (*IdpId) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{3}
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *IdpId) GetValue() string {
@@ -221,7 +301,7 @@ type ListWithIdentityAccountIdReq struct {
 
 func (x *ListWithIdentityAccountIdReq) Reset() {
 	*x = ListWithIdentityAccountIdReq{}
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[4]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -233,7 +313,7 @@ func (x *ListWithIdentityAccountIdReq) String() string {
 func (*ListWithIdentityAccountIdReq) ProtoMessage() {}
 
 func (x *ListWithIdentityAccountIdReq) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[4]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -246,7 +326,7 @@ func (x *ListWithIdentityAccountIdReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListWithIdentityAccountIdReq.ProtoReflect.Descriptor instead.
 func (*ListWithIdentityAccountIdReq) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{4}
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListWithIdentityAccountIdReq) GetIdentityAccountId() string {
@@ -276,7 +356,7 @@ type IdentityAccountsList struct {
 
 func (x *IdentityAccountsList) Reset() {
 	*x = IdentityAccountsList{}
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[5]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -288,7 +368,7 @@ func (x *IdentityAccountsList) String() string {
 func (*IdentityAccountsList) ProtoMessage() {}
 
 func (x *IdentityAccountsList) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[5]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -301,7 +381,7 @@ func (x *IdentityAccountsList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IdentityAccountsList.ProtoReflect.Descriptor instead.
 func (*IdentityAccountsList) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{5}
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *IdentityAccountsList) GetTotalPages() int32 {
@@ -331,7 +411,7 @@ type ListWithIdentityOrg struct {
 
 func (x *ListWithIdentityOrg) Reset() {
 	*x = ListWithIdentityOrg{}
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[6]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -343,7 +423,7 @@ func (x *ListWithIdentityOrg) String() string {
 func (*ListWithIdentityOrg) ProtoMessage() {}
 
 func (x *ListWithIdentityOrg) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[6]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -356,7 +436,7 @@ func (x *ListWithIdentityOrg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListWithIdentityOrg.ProtoReflect.Descriptor instead.
 func (*ListWithIdentityOrg) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{6}
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ListWithIdentityOrg) GetOrg() string {
@@ -395,7 +475,7 @@ type ExternalSubLookup struct {
 
 func (x *ExternalSubLookup) Reset() {
 	*x = ExternalSubLookup{}
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[7]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -407,7 +487,7 @@ func (x *ExternalSubLookup) String() string {
 func (*ExternalSubLookup) ProtoMessage() {}
 
 func (x *ExternalSubLookup) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[7]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -420,7 +500,7 @@ func (x *ExternalSubLookup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExternalSubLookup.ProtoReflect.Descriptor instead.
 func (*ExternalSubLookup) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{7}
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ExternalSubLookup) GetOrg() string {
@@ -468,7 +548,7 @@ type CreateFederatedAccountInput struct {
 
 func (x *CreateFederatedAccountInput) Reset() {
 	*x = CreateFederatedAccountInput{}
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[8]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -480,7 +560,7 @@ func (x *CreateFederatedAccountInput) String() string {
 func (*CreateFederatedAccountInput) ProtoMessage() {}
 
 func (x *CreateFederatedAccountInput) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[8]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -493,7 +573,7 @@ func (x *CreateFederatedAccountInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateFederatedAccountInput.ProtoReflect.Descriptor instead.
 func (*CreateFederatedAccountInput) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{8}
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CreateFederatedAccountInput) GetOrg() string {
@@ -570,7 +650,7 @@ type UpdateFederatedAccountInput struct {
 
 func (x *UpdateFederatedAccountInput) Reset() {
 	*x = UpdateFederatedAccountInput{}
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[9]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -582,7 +662,7 @@ func (x *UpdateFederatedAccountInput) String() string {
 func (*UpdateFederatedAccountInput) ProtoMessage() {}
 
 func (x *UpdateFederatedAccountInput) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[9]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -595,7 +675,7 @@ func (x *UpdateFederatedAccountInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateFederatedAccountInput.ProtoReflect.Descriptor instead.
 func (*UpdateFederatedAccountInput) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{9}
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UpdateFederatedAccountInput) GetOrg() string {
@@ -666,7 +746,7 @@ type DeprovisionFederatedAccountInput struct {
 
 func (x *DeprovisionFederatedAccountInput) Reset() {
 	*x = DeprovisionFederatedAccountInput{}
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[10]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -678,7 +758,7 @@ func (x *DeprovisionFederatedAccountInput) String() string {
 func (*DeprovisionFederatedAccountInput) ProtoMessage() {}
 
 func (x *DeprovisionFederatedAccountInput) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[10]
+	mi := &file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -691,7 +771,7 @@ func (x *DeprovisionFederatedAccountInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeprovisionFederatedAccountInput.ProtoReflect.Descriptor instead.
 func (*DeprovisionFederatedAccountInput) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{10}
+	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *DeprovisionFederatedAccountInput) GetOrg() string {
@@ -726,9 +806,13 @@ var File_ai_scenar_iam_identityaccount_v1_io_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_iam_identityaccount_v1_io_proto_rawDesc = "" +
 	"\n" +
-	")ai/scenar/iam/identityaccount/v1/io.proto\x12 ai.scenar.iam.identityaccount.v1\x1a&ai/scenar/commons/apiresource/io.proto\x1a&ai/scenar/commons/rpc/pagination.proto\x1a*ai/scenar/iam/identityaccount/v1/api.proto\x1a\x1bbuf/validate/validate.proto\"_\n" +
+	")ai/scenar/iam/identityaccount/v1/io.proto\x12 ai.scenar.iam.identityaccount.v1\x1a&ai/scenar/commons/apiresource/io.proto\x1a&ai/scenar/commons/rpc/pagination.proto\x1a*ai/scenar/iam/identityaccount/v1/api.proto\x1a+ai/scenar/tenancy/organization/v1/api.proto\x1a\x1bbuf/validate/validate.proto\"_\n" +
 	"\x10IdentityAccounts\x12K\n" +
-	"\aentries\x18\x01 \x03(\v21.ai.scenar.iam.identityaccount.v1.IdentityAccountR\aentries\"1\n" +
+	"\aentries\x18\x01 \x03(\v21.ai.scenar.iam.identityaccount.v1.IdentityAccountR\aentries\"\xfb\x01\n" +
+	"\x0eCurrentSession\x12\\\n" +
+	"\x10identity_account\x18\x01 \x01(\v21.ai.scenar.iam.identityaccount.v1.IdentityAccountR\x0fidentityAccount\x12U\n" +
+	"\rorganizations\x18\x02 \x03(\v2/.ai.scenar.tenancy.organization.v1.OrganizationR\rorganizations\x124\n" +
+	"\x16active_organization_id\x18\x03 \x01(\tR\x14activeOrganizationId\"1\n" +
 	"\x11IdentityAccountId\x12\x1c\n" +
 	"\x05value\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05value\"4\n" +
 	"\x14IdentityAccountEmail\x12\x1c\n" +
@@ -788,37 +872,41 @@ func file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescGZIP() []byte {
 	return file_ai_scenar_iam_identityaccount_v1_io_proto_rawDescData
 }
 
-var file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_ai_scenar_iam_identityaccount_v1_io_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_ai_scenar_iam_identityaccount_v1_io_proto_goTypes = []any{
 	(*IdentityAccounts)(nil),                 // 0: ai.scenar.iam.identityaccount.v1.IdentityAccounts
-	(*IdentityAccountId)(nil),                // 1: ai.scenar.iam.identityaccount.v1.IdentityAccountId
-	(*IdentityAccountEmail)(nil),             // 2: ai.scenar.iam.identityaccount.v1.IdentityAccountEmail
-	(*IdpId)(nil),                            // 3: ai.scenar.iam.identityaccount.v1.IdpId
-	(*ListWithIdentityAccountIdReq)(nil),     // 4: ai.scenar.iam.identityaccount.v1.ListWithIdentityAccountIdReq
-	(*IdentityAccountsList)(nil),             // 5: ai.scenar.iam.identityaccount.v1.IdentityAccountsList
-	(*ListWithIdentityOrg)(nil),              // 6: ai.scenar.iam.identityaccount.v1.ListWithIdentityOrg
-	(*ExternalSubLookup)(nil),                // 7: ai.scenar.iam.identityaccount.v1.ExternalSubLookup
-	(*CreateFederatedAccountInput)(nil),      // 8: ai.scenar.iam.identityaccount.v1.CreateFederatedAccountInput
-	(*UpdateFederatedAccountInput)(nil),      // 9: ai.scenar.iam.identityaccount.v1.UpdateFederatedAccountInput
-	(*DeprovisionFederatedAccountInput)(nil), // 10: ai.scenar.iam.identityaccount.v1.DeprovisionFederatedAccountInput
-	(*IdentityAccount)(nil),                  // 11: ai.scenar.iam.identityaccount.v1.IdentityAccount
-	(*rpc.PageInfo)(nil),                     // 12: ai.scenar.commons.rpc.PageInfo
-	(*apiresource.ApiResourceReference)(nil), // 13: ai.scenar.commons.apiresource.ApiResourceReference
+	(*CurrentSession)(nil),                   // 1: ai.scenar.iam.identityaccount.v1.CurrentSession
+	(*IdentityAccountId)(nil),                // 2: ai.scenar.iam.identityaccount.v1.IdentityAccountId
+	(*IdentityAccountEmail)(nil),             // 3: ai.scenar.iam.identityaccount.v1.IdentityAccountEmail
+	(*IdpId)(nil),                            // 4: ai.scenar.iam.identityaccount.v1.IdpId
+	(*ListWithIdentityAccountIdReq)(nil),     // 5: ai.scenar.iam.identityaccount.v1.ListWithIdentityAccountIdReq
+	(*IdentityAccountsList)(nil),             // 6: ai.scenar.iam.identityaccount.v1.IdentityAccountsList
+	(*ListWithIdentityOrg)(nil),              // 7: ai.scenar.iam.identityaccount.v1.ListWithIdentityOrg
+	(*ExternalSubLookup)(nil),                // 8: ai.scenar.iam.identityaccount.v1.ExternalSubLookup
+	(*CreateFederatedAccountInput)(nil),      // 9: ai.scenar.iam.identityaccount.v1.CreateFederatedAccountInput
+	(*UpdateFederatedAccountInput)(nil),      // 10: ai.scenar.iam.identityaccount.v1.UpdateFederatedAccountInput
+	(*DeprovisionFederatedAccountInput)(nil), // 11: ai.scenar.iam.identityaccount.v1.DeprovisionFederatedAccountInput
+	(*IdentityAccount)(nil),                  // 12: ai.scenar.iam.identityaccount.v1.IdentityAccount
+	(*v1.Organization)(nil),                  // 13: ai.scenar.tenancy.organization.v1.Organization
+	(*rpc.PageInfo)(nil),                     // 14: ai.scenar.commons.rpc.PageInfo
+	(*apiresource.ApiResourceReference)(nil), // 15: ai.scenar.commons.apiresource.ApiResourceReference
 }
 var file_ai_scenar_iam_identityaccount_v1_io_proto_depIdxs = []int32{
-	11, // 0: ai.scenar.iam.identityaccount.v1.IdentityAccounts.entries:type_name -> ai.scenar.iam.identityaccount.v1.IdentityAccount
-	12, // 1: ai.scenar.iam.identityaccount.v1.ListWithIdentityAccountIdReq.page:type_name -> ai.scenar.commons.rpc.PageInfo
-	11, // 2: ai.scenar.iam.identityaccount.v1.IdentityAccountsList.entries:type_name -> ai.scenar.iam.identityaccount.v1.IdentityAccount
-	12, // 3: ai.scenar.iam.identityaccount.v1.ListWithIdentityOrg.page:type_name -> ai.scenar.commons.rpc.PageInfo
-	13, // 4: ai.scenar.iam.identityaccount.v1.ExternalSubLookup.identity_provider_ref:type_name -> ai.scenar.commons.apiresource.ApiResourceReference
-	13, // 5: ai.scenar.iam.identityaccount.v1.CreateFederatedAccountInput.identity_provider_ref:type_name -> ai.scenar.commons.apiresource.ApiResourceReference
-	13, // 6: ai.scenar.iam.identityaccount.v1.UpdateFederatedAccountInput.identity_provider_ref:type_name -> ai.scenar.commons.apiresource.ApiResourceReference
-	13, // 7: ai.scenar.iam.identityaccount.v1.DeprovisionFederatedAccountInput.identity_provider_ref:type_name -> ai.scenar.commons.apiresource.ApiResourceReference
-	8,  // [8:8] is the sub-list for method output_type
-	8,  // [8:8] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	12, // 0: ai.scenar.iam.identityaccount.v1.IdentityAccounts.entries:type_name -> ai.scenar.iam.identityaccount.v1.IdentityAccount
+	12, // 1: ai.scenar.iam.identityaccount.v1.CurrentSession.identity_account:type_name -> ai.scenar.iam.identityaccount.v1.IdentityAccount
+	13, // 2: ai.scenar.iam.identityaccount.v1.CurrentSession.organizations:type_name -> ai.scenar.tenancy.organization.v1.Organization
+	14, // 3: ai.scenar.iam.identityaccount.v1.ListWithIdentityAccountIdReq.page:type_name -> ai.scenar.commons.rpc.PageInfo
+	12, // 4: ai.scenar.iam.identityaccount.v1.IdentityAccountsList.entries:type_name -> ai.scenar.iam.identityaccount.v1.IdentityAccount
+	14, // 5: ai.scenar.iam.identityaccount.v1.ListWithIdentityOrg.page:type_name -> ai.scenar.commons.rpc.PageInfo
+	15, // 6: ai.scenar.iam.identityaccount.v1.ExternalSubLookup.identity_provider_ref:type_name -> ai.scenar.commons.apiresource.ApiResourceReference
+	15, // 7: ai.scenar.iam.identityaccount.v1.CreateFederatedAccountInput.identity_provider_ref:type_name -> ai.scenar.commons.apiresource.ApiResourceReference
+	15, // 8: ai.scenar.iam.identityaccount.v1.UpdateFederatedAccountInput.identity_provider_ref:type_name -> ai.scenar.commons.apiresource.ApiResourceReference
+	15, // 9: ai.scenar.iam.identityaccount.v1.DeprovisionFederatedAccountInput.identity_provider_ref:type_name -> ai.scenar.commons.apiresource.ApiResourceReference
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_ai_scenar_iam_identityaccount_v1_io_proto_init() }
@@ -833,7 +921,7 @@ func file_ai_scenar_iam_identityaccount_v1_io_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_scenar_iam_identityaccount_v1_io_proto_rawDesc), len(file_ai_scenar_iam_identityaccount_v1_io_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -7,12 +7,16 @@ import { fileDesc, serviceDesc } from "@bufbuild/protobuf/codegenv1";
 import { file_ai_scenar_commons_apiresource_rpc_service_options } from "../../../commons/apiresource/rpc_service_options_pb.js";
 import type { IdentityAccountSchema } from "./api_pb.js";
 import { file_ai_scenar_iam_identityaccount_v1_api } from "./api_pb.js";
+import type { CurrentSessionSchema } from "./io_pb.js";
+import { file_ai_scenar_iam_identityaccount_v1_io } from "./io_pb.js";
+import type { EmptySchema } from "@bufbuild/protobuf/wkt";
+import { file_google_protobuf_empty } from "@bufbuild/protobuf/wkt";
 
 /**
  * Describes the file ai/scenar/iam/identityaccount/v1/command.proto.
  */
 export const file_ai_scenar_iam_identityaccount_v1_command: GenFile = /*@__PURE__*/
-  fileDesc("Ci5haS9zY2VuYXIvaWFtL2lkZW50aXR5YWNjb3VudC92MS9jb21tYW5kLnByb3RvEiBhaS5zY2VuYXIuaWFtLmlkZW50aXR5YWNjb3VudC52MTKYAQogSWRlbnRpdHlBY2NvdW50Q29tbWFuZENvbnRyb2xsZXISbgoGY3JlYXRlEjEuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50GjEuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50GgSg/ysLYgZwcm90bzM", [file_ai_scenar_commons_apiresource_rpc_service_options, file_ai_scenar_iam_identityaccount_v1_api]);
+  fileDesc("Ci5haS9zY2VuYXIvaWFtL2lkZW50aXR5YWNjb3VudC92MS9jb21tYW5kLnByb3RvEiBhaS5zY2VuYXIuaWFtLmlkZW50aXR5YWNjb3VudC52MTL4AQogSWRlbnRpdHlBY2NvdW50Q29tbWFuZENvbnRyb2xsZXISbgoGY3JlYXRlEjEuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50GjEuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50El4KEnByb3Zpc2lvbk15QWNjb3VudBIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRowLmFpLnNjZW5hci5pYW0uaWRlbnRpdHlhY2NvdW50LnYxLkN1cnJlbnRTZXNzaW9uGgSg/ysLYgZwcm90bzM", [file_ai_scenar_commons_apiresource_rpc_service_options, file_ai_scenar_iam_identityaccount_v1_api, file_ai_scenar_iam_identityaccount_v1_io, file_google_protobuf_empty]);
 
 /**
  * IdentityAccountCommandController provides the write operations for identity
@@ -20,12 +24,14 @@ export const file_ai_scenar_iam_identityaccount_v1_command: GenFile = /*@__PURE_
  * about. It is the contract the Scenar Cloud backend implements when accounts
  * are provisioned.
  *
- * These RPCs are internal, in-process calls made by the Cloud backend itself
- * (the authentication/provisioning flow and the day-0 bootstrap migration),
- * never exposed to external clients. The controller therefore carries only the
- * one write operation the backend consumes today:
+ * The controller serves two audiences:
  *
- *   - create: provision a new identity account (the principal-creation path).
+ *   - create is an internal, in-process call made by the backend itself (the
+ *     bootstrap migration and the provisioning flow), never exposed to external
+ *     clients.
+ *   - provisionMyAccount is the one client-facing write on this controller: the
+ *     web console calls it across the network on a user's first login to bring
+ *     their account into existence.
  *
  * The federated-account write operations from the platform's full surface
  * (createFederatedAccount / updateFederatedAccount / deprovisionFederatedAccount)
@@ -38,10 +44,11 @@ export const file_ai_scenar_iam_identityaccount_v1_command: GenFile = /*@__PURE_
  * authorization options are intentionally absent until Scenar adopts a neutral
  * method-level auth contract. These RPCs carry only the service-level
  * resource-kind tag; the Cloud backend enforces authorization in its handlers.
- * create is a special case with no FGA authorize step at all: it is called only
- * over the system channel, and the account being created is itself the
- * principal — there is no tuple to authorize against until it exists (the same
- * bootstrap problem bootstrapPolicy solves on the iampolicy side).
+ * Both writes here are special cases with no FGA authorize step: the account
+ * being acted on is itself the principal, so there is no tuple to authorize
+ * against until it exists (the same bootstrap problem bootstrapPolicy solves on
+ * the iampolicy side). create is restricted to the system channel;
+ * provisionMyAccount is self-scoped and acts only on the authenticated caller.
  *
  * @generated from service ai.scenar.iam.identityaccount.v1.IdentityAccountCommandController
  */
@@ -62,6 +69,26 @@ export const IdentityAccountCommandController: GenService<{
     methodKind: "unary";
     input: typeof IdentityAccountSchema;
     output: typeof IdentityAccountSchema;
+  },
+  /**
+   * Provision the authenticated caller's own account on first login. The console
+   * calls this after whoAmI returns NOT_FOUND. Identity comes entirely from the
+   * request context (the verified JWT subject) and the OIDC userinfo profile;
+   * there is no request payload. The backend creates the identity account (with
+   * its self-owner grant) and a starter organization owned by the caller, then
+   * returns the resulting session.
+   *
+   * Idempotent: a caller who already has an account gets it back unchanged (and
+   * a starter organization is created only if the caller can access none), so a
+   * retried or concurrent first login converges on the same result rather than
+   * duplicating resources. See CurrentSession.
+   *
+   * @generated from rpc ai.scenar.iam.identityaccount.v1.IdentityAccountCommandController.provisionMyAccount
+   */
+  provisionMyAccount: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof CurrentSessionSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_ai_scenar_iam_identityaccount_v1_command, 0);

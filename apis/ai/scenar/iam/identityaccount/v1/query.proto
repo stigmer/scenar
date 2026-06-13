@@ -5,14 +5,18 @@ package ai.scenar.iam.identityaccount.v1;
 import "ai/scenar/commons/apiresource/rpc_service_options.proto";
 import "ai/scenar/iam/identityaccount/v1/api.proto";
 import "ai/scenar/iam/identityaccount/v1/io.proto";
+import "google/protobuf/empty.proto";
 
 // IdentityAccountQueryController provides the read operations for identity
-// account resources. It is the contract the Scenar Cloud backend implements for
-// resolving accounts — at authentication time (idp_id / email lookups) and for
-// cache-proxy fallbacks (id lookups).
+// account resources. It serves two distinct audiences:
 //
-// These are internal, in-process calls. The controller carries the three
-// lookups the backend consumes:
+//   - getById / getByIdpId / getByEmail are internal, in-process calls the
+//     backend makes to resolve accounts at authentication time (idp_id / email
+//     lookups) and for cache-proxy fallbacks (id lookups).
+//   - whoAmI is the one client-facing read on this controller: the web console
+//     calls it across the network to learn who the authenticated caller is.
+//
+// The lookup trio carries the three resolutions the backend consumes:
 //
 //   - getById    : resolve by system id (metadata.id) — the cache-miss path.
 //   - getByIdpId : resolve by identity-provider subject (Auth0 user_id /
@@ -24,11 +28,13 @@ import "ai/scenar/iam/identityaccount/v1/io.proto";
 // surface stays free of a redundant RPC.
 //
 // Authorization note: per-RPC authorization options are intentionally absent
-// until Scenar adopts a neutral method-level auth contract. Each read enforces
-// a dual check in its handler — owner can_view on the specific
+// until Scenar adopts a neutral method-level auth contract. The lookup trio
+// enforces a dual check in its handler — owner can_view on the specific
 // identity_account, falling back to platform-operator
 // can_manage_identity_accounts on the platform singleton — so both self-access
-// and system-level resolution (over the system channel) are permitted.
+// and system-level resolution (over the system channel) are permitted. whoAmI
+// is self-scoped: it acts only on the authenticated caller, so it requires
+// authentication but no FGA authorization step.
 service IdentityAccountQueryController {
   // Tags this controller with the resource kind it manages so the platform's
   // request pipeline can route and register it generically.
@@ -45,4 +51,14 @@ service IdentityAccountQueryController {
 
   // Resolve an identity account by email address. See IdentityAccountEmail.
   rpc getByEmail(IdentityAccountEmail) returns (IdentityAccount);
+
+  // Resolve the authenticated caller to its own session — the identity account
+  // plus the organizations it can act in. The web console calls this on load to
+  // decide what to render.
+  //
+  // Identity comes entirely from the authenticated request context (the verified
+  // JWT subject); there is no request payload. Returns NOT_FOUND when the caller
+  // has authenticated but has no identity account yet — the signal the console
+  // uses to call provisionMyAccount (first login). See CurrentSession.
+  rpc whoAmI(google.protobuf.Empty) returns (CurrentSession);
 }

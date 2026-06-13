@@ -5,12 +5,40 @@ package ai.scenar.iam.identityaccount.v1;
 import "ai/scenar/commons/apiresource/io.proto";
 import "ai/scenar/commons/rpc/pagination.proto";
 import "ai/scenar/iam/identityaccount/v1/api.proto";
+import "ai/scenar/tenancy/organization/v1/api.proto";
 import "buf/validate/validate.proto";
 
 // IdentityAccounts contains a list of identity account resources.
 message IdentityAccounts {
   // Identity account entries.
   repeated IdentityAccount entries = 1;
+}
+
+// CurrentSession is the authenticated caller's view of itself: who they are and
+// the organizations they can act in. It is the response of the two client-facing
+// onboarding RPCs — whoAmI (read) and provisionMyAccount (first-login write) —
+// and the single payload the web console gates its UI on.
+//
+// Unlike the other messages in this controller's surface (which are internal,
+// in-process backend calls), this one crosses the network to the browser, so it
+// is shaped for the console's needs: the identity, the accessible organizations,
+// and which one is active. Organization membership is not a field on the
+// IdentityAccount resource — it is derived from the authorization graph — so it
+// is projected here rather than onto the account itself.
+message CurrentSession {
+  // The caller's own identity account. Always populated on a successful response.
+  IdentityAccount identity_account = 1;
+
+  // The organizations the caller can access (any org on which they hold at least
+  // view permission), in stable server-defined order. After first-login
+  // provisioning this holds exactly the caller's starter organization; it grows
+  // as the caller is granted access to more organizations.
+  repeated ai.scenar.tenancy.organization.v1.Organization organizations = 2;
+
+  // The id of the organization the console should treat as active. References one
+  // of the entries in organizations. Empty only in the degenerate case where the
+  // caller can access no organization at all.
+  string active_organization_id = 3;
 }
 
 // IdentityAccountId identifies an identity account by its unique identifier.

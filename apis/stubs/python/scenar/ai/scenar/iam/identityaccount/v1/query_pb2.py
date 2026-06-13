@@ -25,9 +25,10 @@ _sym_db = _symbol_database.Default()
 from ai.scenar.commons.apiresource import rpc_service_options_pb2 as ai_dot_scenar_dot_commons_dot_apiresource_dot_rpc__service__options__pb2
 from ai.scenar.iam.identityaccount.v1 import api_pb2 as ai_dot_scenar_dot_iam_dot_identityaccount_dot_v1_dot_api__pb2
 from ai.scenar.iam.identityaccount.v1 import io_pb2 as ai_dot_scenar_dot_iam_dot_identityaccount_dot_v1_dot_io__pb2
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n,ai/scenar/iam/identityaccount/v1/query.proto\x12 ai.scenar.iam.identityaccount.v1\x1a\x37\x61i/scenar/commons/apiresource/rpc_service_options.proto\x1a*ai/scenar/iam/identityaccount/v1/api.proto\x1a)ai/scenar/iam/identityaccount/v1/io.proto2\xfc\x02\n\x1eIdentityAccountQueryController\x12q\n\x07getById\x12\x33.ai.scenar.iam.identityaccount.v1.IdentityAccountId\x1a\x31.ai.scenar.iam.identityaccount.v1.IdentityAccount\x12h\n\ngetByIdpId\x12\'.ai.scenar.iam.identityaccount.v1.IdpId\x1a\x31.ai.scenar.iam.identityaccount.v1.IdentityAccount\x12w\n\ngetByEmail\x12\x36.ai.scenar.iam.identityaccount.v1.IdentityAccountEmail\x1a\x31.ai.scenar.iam.identityaccount.v1.IdentityAccount\x1a\x04\xa0\xff+\x0b\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n,ai/scenar/iam/identityaccount/v1/query.proto\x12 ai.scenar.iam.identityaccount.v1\x1a\x37\x61i/scenar/commons/apiresource/rpc_service_options.proto\x1a*ai/scenar/iam/identityaccount/v1/api.proto\x1a)ai/scenar/iam/identityaccount/v1/io.proto\x1a\x1bgoogle/protobuf/empty.proto2\xd0\x03\n\x1eIdentityAccountQueryController\x12q\n\x07getById\x12\x33.ai.scenar.iam.identityaccount.v1.IdentityAccountId\x1a\x31.ai.scenar.iam.identityaccount.v1.IdentityAccount\x12h\n\ngetByIdpId\x12\'.ai.scenar.iam.identityaccount.v1.IdpId\x1a\x31.ai.scenar.iam.identityaccount.v1.IdentityAccount\x12w\n\ngetByEmail\x12\x36.ai.scenar.iam.identityaccount.v1.IdentityAccountEmail\x1a\x31.ai.scenar.iam.identityaccount.v1.IdentityAccount\x12R\n\x06whoAmI\x12\x16.google.protobuf.Empty\x1a\x30.ai.scenar.iam.identityaccount.v1.CurrentSession\x1a\x04\xa0\xff+\x0b\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,6 +37,6 @@ if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_IDENTITYACCOUNTQUERYCONTROLLER']._loaded_options = None
   _globals['_IDENTITYACCOUNTQUERYCONTROLLER']._serialized_options = b'\240\377+\013'
-  _globals['_IDENTITYACCOUNTQUERYCONTROLLER']._serialized_start=227
-  _globals['_IDENTITYACCOUNTQUERYCONTROLLER']._serialized_end=607
+  _globals['_IDENTITYACCOUNTQUERYCONTROLLER']._serialized_start=256
+  _globals['_IDENTITYACCOUNTQUERYCONTROLLER']._serialized_end=720
 # @@protoc_insertion_point(module_scope)

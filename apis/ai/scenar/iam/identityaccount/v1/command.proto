@@ -4,18 +4,22 @@ package ai.scenar.iam.identityaccount.v1;
 
 import "ai/scenar/commons/apiresource/rpc_service_options.proto";
 import "ai/scenar/iam/identityaccount/v1/api.proto";
+import "ai/scenar/iam/identityaccount/v1/io.proto";
+import "google/protobuf/empty.proto";
 
 // IdentityAccountCommandController provides the write operations for identity
 // account resources — the principals every authorization decision is made
 // about. It is the contract the Scenar Cloud backend implements when accounts
 // are provisioned.
 //
-// These RPCs are internal, in-process calls made by the Cloud backend itself
-// (the authentication/provisioning flow and the day-0 bootstrap migration),
-// never exposed to external clients. The controller therefore carries only the
-// one write operation the backend consumes today:
+// The controller serves two audiences:
 //
-//   - create: provision a new identity account (the principal-creation path).
+//   - create is an internal, in-process call made by the backend itself (the
+//     bootstrap migration and the provisioning flow), never exposed to external
+//     clients.
+//   - provisionMyAccount is the one client-facing write on this controller: the
+//     web console calls it across the network on a user's first login to bring
+//     their account into existence.
 //
 // The federated-account write operations from the platform's full surface
 // (createFederatedAccount / updateFederatedAccount / deprovisionFederatedAccount)
@@ -28,10 +32,11 @@ import "ai/scenar/iam/identityaccount/v1/api.proto";
 // authorization options are intentionally absent until Scenar adopts a neutral
 // method-level auth contract. These RPCs carry only the service-level
 // resource-kind tag; the Cloud backend enforces authorization in its handlers.
-// create is a special case with no FGA authorize step at all: it is called only
-// over the system channel, and the account being created is itself the
-// principal — there is no tuple to authorize against until it exists (the same
-// bootstrap problem bootstrapPolicy solves on the iampolicy side).
+// Both writes here are special cases with no FGA authorize step: the account
+// being acted on is itself the principal, so there is no tuple to authorize
+// against until it exists (the same bootstrap problem bootstrapPolicy solves on
+// the iampolicy side). create is restricted to the system channel;
+// provisionMyAccount is self-scoped and acts only on the authenticated caller.
 service IdentityAccountCommandController {
   // Tags this controller with the resource kind it manages so the platform's
   // request pipeline can route and register it generically.
@@ -46,4 +51,17 @@ service IdentityAccountCommandController {
   // carries no FGA authorize step and is restricted to the system channel.
   // See IdentityAccount.
   rpc create(IdentityAccount) returns (IdentityAccount);
+
+  // Provision the authenticated caller's own account on first login. The console
+  // calls this after whoAmI returns NOT_FOUND. Identity comes entirely from the
+  // request context (the verified JWT subject) and the OIDC userinfo profile;
+  // there is no request payload. The backend creates the identity account (with
+  // its self-owner grant) and a starter organization owned by the caller, then
+  // returns the resulting session.
+  //
+  // Idempotent: a caller who already has an account gets it back unchanged (and
+  // a starter organization is created only if the caller can access none), so a
+  // retried or concurrent first login converges on the same result rather than
+  // duplicating resources. See CurrentSession.
+  rpc provisionMyAccount(google.protobuf.Empty) returns (CurrentSession);
 }

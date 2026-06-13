@@ -25,10 +25,11 @@ _sym_db = _symbol_database.Default()
 from ai.scenar.commons.apiresource import io_pb2 as ai_dot_scenar_dot_commons_dot_apiresource_dot_io__pb2
 from ai.scenar.commons.rpc import pagination_pb2 as ai_dot_scenar_dot_commons_dot_rpc_dot_pagination__pb2
 from ai.scenar.iam.identityaccount.v1 import api_pb2 as ai_dot_scenar_dot_iam_dot_identityaccount_dot_v1_dot_api__pb2
+from ai.scenar.tenancy.organization.v1 import api_pb2 as ai_dot_scenar_dot_tenancy_dot_organization_dot_v1_dot_api__pb2
 from buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n)ai/scenar/iam/identityaccount/v1/io.proto\x12 ai.scenar.iam.identityaccount.v1\x1a&ai/scenar/commons/apiresource/io.proto\x1a&ai/scenar/commons/rpc/pagination.proto\x1a*ai/scenar/iam/identityaccount/v1/api.proto\x1a\x1b\x62uf/validate/validate.proto\"_\n\x10IdentityAccounts\x12K\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\x31.ai.scenar.iam.identityaccount.v1.IdentityAccountR\x07\x65ntries\"1\n\x11IdentityAccountId\x12\x1c\n\x05value\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05value\"4\n\x14IdentityAccountEmail\x12\x1c\n\x05value\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05value\"%\n\x05IdpId\x12\x1c\n\x05value\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05value\"\x83\x01\n\x1cListWithIdentityAccountIdReq\x12.\n\x13identity_account_id\x18\x01 \x01(\tR\x11identityAccountId\x12\x33\n\x04page\x18\x02 \x01(\x0b\x32\x1f.ai.scenar.commons.rpc.PageInfoR\x04page\"\x84\x01\n\x14IdentityAccountsList\x12\x1f\n\x0btotal_pages\x18\x01 \x01(\x05R\ntotalPages\x12K\n\x07\x65ntries\x18\x02 \x03(\x0b\x32\x31.ai.scenar.iam.identityaccount.v1.IdentityAccountR\x07\x65ntries\"\\\n\x13ListWithIdentityOrg\x12\x10\n\x03org\x18\x01 \x01(\tR\x03org\x12\x33\n\x04page\x18\x02 \x01(\x0b\x32\x1f.ai.scenar.commons.rpc.PageInfoR\x04page\"\xc1\x01\n\x11\x45xternalSubLookup\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12g\n\x15identity_provider_ref\x18\x02 \x01(\x0b\x32\x33.ai.scenar.commons.apiresource.ApiResourceReferenceR\x13identityProviderRef\x12)\n\x0c\x65xternal_sub\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x0b\x65xternalSub\"\xc6\x02\n\x1b\x43reateFederatedAccountInput\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12g\n\x15identity_provider_ref\x18\x02 \x01(\x0b\x32\x33.ai.scenar.commons.apiresource.ApiResourceReferenceR\x13identityProviderRef\x12)\n\x0c\x65xternal_sub\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x0b\x65xternalSub\x12\x1c\n\x05\x65mail\x18\x04 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05\x65mail\x12\x1d\n\nfirst_name\x18\x05 \x01(\tR\tfirstName\x12\x1b\n\tlast_name\x18\x06 \x01(\tR\x08lastName\x12\x1f\n\x0bpicture_url\x18\x07 \x01(\tR\npictureUrl\"\xc6\x02\n\x1bUpdateFederatedAccountInput\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12g\n\x15identity_provider_ref\x18\x02 \x01(\x0b\x32\x33.ai.scenar.commons.apiresource.ApiResourceReferenceR\x13identityProviderRef\x12)\n\x0c\x65xternal_sub\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x0b\x65xternalSub\x12\x1c\n\x05\x65mail\x18\x04 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05\x65mail\x12\x1d\n\nfirst_name\x18\x05 \x01(\tR\tfirstName\x12\x1b\n\tlast_name\x18\x06 \x01(\tR\x08lastName\x12\x1f\n\x0bpicture_url\x18\x07 \x01(\tR\npictureUrl\"\xf7\x01\n DeprovisionFederatedAccountInput\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12g\n\x15identity_provider_ref\x18\x02 \x01(\x0b\x32\x33.ai.scenar.commons.apiresource.ApiResourceReferenceR\x13identityProviderRef\x12)\n\x0c\x65xternal_sub\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x0b\x65xternalSub\x12%\n\x0e\x64\x65lete_account\x18\x04 \x01(\x08R\rdeleteAccountb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n)ai/scenar/iam/identityaccount/v1/io.proto\x12 ai.scenar.iam.identityaccount.v1\x1a&ai/scenar/commons/apiresource/io.proto\x1a&ai/scenar/commons/rpc/pagination.proto\x1a*ai/scenar/iam/identityaccount/v1/api.proto\x1a+ai/scenar/tenancy/organization/v1/api.proto\x1a\x1b\x62uf/validate/validate.proto\"_\n\x10IdentityAccounts\x12K\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\x31.ai.scenar.iam.identityaccount.v1.IdentityAccountR\x07\x65ntries\"\xfb\x01\n\x0e\x43urrentSession\x12\\\n\x10identity_account\x18\x01 \x01(\x0b\x32\x31.ai.scenar.iam.identityaccount.v1.IdentityAccountR\x0fidentityAccount\x12U\n\rorganizations\x18\x02 \x03(\x0b\x32/.ai.scenar.tenancy.organization.v1.OrganizationR\rorganizations\x12\x34\n\x16\x61\x63tive_organization_id\x18\x03 \x01(\tR\x14\x61\x63tiveOrganizationId\"1\n\x11IdentityAccountId\x12\x1c\n\x05value\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05value\"4\n\x14IdentityAccountEmail\x12\x1c\n\x05value\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05value\"%\n\x05IdpId\x12\x1c\n\x05value\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05value\"\x83\x01\n\x1cListWithIdentityAccountIdReq\x12.\n\x13identity_account_id\x18\x01 \x01(\tR\x11identityAccountId\x12\x33\n\x04page\x18\x02 \x01(\x0b\x32\x1f.ai.scenar.commons.rpc.PageInfoR\x04page\"\x84\x01\n\x14IdentityAccountsList\x12\x1f\n\x0btotal_pages\x18\x01 \x01(\x05R\ntotalPages\x12K\n\x07\x65ntries\x18\x02 \x03(\x0b\x32\x31.ai.scenar.iam.identityaccount.v1.IdentityAccountR\x07\x65ntries\"\\\n\x13ListWithIdentityOrg\x12\x10\n\x03org\x18\x01 \x01(\tR\x03org\x12\x33\n\x04page\x18\x02 \x01(\x0b\x32\x1f.ai.scenar.commons.rpc.PageInfoR\x04page\"\xc1\x01\n\x11\x45xternalSubLookup\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12g\n\x15identity_provider_ref\x18\x02 \x01(\x0b\x32\x33.ai.scenar.commons.apiresource.ApiResourceReferenceR\x13identityProviderRef\x12)\n\x0c\x65xternal_sub\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x0b\x65xternalSub\"\xc6\x02\n\x1b\x43reateFederatedAccountInput\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12g\n\x15identity_provider_ref\x18\x02 \x01(\x0b\x32\x33.ai.scenar.commons.apiresource.ApiResourceReferenceR\x13identityProviderRef\x12)\n\x0c\x65xternal_sub\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x0b\x65xternalSub\x12\x1c\n\x05\x65mail\x18\x04 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05\x65mail\x12\x1d\n\nfirst_name\x18\x05 \x01(\tR\tfirstName\x12\x1b\n\tlast_name\x18\x06 \x01(\tR\x08lastName\x12\x1f\n\x0bpicture_url\x18\x07 \x01(\tR\npictureUrl\"\xc6\x02\n\x1bUpdateFederatedAccountInput\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12g\n\x15identity_provider_ref\x18\x02 \x01(\x0b\x32\x33.ai.scenar.commons.apiresource.ApiResourceReferenceR\x13identityProviderRef\x12)\n\x0c\x65xternal_sub\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x0b\x65xternalSub\x12\x1c\n\x05\x65mail\x18\x04 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05\x65mail\x12\x1d\n\nfirst_name\x18\x05 \x01(\tR\tfirstName\x12\x1b\n\tlast_name\x18\x06 \x01(\tR\x08lastName\x12\x1f\n\x0bpicture_url\x18\x07 \x01(\tR\npictureUrl\"\xf7\x01\n DeprovisionFederatedAccountInput\x12\x18\n\x03org\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x03org\x12g\n\x15identity_provider_ref\x18\x02 \x01(\x0b\x32\x33.ai.scenar.commons.apiresource.ApiResourceReferenceR\x13identityProviderRef\x12)\n\x0c\x65xternal_sub\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x0b\x65xternalSub\x12%\n\x0e\x64\x65lete_account\x18\x04 \x01(\x08R\rdeleteAccountb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -61,26 +62,28 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_DEPROVISIONFEDERATEDACCOUNTINPUT'].fields_by_name['org']._serialized_options = b'\272H\003\310\001\001'
   _globals['_DEPROVISIONFEDERATEDACCOUNTINPUT'].fields_by_name['external_sub']._loaded_options = None
   _globals['_DEPROVISIONFEDERATEDACCOUNTINPUT'].fields_by_name['external_sub']._serialized_options = b'\272H\003\310\001\001'
-  _globals['_IDENTITYACCOUNTS']._serialized_start=232
-  _globals['_IDENTITYACCOUNTS']._serialized_end=327
-  _globals['_IDENTITYACCOUNTID']._serialized_start=329
-  _globals['_IDENTITYACCOUNTID']._serialized_end=378
-  _globals['_IDENTITYACCOUNTEMAIL']._serialized_start=380
-  _globals['_IDENTITYACCOUNTEMAIL']._serialized_end=432
-  _globals['_IDPID']._serialized_start=434
-  _globals['_IDPID']._serialized_end=471
-  _globals['_LISTWITHIDENTITYACCOUNTIDREQ']._serialized_start=474
-  _globals['_LISTWITHIDENTITYACCOUNTIDREQ']._serialized_end=605
-  _globals['_IDENTITYACCOUNTSLIST']._serialized_start=608
-  _globals['_IDENTITYACCOUNTSLIST']._serialized_end=740
-  _globals['_LISTWITHIDENTITYORG']._serialized_start=742
-  _globals['_LISTWITHIDENTITYORG']._serialized_end=834
-  _globals['_EXTERNALSUBLOOKUP']._serialized_start=837
-  _globals['_EXTERNALSUBLOOKUP']._serialized_end=1030
-  _globals['_CREATEFEDERATEDACCOUNTINPUT']._serialized_start=1033
-  _globals['_CREATEFEDERATEDACCOUNTINPUT']._serialized_end=1359
-  _globals['_UPDATEFEDERATEDACCOUNTINPUT']._serialized_start=1362
-  _globals['_UPDATEFEDERATEDACCOUNTINPUT']._serialized_end=1688
-  _globals['_DEPROVISIONFEDERATEDACCOUNTINPUT']._serialized_start=1691
-  _globals['_DEPROVISIONFEDERATEDACCOUNTINPUT']._serialized_end=1938
+  _globals['_IDENTITYACCOUNTS']._serialized_start=277
+  _globals['_IDENTITYACCOUNTS']._serialized_end=372
+  _globals['_CURRENTSESSION']._serialized_start=375
+  _globals['_CURRENTSESSION']._serialized_end=626
+  _globals['_IDENTITYACCOUNTID']._serialized_start=628
+  _globals['_IDENTITYACCOUNTID']._serialized_end=677
+  _globals['_IDENTITYACCOUNTEMAIL']._serialized_start=679
+  _globals['_IDENTITYACCOUNTEMAIL']._serialized_end=731
+  _globals['_IDPID']._serialized_start=733
+  _globals['_IDPID']._serialized_end=770
+  _globals['_LISTWITHIDENTITYACCOUNTIDREQ']._serialized_start=773
+  _globals['_LISTWITHIDENTITYACCOUNTIDREQ']._serialized_end=904
+  _globals['_IDENTITYACCOUNTSLIST']._serialized_start=907
+  _globals['_IDENTITYACCOUNTSLIST']._serialized_end=1039
+  _globals['_LISTWITHIDENTITYORG']._serialized_start=1041
+  _globals['_LISTWITHIDENTITYORG']._serialized_end=1133
+  _globals['_EXTERNALSUBLOOKUP']._serialized_start=1136
+  _globals['_EXTERNALSUBLOOKUP']._serialized_end=1329
+  _globals['_CREATEFEDERATEDACCOUNTINPUT']._serialized_start=1332
+  _globals['_CREATEFEDERATEDACCOUNTINPUT']._serialized_end=1658
+  _globals['_UPDATEFEDERATEDACCOUNTINPUT']._serialized_start=1661
+  _globals['_UPDATEFEDERATEDACCOUNTINPUT']._serialized_end=1987
+  _globals['_DEPROVISIONFEDERATEDACCOUNTINPUT']._serialized_start=1990
+  _globals['_DEPROVISIONFEDERATEDACCOUNTINPUT']._serialized_end=2237
 # @@protoc_insertion_point(module_scope)

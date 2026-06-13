@@ -10,6 +10,7 @@ import (
 	_ "github.com/stigmer/scenar/apis/stubs/go/ai/scenar/commons/apiresource"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	unsafe "unsafe"
 )
@@ -25,19 +26,24 @@ var File_ai_scenar_iam_identityaccount_v1_command_proto protoreflect.FileDescrip
 
 const file_ai_scenar_iam_identityaccount_v1_command_proto_rawDesc = "" +
 	"\n" +
-	".ai/scenar/iam/identityaccount/v1/command.proto\x12 ai.scenar.iam.identityaccount.v1\x1a7ai/scenar/commons/apiresource/rpc_service_options.proto\x1a*ai/scenar/iam/identityaccount/v1/api.proto2\x98\x01\n" +
+	".ai/scenar/iam/identityaccount/v1/command.proto\x12 ai.scenar.iam.identityaccount.v1\x1a7ai/scenar/commons/apiresource/rpc_service_options.proto\x1a*ai/scenar/iam/identityaccount/v1/api.proto\x1a)ai/scenar/iam/identityaccount/v1/io.proto\x1a\x1bgoogle/protobuf/empty.proto2\xf8\x01\n" +
 	" IdentityAccountCommandController\x12n\n" +
-	"\x06create\x121.ai.scenar.iam.identityaccount.v1.IdentityAccount\x1a1.ai.scenar.iam.identityaccount.v1.IdentityAccount\x1a\x04\xa0\xff+\vB\xb5\x02\n" +
+	"\x06create\x121.ai.scenar.iam.identityaccount.v1.IdentityAccount\x1a1.ai.scenar.iam.identityaccount.v1.IdentityAccount\x12^\n" +
+	"\x12provisionMyAccount\x12\x16.google.protobuf.Empty\x1a0.ai.scenar.iam.identityaccount.v1.CurrentSession\x1a\x04\xa0\xff+\vB\xb5\x02\n" +
 	"$com.ai.scenar.iam.identityaccount.v1B\fCommandProtoP\x01ZZgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/iam/identityaccount/v1;identityaccountv1\xa2\x02\x04ASII\xaa\x02 Ai.Scenar.Iam.Identityaccount.V1\xca\x02 Ai\\Scenar\\Iam\\Identityaccount\\V1\xe2\x02,Ai\\Scenar\\Iam\\Identityaccount\\V1\\GPBMetadata\xea\x02$Ai::Scenar::Iam::Identityaccount::V1b\x06proto3"
 
 var file_ai_scenar_iam_identityaccount_v1_command_proto_goTypes = []any{
 	(*IdentityAccount)(nil), // 0: ai.scenar.iam.identityaccount.v1.IdentityAccount
+	(*emptypb.Empty)(nil),   // 1: google.protobuf.Empty
+	(*CurrentSession)(nil),  // 2: ai.scenar.iam.identityaccount.v1.CurrentSession
 }
 var file_ai_scenar_iam_identityaccount_v1_command_proto_depIdxs = []int32{
 	0, // 0: ai.scenar.iam.identityaccount.v1.IdentityAccountCommandController.create:input_type -> ai.scenar.iam.identityaccount.v1.IdentityAccount
-	0, // 1: ai.scenar.iam.identityaccount.v1.IdentityAccountCommandController.create:output_type -> ai.scenar.iam.identityaccount.v1.IdentityAccount
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	1, // 1: ai.scenar.iam.identityaccount.v1.IdentityAccountCommandController.provisionMyAccount:input_type -> google.protobuf.Empty
+	0, // 2: ai.scenar.iam.identityaccount.v1.IdentityAccountCommandController.create:output_type -> ai.scenar.iam.identityaccount.v1.IdentityAccount
+	2, // 3: ai.scenar.iam.identityaccount.v1.IdentityAccountCommandController.provisionMyAccount:output_type -> ai.scenar.iam.identityaccount.v1.CurrentSession
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -49,6 +55,7 @@ func file_ai_scenar_iam_identityaccount_v1_command_proto_init() {
 		return
 	}
 	file_ai_scenar_iam_identityaccount_v1_api_proto_init()
+	file_ai_scenar_iam_identityaccount_v1_io_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

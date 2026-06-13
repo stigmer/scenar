@@ -10,6 +10,8 @@ import type { PageInfo } from "../../../commons/rpc/pagination_pb.js";
 import { file_ai_scenar_commons_rpc_pagination } from "../../../commons/rpc/pagination_pb.js";
 import type { IdentityAccount } from "./api_pb.js";
 import { file_ai_scenar_iam_identityaccount_v1_api } from "./api_pb.js";
+import type { Organization } from "../../../tenancy/organization/v1/api_pb.js";
+import { file_ai_scenar_tenancy_organization_v1_api } from "../../../tenancy/organization/v1/api_pb.js";
 import { file_buf_validate_validate } from "../../../../../buf/validate/validate_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -17,7 +19,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/iam/identityaccount/v1/io.proto.
  */
 export const file_ai_scenar_iam_identityaccount_v1_io: GenFile = /*@__PURE__*/
-  fileDesc("CilhaS9zY2VuYXIvaWFtL2lkZW50aXR5YWNjb3VudC92MS9pby5wcm90bxIgYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEiVgoQSWRlbnRpdHlBY2NvdW50cxJCCgdlbnRyaWVzGAEgAygLMjEuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50IioKEUlkZW50aXR5QWNjb3VudElkEhUKBXZhbHVlGAEgASgJQga6SAPIAQEiLQoUSWRlbnRpdHlBY2NvdW50RW1haWwSFQoFdmFsdWUYASABKAlCBrpIA8gBASIeCgVJZHBJZBIVCgV2YWx1ZRgBIAEoCUIGukgDyAEBImoKHExpc3RXaXRoSWRlbnRpdHlBY2NvdW50SWRSZXESGwoTaWRlbnRpdHlfYWNjb3VudF9pZBgBIAEoCRItCgRwYWdlGAIgASgLMh8uYWkuc2NlbmFyLmNvbW1vbnMucnBjLlBhZ2VJbmZvIm8KFElkZW50aXR5QWNjb3VudHNMaXN0EhMKC3RvdGFsX3BhZ2VzGAEgASgFEkIKB2VudHJpZXMYAiADKAsyMS5haS5zY2VuYXIuaWFtLmlkZW50aXR5YWNjb3VudC52MS5JZGVudGl0eUFjY291bnQiUQoTTGlzdFdpdGhJZGVudGl0eU9yZxILCgNvcmcYASABKAkSLQoEcGFnZRgCIAEoCzIfLmFpLnNjZW5hci5jb21tb25zLnJwYy5QYWdlSW5mbyKaAQoRRXh0ZXJuYWxTdWJMb29rdXASEwoDb3JnGAEgASgJQga6SAPIAQESUgoVaWRlbnRpdHlfcHJvdmlkZXJfcmVmGAIgASgLMjMuYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuQXBpUmVzb3VyY2VSZWZlcmVuY2USHAoMZXh0ZXJuYWxfc3ViGAMgASgJQga6SAPIAQEi9wEKG0NyZWF0ZUZlZGVyYXRlZEFjY291bnRJbnB1dBITCgNvcmcYASABKAlCBrpIA8gBARJSChVpZGVudGl0eV9wcm92aWRlcl9yZWYYAiABKAsyMy5haS5zY2VuYXIuY29tbW9ucy5hcGlyZXNvdXJjZS5BcGlSZXNvdXJjZVJlZmVyZW5jZRIcCgxleHRlcm5hbF9zdWIYAyABKAlCBrpIA8gBARIVCgVlbWFpbBgEIAEoCUIGukgDyAEBEhIKCmZpcnN0X25hbWUYBSABKAkSEQoJbGFzdF9uYW1lGAYgASgJEhMKC3BpY3R1cmVfdXJsGAcgASgJIvcBChtVcGRhdGVGZWRlcmF0ZWRBY2NvdW50SW5wdXQSEwoDb3JnGAEgASgJQga6SAPIAQESUgoVaWRlbnRpdHlfcHJvdmlkZXJfcmVmGAIgASgLMjMuYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuQXBpUmVzb3VyY2VSZWZlcmVuY2USHAoMZXh0ZXJuYWxfc3ViGAMgASgJQga6SAPIAQESFQoFZW1haWwYBCABKAlCBrpIA8gBARISCgpmaXJzdF9uYW1lGAUgASgJEhEKCWxhc3RfbmFtZRgGIAEoCRITCgtwaWN0dXJlX3VybBgHIAEoCSLBAQogRGVwcm92aXNpb25GZWRlcmF0ZWRBY2NvdW50SW5wdXQSEwoDb3JnGAEgASgJQga6SAPIAQESUgoVaWRlbnRpdHlfcHJvdmlkZXJfcmVmGAIgASgLMjMuYWkuc2NlbmFyLmNvbW1vbnMuYXBpcmVzb3VyY2UuQXBpUmVzb3VyY2VSZWZlcmVuY2USHAoMZXh0ZXJuYWxfc3ViGAMgASgJQga6SAPIAQESFgoOZGVsZXRlX2FjY291bnQYBCABKAhiBnByb3RvMw", [file_ai_scenar_commons_apiresource_io, file_ai_scenar_commons_rpc_pagination, file_ai_scenar_iam_identityaccount_v1_api, file_buf_validate_validate]);
+  fileDesc("CilhaS9zY2VuYXIvaWFtL2lkZW50aXR5YWNjb3VudC92MS9pby5wcm90bxIgYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEiVgoQSWRlbnRpdHlBY2NvdW50cxJCCgdlbnRyaWVzGAEgAygLMjEuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50IsUBCg5DdXJyZW50U2Vzc2lvbhJLChBpZGVudGl0eV9hY2NvdW50GAEgASgLMjEuYWkuc2NlbmFyLmlhbS5pZGVudGl0eWFjY291bnQudjEuSWRlbnRpdHlBY2NvdW50EkYKDW9yZ2FuaXphdGlvbnMYAiADKAsyLy5haS5zY2VuYXIudGVuYW5jeS5vcmdhbml6YXRpb24udjEuT3JnYW5pemF0aW9uEh4KFmFjdGl2ZV9vcmdhbml6YXRpb25faWQYAyABKAkiKgoRSWRlbnRpdHlBY2NvdW50SWQSFQoFdmFsdWUYASABKAlCBrpIA8gBASItChRJZGVudGl0eUFjY291bnRFbWFpbBIVCgV2YWx1ZRgBIAEoCUIGukgDyAEBIh4KBUlkcElkEhUKBXZhbHVlGAEgASgJQga6SAPIAQEiagocTGlzdFdpdGhJZGVudGl0eUFjY291bnRJZFJlcRIbChNpZGVudGl0eV9hY2NvdW50X2lkGAEgASgJEi0KBHBhZ2UYAiABKAsyHy5haS5zY2VuYXIuY29tbW9ucy5ycGMuUGFnZUluZm8ibwoUSWRlbnRpdHlBY2NvdW50c0xpc3QSEwoLdG90YWxfcGFnZXMYASABKAUSQgoHZW50cmllcxgCIAMoCzIxLmFpLnNjZW5hci5pYW0uaWRlbnRpdHlhY2NvdW50LnYxLklkZW50aXR5QWNjb3VudCJRChNMaXN0V2l0aElkZW50aXR5T3JnEgsKA29yZxgBIAEoCRItCgRwYWdlGAIgASgLMh8uYWkuc2NlbmFyLmNvbW1vbnMucnBjLlBhZ2VJbmZvIpoBChFFeHRlcm5hbFN1Ykxvb2t1cBITCgNvcmcYASABKAlCBrpIA8gBARJSChVpZGVudGl0eV9wcm92aWRlcl9yZWYYAiABKAsyMy5haS5zY2VuYXIuY29tbW9ucy5hcGlyZXNvdXJjZS5BcGlSZXNvdXJjZVJlZmVyZW5jZRIcCgxleHRlcm5hbF9zdWIYAyABKAlCBrpIA8gBASL3AQobQ3JlYXRlRmVkZXJhdGVkQWNjb3VudElucHV0EhMKA29yZxgBIAEoCUIGukgDyAEBElIKFWlkZW50aXR5X3Byb3ZpZGVyX3JlZhgCIAEoCzIzLmFpLnNjZW5hci5jb21tb25zLmFwaXJlc291cmNlLkFwaVJlc291cmNlUmVmZXJlbmNlEhwKDGV4dGVybmFsX3N1YhgDIAEoCUIGukgDyAEBEhUKBWVtYWlsGAQgASgJQga6SAPIAQESEgoKZmlyc3RfbmFtZRgFIAEoCRIRCglsYXN0X25hbWUYBiABKAkSEwoLcGljdHVyZV91cmwYByABKAki9wEKG1VwZGF0ZUZlZGVyYXRlZEFjY291bnRJbnB1dBITCgNvcmcYASABKAlCBrpIA8gBARJSChVpZGVudGl0eV9wcm92aWRlcl9yZWYYAiABKAsyMy5haS5zY2VuYXIuY29tbW9ucy5hcGlyZXNvdXJjZS5BcGlSZXNvdXJjZVJlZmVyZW5jZRIcCgxleHRlcm5hbF9zdWIYAyABKAlCBrpIA8gBARIVCgVlbWFpbBgEIAEoCUIGukgDyAEBEhIKCmZpcnN0X25hbWUYBSABKAkSEQoJbGFzdF9uYW1lGAYgASgJEhMKC3BpY3R1cmVfdXJsGAcgASgJIsEBCiBEZXByb3Zpc2lvbkZlZGVyYXRlZEFjY291bnRJbnB1dBITCgNvcmcYASABKAlCBrpIA8gBARJSChVpZGVudGl0eV9wcm92aWRlcl9yZWYYAiABKAsyMy5haS5zY2VuYXIuY29tbW9ucy5hcGlyZXNvdXJjZS5BcGlSZXNvdXJjZVJlZmVyZW5jZRIcCgxleHRlcm5hbF9zdWIYAyABKAlCBrpIA8gBARIWCg5kZWxldGVfYWNjb3VudBgEIAEoCGIGcHJvdG8z", [file_ai_scenar_commons_apiresource_io, file_ai_scenar_commons_rpc_pagination, file_ai_scenar_iam_identityaccount_v1_api, file_ai_scenar_tenancy_organization_v1_api, file_buf_validate_validate]);
 
 /**
  * IdentityAccounts contains a list of identity account resources.
@@ -41,6 +43,56 @@ export const IdentityAccountsSchema: GenMessage<IdentityAccounts> = /*@__PURE__*
   messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 0);
 
 /**
+ * CurrentSession is the authenticated caller's view of itself: who they are and
+ * the organizations they can act in. It is the response of the two client-facing
+ * onboarding RPCs — whoAmI (read) and provisionMyAccount (first-login write) —
+ * and the single payload the web console gates its UI on.
+ *
+ * Unlike the other messages in this controller's surface (which are internal,
+ * in-process backend calls), this one crosses the network to the browser, so it
+ * is shaped for the console's needs: the identity, the accessible organizations,
+ * and which one is active. Organization membership is not a field on the
+ * IdentityAccount resource — it is derived from the authorization graph — so it
+ * is projected here rather than onto the account itself.
+ *
+ * @generated from message ai.scenar.iam.identityaccount.v1.CurrentSession
+ */
+export type CurrentSession = Message<"ai.scenar.iam.identityaccount.v1.CurrentSession"> & {
+  /**
+   * The caller's own identity account. Always populated on a successful response.
+   *
+   * @generated from field: ai.scenar.iam.identityaccount.v1.IdentityAccount identity_account = 1;
+   */
+  identityAccount?: IdentityAccount;
+
+  /**
+   * The organizations the caller can access (any org on which they hold at least
+   * view permission), in stable server-defined order. After first-login
+   * provisioning this holds exactly the caller's starter organization; it grows
+   * as the caller is granted access to more organizations.
+   *
+   * @generated from field: repeated ai.scenar.tenancy.organization.v1.Organization organizations = 2;
+   */
+  organizations: Organization[];
+
+  /**
+   * The id of the organization the console should treat as active. References one
+   * of the entries in organizations. Empty only in the degenerate case where the
+   * caller can access no organization at all.
+   *
+   * @generated from field: string active_organization_id = 3;
+   */
+  activeOrganizationId: string;
+};
+
+/**
+ * Describes the message ai.scenar.iam.identityaccount.v1.CurrentSession.
+ * Use `create(CurrentSessionSchema)` to create a new message.
+ */
+export const CurrentSessionSchema: GenMessage<CurrentSession> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 1);
+
+/**
  * IdentityAccountId identifies an identity account by its unique identifier.
  *
  * @generated from message ai.scenar.iam.identityaccount.v1.IdentityAccountId
@@ -59,7 +111,7 @@ export type IdentityAccountId = Message<"ai.scenar.iam.identityaccount.v1.Identi
  * Use `create(IdentityAccountIdSchema)` to create a new message.
  */
 export const IdentityAccountIdSchema: GenMessage<IdentityAccountId> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 1);
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 2);
 
 /**
  * IdentityAccountEmail identifies an identity account by its email address.
@@ -80,7 +132,7 @@ export type IdentityAccountEmail = Message<"ai.scenar.iam.identityaccount.v1.Ide
  * Use `create(IdentityAccountEmailSchema)` to create a new message.
  */
 export const IdentityAccountEmailSchema: GenMessage<IdentityAccountEmail> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 2);
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 3);
 
 /**
  * IdpId identifies an identity account by its identity provider ID.
@@ -101,7 +153,7 @@ export type IdpId = Message<"ai.scenar.iam.identityaccount.v1.IdpId"> & {
  * Use `create(IdpIdSchema)` to create a new message.
  */
 export const IdpIdSchema: GenMessage<IdpId> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 3);
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 4);
 
 /**
  * ListWithIdentityAccountIdReq is the input for paginated queries scoped to an identity account.
@@ -129,7 +181,7 @@ export type ListWithIdentityAccountIdReq = Message<"ai.scenar.iam.identityaccoun
  * Use `create(ListWithIdentityAccountIdReqSchema)` to create a new message.
  */
 export const ListWithIdentityAccountIdReqSchema: GenMessage<ListWithIdentityAccountIdReq> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 4);
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 5);
 
 /**
  * IdentityAccountsList is a paginated response containing identity accounts.
@@ -157,7 +209,7 @@ export type IdentityAccountsList = Message<"ai.scenar.iam.identityaccount.v1.Ide
  * Use `create(IdentityAccountsListSchema)` to create a new message.
  */
 export const IdentityAccountsListSchema: GenMessage<IdentityAccountsList> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 5);
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 6);
 
 /**
  * ListWithIdentityOrg is the input for paginated queries scoped to an organization.
@@ -185,7 +237,7 @@ export type ListWithIdentityOrg = Message<"ai.scenar.iam.identityaccount.v1.List
  * Use `create(ListWithIdentityOrgSchema)` to create a new message.
  */
 export const ListWithIdentityOrgSchema: GenMessage<ListWithIdentityOrg> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 6);
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 7);
 
 /**
  * ExternalSubLookup identifies a federated identity account by its identity provider
@@ -227,7 +279,7 @@ export type ExternalSubLookup = Message<"ai.scenar.iam.identityaccount.v1.Extern
  * Use `create(ExternalSubLookupSchema)` to create a new message.
  */
 export const ExternalSubLookupSchema: GenMessage<ExternalSubLookup> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 7);
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 8);
 
 /**
  * CreateFederatedAccountInput is the command for creating a federated identity account
@@ -291,7 +343,7 @@ export type CreateFederatedAccountInput = Message<"ai.scenar.iam.identityaccount
  * Use `create(CreateFederatedAccountInputSchema)` to create a new message.
  */
 export const CreateFederatedAccountInputSchema: GenMessage<CreateFederatedAccountInput> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 8);
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 9);
 
 /**
  * UpdateFederatedAccountInput is the command for updating profile fields on a
@@ -356,7 +408,7 @@ export type UpdateFederatedAccountInput = Message<"ai.scenar.iam.identityaccount
  * Use `create(UpdateFederatedAccountInputSchema)` to create a new message.
  */
 export const UpdateFederatedAccountInputSchema: GenMessage<UpdateFederatedAccountInput> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 9);
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 10);
 
 /**
  * DeprovisionFederatedAccountInput is the command for revoking a federated
@@ -400,5 +452,5 @@ export type DeprovisionFederatedAccountInput = Message<"ai.scenar.iam.identityac
  * Use `create(DeprovisionFederatedAccountInputSchema)` to create a new message.
  */
 export const DeprovisionFederatedAccountInputSchema: GenMessage<DeprovisionFederatedAccountInput> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 10);
+  messageDesc(file_ai_scenar_iam_identityaccount_v1_io, 11);
 

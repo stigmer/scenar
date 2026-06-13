@@ -10,6 +10,7 @@ import (
 	_ "github.com/stigmer/scenar/apis/stubs/go/ai/scenar/commons/apiresource"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	unsafe "unsafe"
 )
@@ -25,13 +26,14 @@ var File_ai_scenar_iam_identityaccount_v1_query_proto protoreflect.FileDescripto
 
 const file_ai_scenar_iam_identityaccount_v1_query_proto_rawDesc = "" +
 	"\n" +
-	",ai/scenar/iam/identityaccount/v1/query.proto\x12 ai.scenar.iam.identityaccount.v1\x1a7ai/scenar/commons/apiresource/rpc_service_options.proto\x1a*ai/scenar/iam/identityaccount/v1/api.proto\x1a)ai/scenar/iam/identityaccount/v1/io.proto2\xfc\x02\n" +
+	",ai/scenar/iam/identityaccount/v1/query.proto\x12 ai.scenar.iam.identityaccount.v1\x1a7ai/scenar/commons/apiresource/rpc_service_options.proto\x1a*ai/scenar/iam/identityaccount/v1/api.proto\x1a)ai/scenar/iam/identityaccount/v1/io.proto\x1a\x1bgoogle/protobuf/empty.proto2\xd0\x03\n" +
 	"\x1eIdentityAccountQueryController\x12q\n" +
 	"\agetById\x123.ai.scenar.iam.identityaccount.v1.IdentityAccountId\x1a1.ai.scenar.iam.identityaccount.v1.IdentityAccount\x12h\n" +
 	"\n" +
 	"getByIdpId\x12'.ai.scenar.iam.identityaccount.v1.IdpId\x1a1.ai.scenar.iam.identityaccount.v1.IdentityAccount\x12w\n" +
 	"\n" +
-	"getByEmail\x126.ai.scenar.iam.identityaccount.v1.IdentityAccountEmail\x1a1.ai.scenar.iam.identityaccount.v1.IdentityAccount\x1a\x04\xa0\xff+\vB\xb3\x02\n" +
+	"getByEmail\x126.ai.scenar.iam.identityaccount.v1.IdentityAccountEmail\x1a1.ai.scenar.iam.identityaccount.v1.IdentityAccount\x12R\n" +
+	"\x06whoAmI\x12\x16.google.protobuf.Empty\x1a0.ai.scenar.iam.identityaccount.v1.CurrentSession\x1a\x04\xa0\xff+\vB\xb3\x02\n" +
 	"$com.ai.scenar.iam.identityaccount.v1B\n" +
 	"QueryProtoP\x01ZZgithub.com/stigmer/scenar/apis/stubs/go/ai/scenar/iam/identityaccount/v1;identityaccountv1\xa2\x02\x04ASII\xaa\x02 Ai.Scenar.Iam.Identityaccount.V1\xca\x02 Ai\\Scenar\\Iam\\Identityaccount\\V1\xe2\x02,Ai\\Scenar\\Iam\\Identityaccount\\V1\\GPBMetadata\xea\x02$Ai::Scenar::Iam::Identityaccount::V1b\x06proto3"
 
@@ -39,17 +41,21 @@ var file_ai_scenar_iam_identityaccount_v1_query_proto_goTypes = []any{
 	(*IdentityAccountId)(nil),    // 0: ai.scenar.iam.identityaccount.v1.IdentityAccountId
 	(*IdpId)(nil),                // 1: ai.scenar.iam.identityaccount.v1.IdpId
 	(*IdentityAccountEmail)(nil), // 2: ai.scenar.iam.identityaccount.v1.IdentityAccountEmail
-	(*IdentityAccount)(nil),      // 3: ai.scenar.iam.identityaccount.v1.IdentityAccount
+	(*emptypb.Empty)(nil),        // 3: google.protobuf.Empty
+	(*IdentityAccount)(nil),      // 4: ai.scenar.iam.identityaccount.v1.IdentityAccount
+	(*CurrentSession)(nil),       // 5: ai.scenar.iam.identityaccount.v1.CurrentSession
 }
 var file_ai_scenar_iam_identityaccount_v1_query_proto_depIdxs = []int32{
 	0, // 0: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.getById:input_type -> ai.scenar.iam.identityaccount.v1.IdentityAccountId
 	1, // 1: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.getByIdpId:input_type -> ai.scenar.iam.identityaccount.v1.IdpId
 	2, // 2: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.getByEmail:input_type -> ai.scenar.iam.identityaccount.v1.IdentityAccountEmail
-	3, // 3: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.getById:output_type -> ai.scenar.iam.identityaccount.v1.IdentityAccount
-	3, // 4: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.getByIdpId:output_type -> ai.scenar.iam.identityaccount.v1.IdentityAccount
-	3, // 5: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.getByEmail:output_type -> ai.scenar.iam.identityaccount.v1.IdentityAccount
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	3, // 3: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.whoAmI:input_type -> google.protobuf.Empty
+	4, // 4: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.getById:output_type -> ai.scenar.iam.identityaccount.v1.IdentityAccount
+	4, // 5: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.getByIdpId:output_type -> ai.scenar.iam.identityaccount.v1.IdentityAccount
+	4, // 6: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.getByEmail:output_type -> ai.scenar.iam.identityaccount.v1.IdentityAccount
+	5, // 7: ai.scenar.iam.identityaccount.v1.IdentityAccountQueryController.whoAmI:output_type -> ai.scenar.iam.identityaccount.v1.CurrentSession
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
