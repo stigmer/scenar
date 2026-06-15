@@ -5,6 +5,7 @@ import { registerPreviewCommand } from "./commands/preview.js";
 import { registerRenderCommand } from "./commands/render.js";
 import { registerPackCommand } from "./commands/pack.js";
 import { registerServeCommand } from "./commands/serve.js";
+import { registerTryCommand } from "./commands/try.js";
 import { registerPublishCommand } from "./commands/publish.js";
 import { registerDeployCommand } from "./commands/deploy.js";
 
@@ -22,6 +23,7 @@ export function createProgram(): Command {
   registerPreviewCommand(program);
   registerPackCommand(program);
   registerServeCommand(program);
+  registerTryCommand(program);
   registerPublishCommand(program);
   registerDeployCommand(program);
 

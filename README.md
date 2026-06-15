@@ -102,19 +102,31 @@ npx @scenar/cli publish ./my-tour-bundle
 # → https://<you>.github.io/scenar-embeds/my-tour/  (+ a ready-to-paste <iframe> snippet)
 ```
 
-All your tours share one `scenar-embeds` repo by default, each served from its
-own path — so publishing a second tour never clobbers the first, and previews
-stay out of your app's source repo. Needs the
-[GitHub CLI](https://cli.github.com) authenticated (`gh auth login`). Paste the
-snippet into any page.
+Needs the [GitHub CLI](https://cli.github.com) authenticated (`gh auth login`).
+Paste the snippet into any page.
+
+### Where your embeds live
+
+You don't add anything to your app's source repo. The first time you `publish`,
+Scenar creates **one dedicated public repo named `scenar-embeds`** under your
+GitHub account and serves your tour from GitHub Pages:
+
+```
+github.com/<you>/scenar-embeds   → gh-pages branch
+├── welcome-tour/    → https://<you>.github.io/scenar-embeds/welcome-tour/
+├── onboarding/      → https://<you>.github.io/scenar-embeds/onboarding/
+└── billing-demo/    → https://<you>.github.io/scenar-embeds/billing-demo/
+```
+
+Every tour gets its own path, so publishing (or re-publishing) one never touches
+the others — and your application's repository stays untouched. Override the
+target with `--repo`, `--path`, or publish under an organization with `--org`.
+See [docs/hosting.md](docs/hosting.md).
 
 ## Try it now (no app required)
 
 ```bash
-git clone https://github.com/stigmer/scenar && cd scenar
-pnpm install && pnpm -r build
-node packages/cli/dist/bin/scenar.js pack packages/cli/examples/welcome-tour
-node packages/cli/dist/bin/scenar.js serve welcome-tour-bundle
+npx @scenar/cli try   # serves the bundled welcome-tour at http://localhost:4173/
 ```
 
 Open the printed URL — you'll see the same demo as the
@@ -144,7 +156,7 @@ See [docs/authoring-scenarios.md](docs/authoring-scenarios.md) for the full mode
 | Tier | Command | URL | Notes |
 |------|---------|-----|-------|
 | Local | `scenar serve` | `http://localhost:4173/` | Ephemeral, zero setup |
-| GitHub Pages | `scenar publish` | `https://<you>.github.io/scenar-embeds/<slug>/` | Public, free, permanent; many tours per repo |
+| GitHub Pages | `scenar publish` | `https://<you>.github.io/scenar-embeds/<slug>/` | Public, free, permanent; a dedicated `scenar-embeds` repo, many tours per repo |
 | Scenar Cloud | `scenar deploy` | CDN-backed embed URL | Custom domains, analytics (hosted offering) |
 
 Details in [docs/hosting.md](docs/hosting.md).
@@ -155,6 +167,7 @@ Details in [docs/hosting.md](docs/hosting.md).
 scenar preview init --source ./src   # scan a React app → .scenar/ registry
 scenar preview sync  --source ./src  # re-scan, preserving your customizations
 scenar validate demo.yaml            # validate a scenario YAML
+scenar try                           # serve the bundled welcome-tour example (no app needed)
 scenar narrate ./my-tour             # synthesize narration audio (TTS)
 scenar pack ./my-tour                # bundle into a static embed
 scenar serve ./my-tour-bundle        # preview locally

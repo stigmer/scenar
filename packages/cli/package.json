@@ -22,7 +22,7 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && node dist/bin/scenar.js pack examples/welcome-tour --out dist/example-bundle",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests --config ../../vitest.config.ts",
     "lint": "echo 'lint placeholder'",

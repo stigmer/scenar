@@ -13,6 +13,17 @@ preview to a fully managed cloud.
 All three print a responsive `<iframe>` snippet pinned to the bundle's recorded
 aspect ratio (from `scenario.json`).
 
+## Where embeds live
+
+Nothing is published into your application's source repo. The first time you
+`scenar publish`, Scenar creates **one dedicated public repo named
+`scenar-embeds`** under your GitHub account and serves your tours from its
+`gh-pages` branch, each at its own path
+(`https://<owner>.github.io/scenar-embeds/<slug>/`). Many tours coexist there,
+and publishing or re-publishing one never disturbs the others. Override the
+target repo with `--repo`, the subpath with `--path`, or publish under an
+organization with `--org` (details below).
+
 ## Local — `scenar serve`
 
 ```bash

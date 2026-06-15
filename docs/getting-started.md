@@ -145,21 +145,21 @@ npx @scenar/cli publish ./onboarding-tour-bundle
 # → https://<you>.github.io/scenar-embeds/onboarding-tour/  + a responsive <iframe> snippet
 ```
 
-By default all your tours share one `scenar-embeds` repo, each under its own
-path, so publishing more tours never clobbers earlier ones and nothing lands in
-your app's source repo. Paste the snippet into any page. Re-publishing a tour
-updates just its subfolder. See [hosting.md](hosting.md) for `--path`, custom
-domains, and the cloud option.
+The first publish creates one dedicated public repo named `scenar-embeds` under
+your GitHub account — a **separate repo from your application's source** — and
+serves each tour from its own path, so publishing more tours never clobbers
+earlier ones and nothing lands in your app's repo. Paste the snippet into any
+page. Re-publishing a tour updates just its subfolder. See
+[hosting.md](hosting.md) for `--repo`/`--path`, custom domains, and the cloud
+option.
 
 ## Try it with the example
 
-No app needed — run the bundled `welcome-tour` (Path B, illustrative components):
+No app needed — serve the bundled `welcome-tour` (Path B, illustrative
+components) straight from npm:
 
 ```bash
-git clone https://github.com/stigmer/scenar && cd scenar
-pnpm install && pnpm -r build
-node packages/cli/dist/bin/scenar.js pack packages/cli/examples/welcome-tour
-node packages/cli/dist/bin/scenar.js serve welcome-tour-bundle
+npx @scenar/cli try   # → http://localhost:4173/
 ```
 
 That's the same demo as the
