@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildEmbedSnippet } from "../deploy/embed-snippet.js";
+import { buildEmbedSnippet, buildEnhancedEmbedSnippet } from "../deploy/embed-snippet.js";
 
 describe("buildEmbedSnippet", () => {
   const embedUrl = "https://d-dep1.scenarusercontent.net/";
@@ -52,5 +52,52 @@ describe("buildEmbedSnippet", () => {
     const snippet = buildEmbedSnippet({ embedUrl, viewport: { width: 1280, height: 720 } });
     expect(snippet).toContain("aspect-ratio:1280/720");
     expect(snippet).toContain("max-width:1280px");
+  });
+});
+
+describe("buildEnhancedEmbedSnippet", () => {
+  const viewport = { width: 896, height: 480 };
+
+  it("loads the bundle's sibling embed.js and renders <scenar-embed>", () => {
+    const snippet = buildEnhancedEmbedSnippet({
+      embedUrl: "https://you.github.io/scenar-embeds/welcome/",
+      viewport,
+    });
+    expect(snippet).toContain(
+      '<script type="module" src="https://you.github.io/scenar-embeds/welcome/embed.js"></script>',
+    );
+    expect(snippet).toContain('<scenar-embed');
+    expect(snippet).toContain('src="https://you.github.io/scenar-embeds/welcome/"');
+  });
+
+  it("resolves embed.js relative to the embed URL on a local serve", () => {
+    const snippet = buildEnhancedEmbedSnippet({
+      embedUrl: "http://localhost:4173/",
+      viewport,
+    });
+    expect(snippet).toContain('src="http://localhost:4173/embed.js"');
+  });
+
+  it("uses a default title and honors an explicit one", () => {
+    const def = buildEnhancedEmbedSnippet({ embedUrl: "https://x.test/", viewport });
+    expect(def).toContain('title="Scenar embed"');
+
+    const named = buildEnhancedEmbedSnippet({
+      embedUrl: "https://x.test/",
+      viewport,
+      title: "Welcome tour",
+    });
+    expect(named).toContain('title="Welcome tour"');
+  });
+
+  it("escapes attribute-breaking characters", () => {
+    const snippet = buildEnhancedEmbedSnippet({
+      embedUrl: 'https://x.test/?a="1"/',
+      viewport,
+      title: '<b>"&',
+    });
+    expect(snippet).not.toContain('"1"');
+    expect(snippet).not.toContain("<b>");
+    expect(snippet).toContain("&quot;");
   });
 });

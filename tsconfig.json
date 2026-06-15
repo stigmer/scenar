@@ -3,6 +3,7 @@
   "references": [
     { "path": "apis/stubs/ts" },
     { "path": "packages/core" },
+    { "path": "packages/embed" },
     { "path": "packages/cli" },
     { "path": "packages/mcp-server" },
     { "path": "packages/react" },

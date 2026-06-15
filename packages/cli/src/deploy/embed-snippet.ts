@@ -42,6 +42,34 @@ export function buildEmbedSnippet(input: EmbedSnippetInput): string {
   ].join("\n");
 }
 
+/**
+ * Build the *enhanced* embed snippet — the optional `<scenar-embed>` loader of
+ * DD-002/DD-005. A single `<script>` registers the custom element (the bundle's
+ * sibling `embed.js`, copied in by `scenar pack`), and the tag then auto-fits to
+ * the embed's reported size and syncs the host's light/dark theme. No viewport
+ * math is needed in the snippet: the element adopts the embed's exact aspect
+ * ratio from its first `resize`, falling back to the recorded baseline until then.
+ *
+ * The loader URL is resolved as `embed.js` relative to the embed URL, so it
+ * points at the copy that ships inside the bundle (works on GitHub Pages, a
+ * local `serve`, or any static host). Attribute values are escaped, since the
+ * snippet is copy-pasted into third-party HTML.
+ *
+ * Pure function — returns the snippet string; the caller decides where to print.
+ */
+export function buildEnhancedEmbedSnippet(input: EmbedSnippetInput): string {
+  const { embedUrl } = input;
+  const title = input.title ?? "Scenar embed";
+  const loaderUrl = new URL("embed.js", embedUrl).toString();
+  return [
+    `<script type="module" src="${escapeAttr(loaderUrl)}"></script>`,
+    `<scenar-embed`,
+    `  src="${escapeAttr(embedUrl)}"`,
+    `  title="${escapeAttr(title)}"`,
+    `></scenar-embed>`,
+  ].join("\n");
+}
+
 /** Escape a string for safe interpolation into a double-quoted HTML attribute. */
 function escapeAttr(value: string): string {
   return value

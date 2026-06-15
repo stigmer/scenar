@@ -1,6 +1,6 @@
 import { resolve, join } from "node:path";
 import { stat } from "node:fs/promises";
-import { buildEmbedSnippet } from "../deploy/embed-snippet.js";
+import { buildEmbedSnippet, buildEnhancedEmbedSnippet } from "../deploy/embed-snippet.js";
 import { localViewUrl } from "../deploy/deploy-flow.js";
 import { readBundleViewport } from "../bundle/read-viewport.js";
 import type { Viewport } from "../pack/viewport.js";
@@ -26,6 +26,8 @@ export interface ServeResult {
   readonly url: string;
   /** A ready-to-paste responsive <iframe> snippet for this URL. */
   readonly snippet: string;
+  /** The optional <scenar-embed> loader snippet (auto-fit + theme sync). */
+  readonly enhancedSnippet: string;
   /** The viewport used for the snippet (recorded, or the default). */
   readonly viewport: Viewport;
   /** Whether the snippet's viewport came from the bundle (vs. the default). */
@@ -63,6 +65,7 @@ export async function runServe(options: RunServeOptions): Promise<ServeResult> {
   const url = localViewUrl(handle.url);
   const { viewport, recorded } = await readBundleViewport(resolvedDir);
   const snippet = buildEmbedSnippet({ embedUrl: url, viewport });
+  const enhancedSnippet = buildEnhancedEmbedSnippet({ embedUrl: url, viewport });
 
-  return { handle, url, snippet, viewport, recordedViewport: recorded };
+  return { handle, url, snippet, enhancedSnippet, viewport, recordedViewport: recorded };
 }

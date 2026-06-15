@@ -4,6 +4,7 @@ import { detectRenderExport } from "../render/detect-render-export.js";
 import { resolveProvidersPath } from "../render/resolve-providers.js";
 import { generateEmbedEntry, generateEmbedHtml } from "./generate-embed-entry.js";
 import { runViteBuild } from "./build.js";
+import { copyEmbedLoader } from "./embed-loader.js";
 import {
   buildPackManifest,
   writePackManifest,
@@ -118,6 +119,12 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
       width,
       height: shellHeight,
     });
+
+    // 4b. Copy the optional <scenar-embed> loader into the bundle as embed.js
+    //     (sibling of index.html), so the enhanced snippet works on any static
+    //     host (GitHub Pages, `serve`, the edge) with no extra setup. It lands
+    //     before the manifest pass below so it ships as a first-class bundle file.
+    await copyEmbedLoader(outDir);
 
     // 5. Compute + write the deploy-facing pack manifest (validates the bundle
     //    against the backend allowlist; throws on any violation).

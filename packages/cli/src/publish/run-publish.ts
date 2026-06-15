@@ -1,7 +1,7 @@
 import { resolve, join, basename } from "node:path";
 import { stat, readFile } from "node:fs/promises";
 import { PACK_MANIFEST_FILE } from "../pack/pack-manifest.js";
-import { buildEmbedSnippet } from "../deploy/embed-snippet.js";
+import { buildEmbedSnippet, buildEnhancedEmbedSnippet } from "../deploy/embed-snippet.js";
 import { readBundleViewport } from "../bundle/read-viewport.js";
 import type { Viewport } from "../pack/viewport.js";
 import { createGithubPublisher } from "./github.js";
@@ -57,6 +57,8 @@ export interface PublishRunResult {
   readonly viewport: Viewport;
   readonly recordedViewport: boolean;
   readonly snippet: string;
+  /** The optional <scenar-embed> loader snippet (auto-fit + theme sync). */
+  readonly enhancedSnippet: string;
 }
 
 /**
@@ -110,8 +112,9 @@ export async function runPublish(options: RunPublishOptions): Promise<PublishRun
 
   const { viewport, recorded } = await readBundleViewport(resolvedDir);
   const snippet = buildEmbedSnippet({ embedUrl: result.pagesUrl, viewport });
+  const enhancedSnippet = buildEnhancedEmbedSnippet({ embedUrl: result.pagesUrl, viewport });
 
-  return { result, viewport, recordedViewport: recorded, snippet };
+  return { result, viewport, recordedViewport: recorded, snippet, enhancedSnippet };
 }
 
 /**

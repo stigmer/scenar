@@ -63,6 +63,10 @@ export function registerServeCommand(program: Command): void {
         }
         process.stderr.write("\n  Embed snippet (paste into any page):\n\n");
         process.stderr.write(`${indent(result.snippet)}\n`);
+        process.stderr.write(
+          "\n  Or, for auto-fit + light/dark sync, the <scenar-embed> loader:\n\n",
+        );
+        process.stderr.write(`${indent(result.enhancedSnippet)}\n`);
         process.stderr.write("\n  Press Ctrl+C to stop.\n");
 
         if (options.open) {

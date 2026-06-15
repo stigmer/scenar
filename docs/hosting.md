@@ -11,7 +11,8 @@ preview to a fully managed cloud.
 | Scenar Cloud | `scenar deploy` | CDN-backed embed URL | Custom domains, analytics, teams |
 
 All three print a responsive `<iframe>` snippet pinned to the bundle's recorded
-aspect ratio (from `scenario.json`).
+aspect ratio (from `scenario.json`), plus an optional `<scenar-embed>` loader
+snippet that auto-fits and syncs your page's theme. See [Embedding](embedding.md).
 
 ## Where embeds live
 
@@ -131,3 +132,7 @@ preserves the tour's aspect ratio:
   ></iframe>
 </div>
 ```
+
+For an embed that auto-fits its exact size and follows your page's light/dark
+theme, use the optional `<scenar-embed>` loader (or its React component) from
+[`@scenar/embed`](../packages/embed). Full guide: [Embedding](embedding.md).

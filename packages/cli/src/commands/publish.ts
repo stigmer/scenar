@@ -42,7 +42,7 @@ export function registerPublishCommand(program: Command): void {
             `/${options.path ?? "(scenario slug)"} (GitHub Pages)\n\n`,
         );
 
-        const { result, viewport, recordedViewport, snippet } = await runPublish({
+        const { result, viewport, recordedViewport, snippet, enhancedSnippet } = await runPublish({
           bundleDir,
           repo: options.repo,
           path: options.path,
@@ -72,6 +72,10 @@ export function registerPublishCommand(program: Command): void {
         }
         process.stderr.write("\n  Embed snippet (paste into any page):\n\n");
         process.stderr.write(`${indent(snippet)}\n`);
+        process.stderr.write(
+          "\n  Or, for auto-fit + light/dark sync, the <scenar-embed> loader:\n\n",
+        );
+        process.stderr.write(`${indent(enhancedSnippet)}\n`);
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         process.stderr.write(`\x1b[31mError:\x1b[0m ${msg}\n`);

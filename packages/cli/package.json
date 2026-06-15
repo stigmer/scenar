@@ -34,6 +34,7 @@
     "@connectrpc/connect": "^2.0.0",
     "@connectrpc/connect-node": "^2.0.0",
     "@scenar/core": "workspace:*",
+    "@scenar/embed": "workspace:*",
     "@scenar/preview": "workspace:*",
     "@scenar/sdk": "workspace:*",
     "@scenar/stubs": "workspace:*",

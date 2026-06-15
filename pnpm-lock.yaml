@@ -77,6 +77,9 @@ importers:
       '@scenar/core':
         specifier: workspace:*
         version: link:../core
+      '@scenar/embed':
+        specifier: workspace:*
+        version: link:../embed
       '@scenar/preview':
         specifier: workspace:*
         version: link:../preview
@@ -113,6 +116,22 @@ importers:
         version: 6.4.3(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.3)
 
   packages/core: {}
+
+  packages/embed:
+    dependencies:
+      '@scenar/core':
+        specifier: workspace:*
+        version: link:../core
+      react:
+        specifier: '>=18.0.0'
+        version: 19.2.5
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 19.2.5(react@19.2.5)
+    devDependencies:
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.3(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.3)
 
   packages/mcp-server:
     dependencies:
