@@ -17,6 +17,7 @@ import {
   MAX_PATH_DEPTH,
   finalExtension,
 } from "../pack/bundle-contract.js";
+import { DEFAULT_VIEWPORT } from "../pack/viewport.js";
 
 let dir: string;
 
@@ -37,20 +38,22 @@ async function seedCleanBundle(): Promise<void> {
 }
 
 describe("writeScenarioJson", () => {
-  it("writes a valid scenario.json at the bundle root", async () => {
-    await writeScenarioJson(dir, "welcome-tour", "0.0.1");
+  it("writes a valid scenario.json at the bundle root with the recorded viewport", async () => {
+    await writeScenarioJson(dir, "welcome-tour", "0.0.1", { width: 1024, height: 576 });
     const raw = await readFile(join(dir, "scenario.json"), "utf-8");
     const parsed = JSON.parse(raw);
     expect(parsed.schemaVersion).toBe("1");
     expect(parsed.id).toBe("welcome-tour");
     expect(parsed.generator).toContain("@scenar/cli pack");
+    // The baked canonical viewport flows downstream to the embed snippet (DD-004).
+    expect(parsed.viewport).toEqual({ width: 1024, height: 576 });
   });
 });
 
 describe("buildPackManifest", () => {
   it("computes one validated entry per file with lowercase-hex sha256", async () => {
     await seedCleanBundle();
-    await writeScenarioJson(dir, "welcome-tour", "0.0.1");
+    await writeScenarioJson(dir, "welcome-tour", "0.0.1", DEFAULT_VIEWPORT);
 
     const manifest = await buildPackManifest(dir, "welcome-tour");
 
@@ -71,7 +74,7 @@ describe("buildPackManifest", () => {
 
   it("never lists pack-manifest.json itself", async () => {
     await seedCleanBundle();
-    await writeScenarioJson(dir, "welcome-tour", "0.0.1");
+    await writeScenarioJson(dir, "welcome-tour", "0.0.1", DEFAULT_VIEWPORT);
     const manifest = await buildPackManifest(dir, "welcome-tour");
     await writePackManifest(dir, manifest);
     // Re-derive after the manifest file exists on disk.
@@ -81,7 +84,7 @@ describe("buildPackManifest", () => {
 
   it("includes raster images and fonts with their canonical content types", async () => {
     await seedCleanBundle();
-    await writeScenarioJson(dir, "welcome-tour", "0.0.1");
+    await writeScenarioJson(dir, "welcome-tour", "0.0.1", DEFAULT_VIEWPORT);
     await writeFile(join(dir, "assets", "logo-abc.png"), "PNG-bytes", "utf-8");
     await writeFile(join(dir, "assets", "brand-abc.woff2"), "WOFF2-bytes", "utf-8");
 
@@ -108,7 +111,7 @@ describe("buildPackManifest", () => {
 describe("bundle-contract conformance (pack output ↔ backend validators)", () => {
   it("produces a manifest every field of which the backend would accept", async () => {
     await seedCleanBundle();
-    await writeScenarioJson(dir, "welcome-tour", "0.0.1");
+    await writeScenarioJson(dir, "welcome-tour", "0.0.1", DEFAULT_VIEWPORT);
     const manifest = await buildPackManifest(dir, "welcome-tour");
 
     // scenario.json is present at the root (REQUIRED_FILE).

@@ -7,6 +7,7 @@ import {
   validateRelativePath,
   validateScenarioJson,
 } from "./bundle-contract.js";
+import type { Viewport } from "./viewport.js";
 
 /** One uploadable file, described exactly as the deploy session needs it. */
 export interface PackFile {
@@ -36,20 +37,25 @@ export const SCENARIO_JSON_FILE = "scenario.json";
 
 /**
  * Write the bundle's scenario.json — the required-at-root descriptor. Kept
- * intentionally minimal (a validated metadata header): the player reads its
- * steps from the bundled JS, so the full serialized spec is a follow-up, not a
- * first-embed requirement. Validated against the backend rules before writing.
+ * intentionally minimal (a validated metadata header) plus the canonical
+ * `viewport` baked into the bundle: the player reads its steps from the bundled
+ * JS, so the full serialized spec is still a follow-up, but `deploy` needs the
+ * viewport to derive a correctly-proportioned embed snippet (DD-004). The
+ * viewport mirrors `ViewportConfig { width, height }`. Validated against the
+ * backend rules before writing (which accept the extra `viewport` key).
  */
 export async function writeScenarioJson(
   outDir: string,
   scenarioId: string,
   generatorVersion: string,
+  viewport: Viewport,
 ): Promise<void> {
   const content = JSON.stringify(
     {
       schemaVersion: "1",
       id: scenarioId,
       generator: `@scenar/cli pack ${generatorVersion}`,
+      viewport: { width: viewport.width, height: viewport.height },
     },
     null,
     2,

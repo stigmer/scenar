@@ -11,15 +11,16 @@ import {
   writeScenarioJson,
   verifyManifestFilesExist,
 } from "../pack/pack-manifest.js";
+import { DEFAULT_VIEWPORT } from "../pack/viewport.js";
 
 /** Generator version stamped into scenario.json (kept in sync with the CLI). */
 const PACK_GENERATOR_VERSION = "0.0.1";
 
 /** Default canonical viewport width (matches DemoViewport's default). */
-const DEFAULT_WIDTH = 896;
+const DEFAULT_WIDTH = DEFAULT_VIEWPORT.width;
 
 /** Default shell height for the embed. */
-const DEFAULT_SHELL_HEIGHT = 480;
+const DEFAULT_SHELL_HEIGHT = DEFAULT_VIEWPORT.height;
 
 interface PackOptions {
   out?: string;
@@ -122,8 +123,13 @@ export function registerPackCommand(program: Command): void {
           await copyNarration(scenarioDir, outDir);
         }
 
-        // 4. Write the required scenario.json descriptor at the bundle root.
-        await writeScenarioJson(outDir, scenarioId, PACK_GENERATOR_VERSION);
+        // 4. Write the required scenario.json descriptor at the bundle root,
+        //    recording the canonical viewport baked into the bundle so `deploy`
+        //    can derive a correctly-proportioned embed snippet (DD-004).
+        await writeScenarioJson(outDir, scenarioId, PACK_GENERATOR_VERSION, {
+          width,
+          height: shellHeight,
+        });
 
         // 5. Compute + write the deploy-facing pack manifest (validates the
         //    bundle against the backend allowlist; throws on any violation).
