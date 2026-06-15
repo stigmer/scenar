@@ -1,0 +1,177 @@
+# Getting started
+
+This is the end-to-end walkthrough: from a React app to a published, narrated
+embed. It uses the AI-assisted flow (Cursor + the Scenar MCP server + the Scenar
+skill), and is honest about the one step that needs a human — wiring providers
+and API mocks so your real components render in isolation.
+
+If you just want to see the pipeline run with zero setup, jump to
+[Try it with the example](#try-it-with-the-example).
+
+## Prerequisites
+
+- Node.js 20+ and a package manager (npm / pnpm).
+- A React app (Vite, Next.js, CRA, etc.) — for the "real components" path.
+- [Cursor](https://cursor.com) or another MCP-capable editor.
+- [GitHub CLI](https://cli.github.com) (`gh`), authenticated, if you'll `publish`.
+
+## 1. Install the MCP server and skill
+
+Add the MCP server to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "scenar": { "command": "npx", "args": ["-y", "@scenar/mcp-server"] }
+  }
+}
+```
+
+Add the skill so the AI knows the authoring model:
+
+```bash
+mkdir -p .cursor/skills
+cp -R node_modules/@scenar/mcp-server/skill .cursor/skills/scenar
+```
+
+Restart the editor so it picks up the MCP server and skill. See
+[mcp-server.md](mcp-server.md) for other editors and configuration.
+
+## 2. Scan your app
+
+```bash
+npx @scenar/cli preview init --source ./src
+```
+
+Or ask the AI: *"Run scenar preview init on ./src."* (it calls
+`scenar_preview_init`). This writes a `.scenar/` directory:
+
+| File | Owner | Purpose |
+|------|-------|---------|
+| `views.generated.ts` | scanner | discovered components — never edit |
+| `views.custom.tsx` | you | hand-added views |
+| `views.ts` | you | the merged registry you author against |
+| `providers.tsx` | you | wrap components in the providers they need |
+| `report.md` | scanner | what was discovered/skipped, and why |
+
+It also installs an MSW (Mock Service Worker) service worker into your public
+directory.
+
+**Read `report.md` first.** It tells you which components were found, which were
+skipped, and what props/providers they expect.
+
+## 3. Wire providers and mocks (the manual step)
+
+Real components rarely render in a vacuum — they need a theme, a router, a query
+client, auth context, etc., and their data fetches need to resolve. This is the
+one part the scanner can't do for you.
+
+1. **Providers.** Edit `.scenar/providers.tsx` to wrap children in the providers
+   your components require:
+
+   ```tsx
+   export function Providers({ children }: { children: React.ReactNode }) {
+     return (
+       <ThemeProvider theme={demoTheme}>
+         <QueryClientProvider client={new QueryClient()}>
+           <MemoryRouter>{children}</MemoryRouter>
+         </QueryClientProvider>
+       </ThemeProvider>
+     );
+   }
+   ```
+
+2. **API mocks.** Add MSW handlers so fetches resolve with realistic fixtures:
+
+   ```ts
+   import { http, HttpResponse } from "msw";
+
+   export const handlers = [
+     http.get("/api/projects", () =>
+       HttpResponse.json([{ id: "1", name: "checkout-api", status: "healthy" }]),
+     ),
+   ];
+   ```
+
+   Wire these into the generated MSW setup so the preview uses them.
+
+Tip: keep fixtures small and representative — they become the data your tour
+shows.
+
+## 4. Author the scenario (AI-assisted)
+
+Ask the AI in plain English:
+
+> "Build a Scenar tour of our onboarding: the sign-up screen, creating a
+> workspace, then the dashboard. Four steps, with a cursor click on the
+> 'Create workspace' button."
+
+Guided by the skill, the AI writes a **scenario directory**:
+
+```
+onboarding-tour/
+├── steps.ts    # timeline: data, delayMs, captions, narration, interactions
+└── index.tsx   # renderStep(data, stepIndex) → ReactNode (your real components)
+```
+
+Review it: check the component props, the captions read as a story, and the
+interactions (`data-cursor-target` hooks) point at the right elements. See
+[authoring-scenarios.md](authoring-scenarios.md) for the full model.
+
+## 5. Narrate
+
+```bash
+npx @scenar/cli narrate ./onboarding-tour
+```
+
+This synthesizes per-step audio from each step's narration text into a
+`narration/` folder. The default TTS engine (echogarden) is an optional install;
+`edge-tts` and `openai` are alternatives — see the command's `--help`.
+
+## 6. Pack and preview
+
+```bash
+npx @scenar/cli pack ./onboarding-tour
+npx @scenar/cli serve ./onboarding-tour-bundle   # → http://localhost:4173/
+```
+
+Open the URL and watch it play. Iterate: adjust `delayMs` dwell times, tighten
+captions, refine narration, re-run `narrate`/`pack`/`serve`.
+
+## 7. Publish
+
+```bash
+npx @scenar/cli publish ./onboarding-tour-bundle
+# → https://<you>.github.io/scenar-embeds/onboarding-tour/  + a responsive <iframe> snippet
+```
+
+By default all your tours share one `scenar-embeds` repo, each under its own
+path, so publishing more tours never clobbers earlier ones and nothing lands in
+your app's source repo. Paste the snippet into any page. Re-publishing a tour
+updates just its subfolder. See [hosting.md](hosting.md) for `--path`, custom
+domains, and the cloud option.
+
+## Try it with the example
+
+No app needed — run the bundled `welcome-tour` (Path B, illustrative components):
+
+```bash
+git clone https://github.com/stigmer/scenar && cd scenar
+pnpm install && pnpm -r build
+node packages/cli/dist/bin/scenar.js pack packages/cli/examples/welcome-tour
+node packages/cli/dist/bin/scenar.js serve welcome-tour-bundle
+```
+
+That's the same demo as the
+[live example](https://stigmer.github.io/scenar-welcome-tour/).
+
+## Troubleshooting
+
+- **A component renders blank or throws.** It's missing a provider or a mock —
+  add it to `.scenar/providers.tsx` or your MSW handlers.
+- **`pack` fails on an SVG.** SVG isn't a served file type. Inline it as a React
+  component or a `data:` URI. See [authoring-scenarios.md](authoring-scenarios.md#bundle-constraints).
+- **`publish` says gh isn't authenticated.** Run `gh auth login`.
+- **Interactions fire at the wrong time.** `atPercent` is measured against the
+  step's narration duration; narrate first, or set explicit `delayMs` for muted
+  tours.

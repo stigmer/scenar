@@ -8,6 +8,18 @@
   },
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
+    },
+    "./api": {
+      "types": "./dist/src/api.d.ts",
+      "import": "./dist/src/api.js",
+      "default": "./dist/src/api.js"
+    }
+  },
   "files": ["dist"],
   "scripts": {
     "build": "tsc --build",

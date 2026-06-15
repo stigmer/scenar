@@ -92,9 +92,21 @@ export function detectComponents(
     }
   }
 
+  // A default-exported function declaration (`export default function Foo()`)
+  // is already covered by the `getFunctions()` loop above — reprocessing it via
+  // the default-export symbol would double-count it (once discovered/skipped,
+  // again here). Only fall through for default exports the loops did NOT see:
+  // `function Foo() {}; export default Foo;` or `export default <expr>`.
   const defaultExportSymbol = sourceFile.getDefaultExportSymbol();
-  if (defaultExportSymbol && !discovered.some(c => c.exportType === "default")) {
-    processDefaultExport(defaultExportSymbol, sourceFile, filePath, projectRoot, discovered, skipped);
+  if (defaultExportSymbol && !discovered.some((c) => c.exportType === "default")) {
+    const defaultDecl = defaultExportSymbol.getDeclarations()[0];
+    const handledByLoop =
+      defaultDecl != null &&
+      Node.isFunctionDeclaration(defaultDecl) &&
+      defaultDecl.isExported();
+    if (!handledByLoop) {
+      processDefaultExport(defaultExportSymbol, sourceFile, filePath, projectRoot, discovered, skipped);
+    }
   }
 
   return { discovered, skipped };
@@ -131,6 +143,7 @@ function processFunction(
 
   discovered.push({
     name,
+    exportName: name,
     importPath,
     filePath,
     exportType: isDefault ? "default" : "named",
@@ -174,6 +187,7 @@ function processVariable(
 
     discovered.push({
       name,
+      exportName: name,
       importPath,
       filePath,
       exportType: "named",
@@ -194,6 +208,7 @@ function processVariable(
         const importPath = buildImportPath(filePath, projectRoot);
         discovered.push({
           name,
+          exportName: name,
           importPath,
           filePath,
           exportType: "named",
@@ -302,7 +317,7 @@ function extractProps(type: Type | undefined): PropInfo[] {
     try {
       if (propDecl) {
         const propType = propDecl.getType?.() ?? prop.getTypeAtLocation(propDecl);
-        typeText = propType.getText(propDecl);
+        typeText = cleanTypeText(propType.getText(propDecl));
         if (typeText.length > 80) {
           typeText = typeText.slice(0, 77) + "...";
         }
@@ -316,6 +331,18 @@ function extractProps(type: Type | undefined): PropInfo[] {
   }
 
   return props;
+}
+
+/**
+ * Collapse TypeScript's fully-qualified `import("/abs/path").Name` references —
+ * which leak absolute `node_modules` paths into the report — down to `Name`, and
+ * normalise whitespace. Keeps prop types readable without changing their meaning.
+ */
+function cleanTypeText(text: string): string {
+  return text
+    .replace(/import\((?:"[^"]*"|'[^']*')\)\./g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 // ---------------------------------------------------------------------------

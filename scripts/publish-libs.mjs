@@ -8,9 +8,10 @@
  * directory. The workspace package.json is never modified.
  *
  * Publish order respects the dependency graph:
- *   @scenar/stubs + @scenar/core + @scenar/preview → @scenar/sdk + @scenar/react → @scenar/remotion → @scenar/cli
+ *   @scenar/stubs + @scenar/core + @scenar/preview → @scenar/sdk + @scenar/react → @scenar/remotion → @scenar/cli → @scenar/mcp-server
  * (@scenar/stubs is a leaf — only @bufbuild/protobuf — and @scenar/cli depends
- * on it at runtime, so it must publish before cli.)
+ * on it at runtime, so it must publish before cli. @scenar/mcp-server depends on
+ * @scenar/cli and @scenar/preview, so it publishes last.)
  *
  * Usage:
  *   node scripts/publish-libs.mjs --version 0.1.0              # build + publish
@@ -51,6 +52,7 @@ export const PACKAGES = [
   "packages/react",
   "packages/remotion",
   "packages/cli",
+  "packages/mcp-server",
 ];
 
 function run(cmd, cwd = root) {
@@ -265,6 +267,14 @@ async function main() {
       const licenseSrc = resolve(root, "LICENSE");
       if (existsSync(licenseSrc)) {
         cpSync(licenseSrc, resolve(distDir, "LICENSE"));
+      }
+
+      // Ship a package's skill/ dir (e.g. @scenar/mcp-server) alongside dist so
+      // it lands at the published package root — we publish from dist/, so the
+      // source package.json `files` entry alone would not include it.
+      const skillSrc = resolve(pkgDir, "skill");
+      if (existsSync(skillSrc)) {
+        cpSync(skillSrc, resolve(distDir, "skill"), { recursive: true });
       }
 
       let publishCmd = `npm publish ${distDir} --access public --tag ${tag}`;

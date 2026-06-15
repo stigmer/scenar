@@ -2,8 +2,8 @@ import { resolve, join } from "node:path";
 import { readFile, stat } from "node:fs/promises";
 import { Command } from "commander";
 import type { PackManifest } from "../pack/pack-manifest.js";
-import { PACK_MANIFEST_FILE, SCENARIO_JSON_FILE } from "../pack/pack-manifest.js";
-import { DEFAULT_VIEWPORT, parseViewport, type Viewport } from "../pack/viewport.js";
+import { PACK_MANIFEST_FILE } from "../pack/pack-manifest.js";
+import { readBundleViewport } from "../bundle/read-viewport.js";
 import { createBackendClients } from "../deploy/client.js";
 import { putFile } from "../deploy/upload.js";
 import { buildEmbedSnippet } from "../deploy/embed-snippet.js";
@@ -91,7 +91,14 @@ export function registerDeployCommand(program: Command): void {
         // piping). Responsive iframe at the bundle's canonical aspect ratio
         // (DD-002/DD-004); falls back to the default viewport for bundles packed
         // before the viewport was recorded.
-        const viewport = await readScenarioViewport(resolvedDir, name);
+        const { viewport, recorded } = await readBundleViewport(resolvedDir);
+        if (!recorded) {
+          process.stderr.write(
+            `  Note: no recorded viewport for "${name}"; ` +
+              `snippet uses the default ${viewport.width}x${viewport.height}. ` +
+              "Re-pack with the current CLI to embed at the exact aspect ratio.\n",
+          );
+        }
         process.stderr.write("\n  Embed snippet (paste into any page):\n\n");
         process.stderr.write(`${indent(buildEmbedSnippet({ embedUrl, viewport, title: name }))}\n`);
       } catch (error) {
@@ -154,31 +161,6 @@ function makeDeps(
       process.stderr.write(`${message}\n`);
     },
   };
-}
-
-/**
- * Read the canonical viewport recorded in the bundle's scenario.json (DD-004).
- * Falls back to {@link DEFAULT_VIEWPORT} for bundles packed before the viewport
- * was recorded, or if the file is missing/malformed — a snippet with sensible
- * proportions always beats no snippet. `scenarioLabel` is only for the warning.
- */
-async function readScenarioViewport(
-  bundleDir: string,
-  scenarioLabel: string,
-): Promise<Viewport> {
-  try {
-    const raw = await readFile(join(bundleDir, SCENARIO_JSON_FILE), "utf-8");
-    const viewport = parseViewport((JSON.parse(raw) as { viewport?: unknown }).viewport);
-    if (viewport) return viewport;
-  } catch {
-    // Missing/unreadable/invalid scenario.json — fall through to the default.
-  }
-  process.stderr.write(
-    `  Note: no recorded viewport for "${scenarioLabel}"; ` +
-      `snippet uses the default ${DEFAULT_VIEWPORT.width}x${DEFAULT_VIEWPORT.height}. ` +
-      "Re-pack with the current CLI to embed at the exact aspect ratio.\n",
-  );
-  return DEFAULT_VIEWPORT;
 }
 
 /** Indent every line by two spaces (for nesting a block under a heading). */

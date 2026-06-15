@@ -1,0 +1,35 @@
+{
+  "name": "@scenar/mcp-server",
+  "version": "0.0.1",
+  "description": "Model Context Protocol server for Scenar — lets AI editors scan, author, narrate, pack, serve, and publish scenario tours.",
+  "type": "module",
+  "bin": {
+    "scenar-mcp": "./dist/bin/scenar-mcp.js"
+  },
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "files": ["dist", "skill"],
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests --config ../../vitest.config.ts",
+    "lint": "echo 'lint placeholder'",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@scenar/cli": "workspace:*",
+    "@scenar/preview": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stigmer/scenar.git",
+    "directory": "packages/mcp-server"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": ["scenar", "mcp", "model-context-protocol", "cursor", "ai", "scenario", "tour"]
+}

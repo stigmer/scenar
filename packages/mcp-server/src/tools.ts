@@ -1,0 +1,374 @@
+import { resolve, relative, dirname } from "node:path";
+import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { scanProject, generate, initMswServiceWorker } from "@scenar/preview";
+import {
+  runPack,
+  runServe,
+  runPublish,
+  runNarrate,
+  runRender,
+  validateScenario,
+  loadScenarioYaml,
+} from "@scenar/cli/api";
+import { projectRoot, resolveInProject } from "./project.js";
+import { rememberServer, listServers, stopServer } from "./serve-registry.js";
+
+/** A successful text result. */
+function text(body: string): { content: Array<{ type: "text"; text: string }> } {
+  return { content: [{ type: "text", text: body }] };
+}
+
+/** An error result (sets isError so the client renders it as a failure). */
+function fail(message: string): {
+  content: Array<{ type: "text"; text: string }>;
+  isError: true;
+} {
+  return { content: [{ type: "text", text: `Error: ${message}` }], isError: true };
+}
+
+/** Run an async op, formatting any throw as a tool error rather than crashing. */
+async function guard(
+  op: () => Promise<{ content: Array<{ type: "text"; text: string }>; isError?: true }>,
+): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: true }> {
+  try {
+    return await op();
+  } catch (error) {
+    return fail(error instanceof Error ? error.message : String(error));
+  }
+}
+
+/** Register every Scenar tool on the server. */
+export function registerTools(server: McpServer): void {
+  registerPreviewInit(server);
+  registerPreviewSync(server);
+  registerValidate(server);
+  registerNarrate(server);
+  registerPack(server);
+  registerServe(server);
+  registerStopServe(server);
+  registerPublish(server);
+  registerRender(server);
+}
+
+function registerPreviewInit(server: McpServer): void {
+  server.registerTool(
+    "scenar_preview_init",
+    {
+      title: "Scan project & init preview registry",
+      description:
+        "Scan a React project and generate the .scenar/ view registry (views, " +
+        "providers scaffold, report.md) plus the MSW service worker. Run this first " +
+        "before authoring a scenario. Re-run with resetProviders to regenerate the " +
+        "providers scaffold.",
+      inputSchema: {
+        source: z.string().optional().describe("project dir to scan (default: project root)"),
+        output: z.string().optional().describe("output dir for generated files (default: .scenar)"),
+        resetProviders: z.boolean().optional().describe("force-regenerate providers.tsx"),
+      },
+    },
+    async ({ source, output, resetProviders }) =>
+      guard(async () => {
+        const sourceRoot = source ? resolveInProject(source) : projectRoot();
+        const outputDir = output ? resolveInProject(output) : resolve(projectRoot(), ".scenar");
+
+        const scan = scanProject(sourceRoot);
+        const result = generate(scan, { sourceRoot, outputDir, isInit: true, resetProviders });
+        const msw = initMswServiceWorker(resolve(dirname(outputDir)), scan.framework);
+
+        const rel = (p: string) => relative(projectRoot(), p) || ".";
+        const lines = [
+          `Scanned ${sourceRoot}`,
+          `  framework: ${scan.framework}`,
+          `  entry: ${scan.entryPoint ?? "none detected"}`,
+          `  discovered: ${scan.discovered.length} component(s)`,
+          `  skipped: ${scan.skipped.length}`,
+          scan.detectedProviders.length > 0 ? `  providers: ${scan.detectedProviders.join(", ")}` : null,
+          ``,
+          `Generated ${rel(outputDir)}/:`,
+          ...result.written.map((f) => `  + ${f}`),
+          ...result.preserved.map((f) => `  = ${f} (preserved)`),
+          ``,
+          `MSW service worker: ${msw.status}${msw.path ? ` (${rel(msw.path)})` : ""}`,
+          msw.status === "error" ? `  ${msw.error}` : null,
+          ``,
+          `Next: review ${rel(outputDir)}/report.md, wire ${rel(outputDir)}/providers.tsx,`,
+          `then author a scenario (see the Scenar skill).`,
+        ].filter((l): l is string => l !== null);
+        return text(lines.join("\n"));
+      }),
+  );
+}
+
+function registerPreviewSync(server: McpServer): void {
+  server.registerTool(
+    "scenar_preview_sync",
+    {
+      title: "Re-scan project & update registry",
+      description:
+        "Re-scan the project and update scanner-owned files in .scenar/ after code " +
+        "changes. Preserves user-owned files (views.custom.tsx, providers.tsx).",
+      inputSchema: {
+        source: z.string().optional().describe("project dir to scan (default: project root)"),
+        output: z.string().optional().describe("output dir (default: .scenar)"),
+      },
+    },
+    async ({ source, output }) =>
+      guard(async () => {
+        const sourceRoot = source ? resolveInProject(source) : projectRoot();
+        const outputDir = output ? resolveInProject(output) : resolve(projectRoot(), ".scenar");
+
+        const scan = scanProject(sourceRoot);
+        const result = generate(scan, { sourceRoot, outputDir, isInit: false });
+
+        const rel = (p: string) => relative(projectRoot(), p) || ".";
+        const lines = [
+          `Re-scanned ${sourceRoot}: ${scan.discovered.length} discovered, ${scan.skipped.length} skipped`,
+          `Updated ${rel(outputDir)}/:`,
+          ...result.written.map((f) => `  ~ ${f} (updated)`),
+          ...result.preserved.map((f) => `  = ${f} (preserved)`),
+        ];
+        return text(lines.join("\n"));
+      }),
+  );
+}
+
+function registerValidate(server: McpServer): void {
+  server.registerTool(
+    "scenar_validate",
+    {
+      title: "Validate a scenario YAML",
+      description: "Validate a scenario YAML file against the proto schema. Returns the errors, if any.",
+      inputSchema: {
+        file: z.string().describe("path to a scenario YAML file"),
+      },
+    },
+    async ({ file }) =>
+      guard(async () => {
+        const scenario = await loadScenarioYaml(resolveInProject(file));
+        const result = validateScenario(scenario);
+        if (result.valid) {
+          return text(`Valid: ${file}`);
+        }
+        const lines = [
+          `Invalid: ${file} (${result.errors.length} error(s))`,
+          ...result.errors.map((e) => `  • ${e.path}: ${e.reason}`),
+        ];
+        return text(lines.join("\n"));
+      }),
+  );
+}
+
+function registerNarrate(server: McpServer): void {
+  server.registerTool(
+    "scenar_narrate",
+    {
+      title: "Generate narration audio",
+      description:
+        "Synthesize per-step narration audio (TTS) for a scenario file or a directory " +
+        "of scenarios. Writes a narration/ folder with a manifest and mp3 clips. " +
+        "Requires the chosen TTS provider's optional dependency to be installed.",
+      inputSchema: {
+        target: z.string().describe("scenario file (.yaml/.ts) or a directory of scenarios"),
+        tts: z.enum(["echogarden", "edge-tts", "openai"]).optional().describe("TTS provider (default: echogarden)"),
+        out: z.string().optional().describe("output directory for audio"),
+        voice: z.string().optional().describe("voice name (provider-specific)"),
+        baseUrl: z.string().optional().describe("URL path prefix for src fields in the manifest"),
+      },
+    },
+    async ({ target, tts, out, voice, baseUrl }) =>
+      guard(async () => {
+        const result = await runNarrate({
+          target: resolveInProject(target),
+          tts,
+          out: out ? resolveInProject(out) : undefined,
+          voice,
+          baseUrl,
+        });
+        const lines = [
+          `Narrated (${result.mode}): ${result.totalGenerated} generated, ${result.totalCached} cached, ${result.totalSkipped} skipped`,
+          ...result.scenarios.map(
+            (s) => `  ${s.id}: ${s.skipped ? "no narration" : `${s.generated} generated, ${s.cached} cached`}`,
+          ),
+          ...result.errors.map((e) => `  ✗ ${e.id}: ${e.message}`),
+        ];
+        return result.errors.length > 0 ? fail(lines.join("\n")) : text(lines.join("\n"));
+      }),
+  );
+}
+
+function registerPack(server: McpServer): void {
+  server.registerTool(
+    "scenar_pack",
+    {
+      title: "Pack a scenario into a static embed",
+      description:
+        "Bundle a scenario directory (steps.ts + index.tsx exporting renderStep) into a " +
+        "self-contained static embed with Vite. Output defaults to ./<id>-bundle. " +
+        "The bundle is ready for scenar_serve, scenar_publish, or scenar deploy.",
+      inputSchema: {
+        scenarioDir: z.string().describe("scenario directory (must contain steps.ts)"),
+        outDir: z.string().optional().describe("output directory for the bundle"),
+        width: z.number().int().positive().optional().describe("canonical viewport width in px (default 896)"),
+        shellHeight: z.number().int().positive().optional().describe("shell height in px (default 480)"),
+      },
+    },
+    async ({ scenarioDir, outDir, width, shellHeight }) =>
+      guard(async () => {
+        const result = await runPack({
+          scenarioDir: resolveInProject(scenarioDir),
+          outDir: outDir ? resolveInProject(outDir) : undefined,
+          width,
+          shellHeight,
+        });
+        const lines = [
+          `Packed ${result.manifest.files.length} file(s), ${formatBytes(result.totalBytes)}`,
+          `  output: ${result.outDir}`,
+          `  render: ${result.renderFilePath}`,
+          `  providers: ${result.providersPath ?? "none"}`,
+          `  narration: ${result.hasNarration ? "yes" : "none"}`,
+          ``,
+          `Next: scenar_serve to preview, or scenar_publish for a public URL.`,
+        ];
+        return text(lines.join("\n"));
+      }),
+  );
+}
+
+function registerServe(server: McpServer): void {
+  server.registerTool(
+    "scenar_serve",
+    {
+      title: "Serve a packed bundle locally",
+      description:
+        "Start a local static server for a packed bundle and return its URL plus an " +
+        "<iframe> embed snippet. The server stays running across tool calls; stop it " +
+        "with scenar_stop_serve.",
+      inputSchema: {
+        bundleDir: z.string().describe("a packed bundle directory (from scenar_pack)"),
+        port: z.number().int().min(0).max(65535).optional().describe("port (default 4173; 0 = pick a free one)"),
+        host: z.string().optional().describe("host/interface to bind (default localhost)"),
+      },
+    },
+    async ({ bundleDir, port, host }) =>
+      guard(async () => {
+        const result = await runServe({
+          bundleDir: resolveInProject(bundleDir),
+          port: port ?? 4173,
+          host,
+        });
+        rememberServer(result.handle);
+        return text([`Serving at ${result.url}`, ``, `Embed snippet:`, result.snippet].join("\n"));
+      }),
+  );
+}
+
+function registerStopServe(server: McpServer): void {
+  server.registerTool(
+    "scenar_stop_serve",
+    {
+      title: "Stop local preview server(s)",
+      description:
+        "Stop a preview server started by scenar_serve. Pass a url to stop one, or " +
+        "omit it to list the running servers.",
+      inputSchema: {
+        url: z.string().optional().describe("the server URL to stop (omit to list running servers)"),
+      },
+    },
+    async ({ url }) =>
+      guard(async () => {
+        if (!url) {
+          const running = listServers();
+          return text(running.length > 0 ? `Running:\n${running.map((u) => `  ${u}`).join("\n")}` : "No servers running.");
+        }
+        const stopped = await stopServer(url);
+        return text(stopped ? `Stopped ${url}` : `No server running at ${url}`);
+      }),
+  );
+}
+
+function registerPublish(server: McpServer): void {
+  server.registerTool(
+    "scenar_publish",
+    {
+      title: "Publish a bundle to GitHub Pages",
+      description:
+        "Publish a packed bundle to GitHub Pages and return its public URL. Many tours " +
+        "share one repo: repo defaults to `scenar-embeds` and path to the scenario slug, " +
+        "so the embed serves at https://<you>.github.io/scenar-embeds/<slug>/ and " +
+        "re-publishing one tour preserves the others. Pass path '/' to publish at the " +
+        "repo root. Requires the GitHub CLI (gh) installed and authenticated.",
+      inputSchema: {
+        bundleDir: z.string().describe("a packed bundle directory (from scenar_pack)"),
+        repo: z.string().optional().describe("repository name (default: scenar-embeds)"),
+        path: z.string().optional().describe("subdirectory within the repo (default: the scenario slug; '/' for the root)"),
+        org: z.string().optional().describe("GitHub org (default: the authenticated user)"),
+        private: z.boolean().optional().describe("create a private repo (GitHub Pages needs a paid plan)"),
+        message: z.string().optional().describe("commit message for the published snapshot"),
+      },
+    },
+    async ({ bundleDir, repo, path, org, private: isPrivate, message }) =>
+      guard(async () => {
+        const { result, snippet } = await runPublish({
+          bundleDir: resolveInProject(bundleDir),
+          repo,
+          path,
+          org,
+          private: isPrivate,
+          message,
+        });
+        const location = result.path ? `${result.owner}/${result.repo}/${result.path}` : `${result.owner}/${result.repo}`;
+        const lines = [
+          `${result.created ? "Created" : "Updated"} ${location}`,
+          `  public URL: ${result.pagesUrl}`,
+          `  repo: ${result.repoUrl}`,
+          `  (Pages builds asynchronously; live in ~1 minute on first publish)`,
+          ``,
+          `Embed snippet:`,
+          snippet,
+        ];
+        return text(lines.join("\n"));
+      }),
+  );
+}
+
+function registerRender(server: McpServer): void {
+  server.registerTool(
+    "scenar_render",
+    {
+      title: "Render a scenario to MP4",
+      description:
+        "Render a scenario directory to an MP4 video via Remotion (same source as the " +
+        "embed). Requires the Remotion peer dependencies to be installed.",
+      inputSchema: {
+        scenarioDir: z.string().describe("scenario directory (must contain steps.ts)"),
+        out: z.string().optional().describe("output .mp4 path or directory"),
+        fps: z.number().int().positive().optional().describe("frames per second (default 30)"),
+        width: z.number().int().positive().optional().describe("video width in px (default 1920)"),
+        height: z.number().int().positive().optional().describe("video height in px (default 1080)"),
+      },
+    },
+    async ({ scenarioDir, out, fps, width, height }) =>
+      guard(async () => {
+        const result = await runRender({
+          scenarioDir: resolveInProject(scenarioDir),
+          out: out ? resolveInProject(out) : undefined,
+          fps,
+          width,
+          height,
+        });
+        return text(
+          [
+            `Rendered ${result.scenarioId} → ${result.outputPath}`,
+            `  ${result.width}x${result.height} @ ${result.fps}fps, ${result.steps} step(s)`,
+          ].join("\n"),
+        );
+      }),
+  );
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+}

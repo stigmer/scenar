@@ -21,7 +21,11 @@ export function renderReport(scanResult: ScanResult): string {
     lines.push(`|-----------|------|----------|-------|`);
     for (const comp of scanResult.discovered) {
       const propsStr = formatProps(comp);
-      lines.push(`| ${comp.name} | ${comp.importPath} | ${comp.category} | ${propsStr} |`);
+      const label =
+        comp.name === comp.exportName
+          ? comp.name
+          : `${comp.name} _(exports \`${comp.exportName}\`)_`;
+      lines.push(`| ${label} | ${comp.importPath} | ${comp.category} | ${propsStr} |`);
     }
   } else {
     lines.push(`_No components discovered. Check your \`scenar.config.ts\` source roots._`);
@@ -29,39 +33,68 @@ export function renderReport(scanResult: ScanResult): string {
 
   lines.push(``);
 
+  // Split UI primitives out of the skipped list — they're excluded by design,
+  // not failures, and shouldn't be lumped in with HOCs/hooks/server components.
+  const primitives = scanResult.skipped.filter((c) => c.reason === "ui-primitive");
+  const skipped = scanResult.skipped.filter((c) => c.reason !== "ui-primitive");
+
   // --- Skipped ---
-  lines.push(`## Skipped (${scanResult.skipped.length} components)`);
+  lines.push(`## Skipped (${skipped.length} components)`);
   lines.push(``);
 
-  if (scanResult.skipped.length > 0) {
+  if (skipped.length > 0) {
     lines.push(`| Component | Path | Reason |`);
     lines.push(`|-----------|------|--------|`);
-    for (const comp of scanResult.skipped) {
+    for (const comp of skipped) {
       lines.push(`| ${comp.name} | ${comp.filePath} | ${formatReason(comp)} |`);
     }
   } else {
-    lines.push(`_All exported components were successfully discovered._`);
+    lines.push(`_No components were skipped._`);
   }
 
   lines.push(``);
 
-  // --- Adding skipped components ---
-  if (scanResult.skipped.length > 0) {
-    lines.push(`## Adding skipped components`);
+  // --- UI primitives (excluded by default) ---
+  if (primitives.length > 0) {
+    lines.push(`## UI primitives (${primitives.length}, excluded by default)`);
     lines.push(``);
-    lines.push(`Edit \`.scenar/views.custom.tsx\` to add them manually:`);
+    lines.push(
+      `These look like leaf UI primitives (\`ui/\`, \`primitives/\`, \`atoms/\`), ` +
+        `so they're kept out of the registry. Most scenarios compose pages, not ` +
+        `primitives — but you can opt one in via \`views.custom.tsx\` if needed.`,
+    );
+    lines.push(``);
+    lines.push(`| Component | Path |`);
+    lines.push(`|-----------|------|`);
+    for (const comp of primitives) {
+      lines.push(`| ${comp.name} | ${comp.filePath} |`);
+    }
+    lines.push(``);
+  }
+
+  // --- Adding a component manually ---
+  const addable = [...skipped, ...primitives];
+  if (addable.length > 0) {
+    const example = addable[0]!;
+    lines.push(`## Adding a component manually`);
+    lines.push(``);
+    lines.push(
+      `Edit \`.scenar/views.custom.tsx\` to register a skipped component or ` +
+        `primitive. For example:`,
+    );
     lines.push(``);
     lines.push("```tsx");
-    for (const comp of scanResult.skipped) {
-      lines.push(`import { ${comp.name} } from "../${relativeFromSkipped(comp)}";`);
-    }
+    lines.push(`import { ${example.name} } from "../${relativeFromSkipped(example)}";`);
     lines.push(``);
     lines.push(`export const customViews = {`);
-    for (const comp of scanResult.skipped) {
-      lines.push(`  ${comp.name},`);
-    }
+    lines.push(`  ${example.name},`);
     lines.push(`} as const;`);
     lines.push("```");
+    lines.push(``);
+    lines.push(
+      `Note: server components, hooks, and redirect-only pages can't be rendered ` +
+        `as views as-is — adapt them into a presentational component first.`,
+    );
     lines.push(``);
   }
 
@@ -96,6 +129,7 @@ function formatReason(comp: SkippedComponent): string {
     case "hook": return "Hook (use* prefix)";
     case "no-jsx-return": return "No JSX return detected";
     case "no-default-or-named-export": return "No usable export";
+    case "ui-primitive": return "UI primitive (excluded)";
   }
 }
 
