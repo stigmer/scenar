@@ -1,0 +1,153 @@
+# Scenar Authoring Reference
+
+Deep reference for the [scenar skill](SKILL.md): the shell catalog, page parts,
+the `createScenario` SDK (Path B), provider/MSW wiring (Path A), the proto/YAML
+shape, and bundle constraints.
+
+## Canonical example
+
+The bundled example is the best reference — read it before authoring:
+
+- `packages/cli/examples/welcome-tour/steps.ts` — a four-step `ScenarioStep<T>[]`
+- `packages/cli/examples/welcome-tour/index.tsx` — `renderStep` switching on
+  `data.screen`, wrapping `@scenar/react` page templates in a `BrowserView`
+
+## Shell catalog (`@scenar/react`)
+
+Every shell takes `contentKey: string` (pass `String(stepIndex)`) and an
+optional `slideDirection?: "forward" | "backward"`.
+
+| Shell | Frames | Key props |
+|-------|--------|-----------|
+| `BrowserView` | a web app | `url`, `children`, `zoom?` |
+| `TerminalView` | a CLI session | `lines: TerminalLine[]`, `cwd?`, `title?`, `fontSize?` |
+| `CodeEditorView` | an IDE | `files: FileTreeEntry[]`, plus active file/content |
+| `MobileView` | a phone app | mobile chrome + `children` |
+| `ChatView` | a messaging UI | messages; pair with `ChatBubble`, `TypingIndicator` |
+| `SlideView` | a presentation slide | slide content |
+| `DashboardView` | an app with sidebar | `sidebarItems: SidebarItem[]`, `children` |
+| `APIClientView` | a Postman-style client | `method: HttpMethod`, request/response |
+| `DesktopView` | a desktop window | window chrome + `children` |
+
+`TerminalLine` is `{ type: "prompt" | "output" | "error" | "success" | "blank"; text: string }`.
+
+## Page primitives & templates
+
+Use inside a `BrowserView`/`DashboardView` to draw realistic app screens
+(all CSS-drawn; lucide icons inline as components):
+
+- **Templates**: `LoginCardPage`, `DashboardPage`, `SettingsFormPage`, `AdminListPage`
+- **Primitives**: `PageLayout`, `AppBar` (`navLinks: NavLink[]`), `SideNav`
+  (`items: SideNavItem[]`), `FormCard` (`fields: FormField[]`), `DataTable`
+  (`columns`, `rows`), `SettingsForm`, `Breadcrumb`, `StatusBadge`
+  (`variant: "success" | "info" | "warning" | ...`), `PulseHighlight` (draws
+  attention to a region).
+
+`DashboardPage` props (as used by welcome-tour): `appName`, `userName`,
+`navLinks: NavLink[]`, `sidebarItems: SideNavItem[]`, `children`. A `NavLink` is
+`{ label: string; active?: boolean }`; a `SideNavItem` adds `isSection?: boolean`.
+
+## Interactions — full `StepAction` shape
+
+```ts
+interface StepAction {
+  atPercent: number;          // 0.0–1.0 of the step's narration duration
+  type: ActionType;
+  target?: string;            // matches data-cursor-target / data-scroll-target
+  dragTarget?: string;        // drag destination (data-cursor-target)
+  text?: string;              // for "type"
+  typeDelay?: number;         // ms/char (default 50)
+  hoverDuration?: number;     // ms held during "hover" (default 1500)
+  viewportZoom?: number;      // for "viewport_transition" (>1 zooms in; default 1.5)
+  viewportReset?: boolean;    // reset viewport to identity (ignores target/zoom)
+}
+```
+
+`ActionType`: `set_cursor`, `clear_cursor`, `click`, `type`, `hover`, `drag`,
+`scroll_to`, `viewport_transition`.
+
+Targeting attributes (set them in `renderStep` output):
+- `data-cursor-target="id"` — cursor actions (`set_cursor`/`click`/`type`/`hover`/`drag`)
+- `data-scroll-target="id"` — `scroll_to`
+- The engine sets `data-hover` during a hover and `data-dragging` during a drag;
+  style against them for feedback.
+
+Timing rule: with narration, `atPercent` maps onto the clip's real duration; when
+muted, it maps onto the next step's `delayMs`. So author narration first for
+tight sync, or set deliberate `delayMs` values for muted tours.
+
+## Path B — the `createScenario` SDK (type-safe)
+
+For code-authored scenarios, `createScenario` gives compile-time prop checking:
+each step's `props` is typed against the component registered under its `view`.
+
+```ts
+import { createScenario } from "@scenar/sdk";
+import { LoginScreen, Dashboard } from "./screens";
+
+export default createScenario({
+  viewport: { width: 896, height: 480 },
+  views: { login: LoginScreen, dashboard: Dashboard },
+  steps: [
+    { view: "login", delayMs: 0, caption: "Sign in",
+      narrationText: "Sign in to your workspace.",
+      props: { email: "jordan@acme.cloud" } },          // typed to LoginScreen's props
+    { view: "dashboard", delayMs: 2400, caption: "Your dashboard",
+      props: { userName: "Jordan" } },
+  ],
+});
+```
+
+`StepInput` uses `narrationText` (not `narration`) and carries `props` instead of
+a free-form `data`. The output plugs straight into `<ScenarioPlayer>`.
+
+## Path A — real components: provider + MSW wiring
+
+`scenar preview init --source ./src` writes `.scenar/`:
+
+- `views.generated.ts` — scanner-owned; never edit
+- `views.custom.tsx` — your hand-added views
+- `views.ts` — the merged registry you author against
+- `providers.tsx` — **you wire this**: wrap components in the theme/router/data
+  providers they need to render in isolation
+- `report.md` — what was discovered/skipped and why (read this first)
+
+Also generates an MSW service worker. Add MSW handlers so components that fetch
+data render with realistic fixtures (no live backend). This wiring is the one
+step that can't be automated — do it explicitly with the user, using `report.md`
+to see what each component expects. Re-run `scenar preview sync` after code
+changes (it preserves `views.custom.tsx` and `providers.tsx`).
+
+## YAML / proto scenarios
+
+`scenar validate` checks a scenario **YAML** against the proto schema
+(`ai.scenar.scenario.v1`). `ActionType` values match the proto enum names
+verbatim, so YAML interactions use the same `scroll_to`/`set_cursor`/... strings.
+Most authoring is TS-first (directory form); YAML is for proto-driven pipelines.
+
+## Bundle constraints (`scenar pack`)
+
+The packed bundle must satisfy the deploy allowlist (enforced at pack time):
+
+- Allowed file types: `html`, `js`, `css`, `json`, `mp3`, raster images
+  (`png`/`jpg`/`jpeg`/`gif`/`webp`/`avif`), `woff2`/`woff`.
+- **No SVG files** — SVG is active content. Inline SVG as a React component or a
+  `data:` URI instead. (lucide-react icons are already inline components.)
+- Prefer CSS-drawn UI. Import raster assets with a normal `import logo from
+  "./logo.png"` — Vite emits a hashed file at pack time.
+- Relative asset URLs only (the bundle is served from an origin/subpath root):
+  pack sets Vite `base: "./"` for you.
+- `scenar pack` writes `scenario.json` (records the canonical viewport for the
+  embed aspect ratio) and `pack-manifest.json` (every file + sha256 + content
+  type). Don't hand-edit these.
+
+## Hosting the embed
+
+- `scenar serve <bundle>` → `http://localhost:4173/` (ephemeral local preview).
+- `scenar publish <bundle>` → `https://<owner>.github.io/scenar-embeds/<slug>/`
+  (GitHub Pages; needs the `gh` CLI authenticated). Public and permanent. Many
+  tours share one repo (`--repo`, default `scenar-embeds`), each under its slug
+  (`--path`, default the scenario slug; `--path /` for the repo root); publishing
+  one tour preserves its siblings.
+- Both print a responsive `<iframe>` snippet pinned to the bundle's aspect ratio.
+- `scenar render <dir>` → an MP4 (same source, via Remotion).

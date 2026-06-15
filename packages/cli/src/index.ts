@@ -4,6 +4,8 @@ import { registerNarrateCommand } from "./commands/narrate.js";
 import { registerPreviewCommand } from "./commands/preview.js";
 import { registerRenderCommand } from "./commands/render.js";
 import { registerPackCommand } from "./commands/pack.js";
+import { registerServeCommand } from "./commands/serve.js";
+import { registerPublishCommand } from "./commands/publish.js";
 import { registerDeployCommand } from "./commands/deploy.js";
 
 export function createProgram(): Command {
@@ -19,6 +21,8 @@ export function createProgram(): Command {
   registerRenderCommand(program);
   registerPreviewCommand(program);
   registerPackCommand(program);
+  registerServeCommand(program);
+  registerPublishCommand(program);
   registerDeployCommand(program);
 
   return program;

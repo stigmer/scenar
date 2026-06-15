@@ -6,7 +6,8 @@ export type SkipReason =
   | "higher-order-component"
   | "hook"
   | "no-jsx-return"
-  | "no-default-or-named-export";
+  | "no-default-or-named-export"
+  | "ui-primitive";
 
 /** A single prop extracted from a component's props interface. */
 export interface PropInfo {
@@ -21,8 +22,18 @@ export type ComponentCategory = "page" | "layout" | "component" | "primitive";
 
 /** A React component the scanner successfully identified. */
 export interface DiscoveredComponent {
-  /** PascalCase component name. */
+  /**
+   * PascalCase registry key — unique across the scan. Usually identical to
+   * {@link exportName}, but disambiguated (e.g. `AgentsPage`) when two files
+   * export the same identifier so every component keeps a stable, unique slot.
+   */
   readonly name: string;
+  /**
+   * The identifier actually exported by the source module. Equals {@link name}
+   * unless the key was disambiguated, in which case the generated registry
+   * imports `{ exportName as name }`.
+   */
+  readonly exportName: string;
   /** Import path relative to the project root (e.g. "../src/pages/Dashboard"). */
   readonly importPath: string;
   /** Absolute path of the source file. */

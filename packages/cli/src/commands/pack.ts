@@ -1,20 +1,6 @@
-import { resolve, join, basename } from "node:path";
-import { stat, mkdir, writeFile, rm, readdir, copyFile, access } from "node:fs/promises";
 import { Command } from "commander";
-import { detectRenderExport } from "../render/detect-render-export.js";
-import { resolveProvidersPath } from "../render/resolve-providers.js";
-import { generateEmbedEntry, generateEmbedHtml } from "../pack/generate-embed-entry.js";
-import { runViteBuild } from "../pack/build.js";
-import {
-  buildPackManifest,
-  writePackManifest,
-  writeScenarioJson,
-  verifyManifestFilesExist,
-} from "../pack/pack-manifest.js";
 import { DEFAULT_VIEWPORT } from "../pack/viewport.js";
-
-/** Generator version stamped into scenario.json (kept in sync with the CLI). */
-const PACK_GENERATOR_VERSION = "0.0.1";
+import { runPack } from "../pack/run-pack.js";
 
 /** Default canonical viewport width (matches DemoViewport's default). */
 const DEFAULT_WIDTH = DEFAULT_VIEWPORT.width;
@@ -38,7 +24,7 @@ export function registerPackCommand(program: Command): void {
         "(steps.ts + an index.tsx that exports renderStep, plus an\n" +
         "optional .scenar/providers.tsx and narration/). Produces a static\n" +
         "bundle that boots ScenarioPlayer in the browser, ready for\n" +
-        "`scenar deploy`.\n\n" +
+        "`scenar serve`, `scenar publish`, or `scenar deploy`.\n\n" +
         "The bundle contains index.html, hashed JS/CSS, a scenario.json\n" +
         "descriptor, and a pack-manifest.json listing every file with its\n" +
         "lowercase-hex sha256 and content type. Output stays within the\n" +
@@ -57,129 +43,27 @@ export function registerPackCommand(program: Command): void {
     )
     .option("--keep-temp", "keep the generated entry directory for debugging")
     .action(async (dir: string, options: PackOptions) => {
-      const scenarioDir = resolve(dir);
-
-      let info;
       try {
-        info = await stat(scenarioDir);
-      } catch {
-        process.stderr.write(`\x1b[31mError:\x1b[0m ${dir} does not exist.\n`);
-        process.exitCode = 1;
-        return;
-      }
-      if (!info.isDirectory()) {
-        process.stderr.write(
-          `\x1b[31mError:\x1b[0m ${dir} is not a directory.\n` +
-            "The pack command requires a scenario directory (with steps.ts).\n",
-        );
-        process.exitCode = 1;
-        return;
-      }
-
-      const scenarioId = basename(scenarioDir);
-      const outDir = options.out ? resolve(options.out) : resolve(`./${scenarioId}-bundle`);
-      const width = Number(options.width) || DEFAULT_WIDTH;
-      const shellHeight = Number(options.shellHeight) || DEFAULT_SHELL_HEIGHT;
-
-      // The entry must live inside the scenario directory so the bundler's
-      // node_modules resolution walks up into the consumer project.
-      const tempDir = join(scenarioDir, ".scenar-pack");
-
-      try {
-        const renderFilePath = await detectRenderExport(scenarioDir);
-        const providersPath = await resolveProvidersPath(scenarioDir);
-        const hasNarration = await fileExists(join(scenarioDir, "narration", "manifest.json"));
-
-        process.stderr.write(`Scenario:  ${scenarioId}\n`);
-        process.stderr.write(`Render:    ${renderFilePath}\n`);
-        process.stderr.write(`Providers: ${providersPath ?? "none"}\n`);
-        process.stderr.write(`Narration: ${hasNarration ? "yes (manifest found)" : "none"}\n`);
-        process.stderr.write(`Output:    ${outDir}\n\n`);
-
-        // 1. Generate the browser entry + index.html into the temp dir.
-        const entrySource = generateEmbedEntry({
-          scenarioDir,
-          renderFilePath,
-          scenarioId,
-          hasNarration,
-          providersPath,
-          canonicalWidth: width,
-          shellHeight,
-        });
-        await mkdir(tempDir, { recursive: true });
-        const entryFileName = "entry.tsx";
-        const entryHtmlPath = join(tempDir, "index.html");
-        await writeFile(join(tempDir, entryFileName), entrySource, "utf-8");
-        await writeFile(entryHtmlPath, generateEmbedHtml(scenarioId, entryFileName), "utf-8");
-
-        // 2. Build the static bundle with Vite.
-        process.stderr.write("Bundling embed with Vite...\n");
-        await runViteBuild({ root: tempDir, outDir, entryHtmlPath });
-
-        // 3. Copy the narration manifest + audio. The embed fetches
-        //    ./narration/manifest.json at runtime and resolves each clip's
-        //    relative src against it, so both must ship in the bundle.
-        if (hasNarration) {
-          await copyNarration(scenarioDir, outDir);
-        }
-
-        // 4. Write the required scenario.json descriptor at the bundle root,
-        //    recording the canonical viewport baked into the bundle so `deploy`
-        //    can derive a correctly-proportioned embed snippet (DD-004).
-        await writeScenarioJson(outDir, scenarioId, PACK_GENERATOR_VERSION, {
-          width,
-          height: shellHeight,
+        const result = await runPack({
+          scenarioDir: dir,
+          outDir: options.out,
+          width: Number(options.width) || DEFAULT_WIDTH,
+          shellHeight: Number(options.shellHeight) || DEFAULT_SHELL_HEIGHT,
+          keepTemp: options.keepTemp,
+          onLog: (message) => process.stderr.write(`${message}\n`),
         });
 
-        // 5. Compute + write the deploy-facing pack manifest (validates the
-        //    bundle against the backend allowlist; throws on any violation).
-        const manifest = await buildPackManifest(outDir, scenarioId);
-        await verifyManifestFilesExist(outDir, manifest);
-        await writePackManifest(outDir, manifest);
-
-        const totalBytes = manifest.files.reduce((sum, f) => sum + f.sizeBytes, 0);
         process.stderr.write(
-          `\n\x1b[32m✓\x1b[0m Packed ${manifest.files.length} files (${formatBytes(totalBytes)}) to ${outDir}\n`,
+          `\n\x1b[32m✓\x1b[0m Packed ${result.manifest.files.length} files ` +
+            `(${formatBytes(result.totalBytes)}) to ${result.outDir}\n`,
         );
-        process.stderr.write(`  Next: scenar deploy ${outDir}\n`);
+        process.stderr.write(`  Next: scenar serve ${result.outDir}\n`);
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         process.stderr.write(`\x1b[31mError:\x1b[0m ${msg}\n`);
         process.exitCode = 1;
-      } finally {
-        if (!options.keepTemp) {
-          await rm(tempDir, { recursive: true, force: true }).catch(() => {});
-        }
       }
     });
-}
-
-/**
- * Copy the narration manifest and every *.mp3 from <scenarioDir>/narration
- * into <outDir>/narration. The manifest is the runtime index the embed fetches;
- * the mp3s are the clips it references by relative src.
- */
-async function copyNarration(scenarioDir: string, outDir: string): Promise<void> {
-  const srcDir = join(scenarioDir, "narration");
-  const destDir = join(outDir, "narration");
-  await mkdir(destDir, { recursive: true });
-  const entries = await readdir(srcDir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (!entry.isFile()) continue;
-    const name = entry.name.toLowerCase();
-    if (name === "manifest.json" || name.endsWith(".mp3")) {
-      await copyFile(join(srcDir, entry.name), join(destDir, entry.name));
-    }
-  }
-}
-
-async function fileExists(path: string): Promise<boolean> {
-  try {
-    await access(path);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function formatBytes(bytes: number): string {

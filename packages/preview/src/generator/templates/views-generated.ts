@@ -25,9 +25,14 @@ export function renderViewsGenerated(
   for (const comp of components) {
     const relPath = buildRelativeImport(comp.filePath, outputDir);
     if (comp.exportType === "default") {
+      // Default imports bind to an arbitrary local name, so the (possibly
+      // disambiguated) registry key is used directly.
       imports.push(`import ${comp.name} from "${relPath}";`);
-    } else {
+    } else if (comp.name === comp.exportName) {
       imports.push(`import { ${comp.name} } from "${relPath}";`);
+    } else {
+      // Key was disambiguated away from the source export — alias on import.
+      imports.push(`import { ${comp.exportName} as ${comp.name} } from "${relPath}";`);
     }
     entries.push(`  ${comp.name},`);
   }
