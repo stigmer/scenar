@@ -33,6 +33,17 @@ export interface EmbedEntryInput {
  * @scenar/react theme + styles so the bundle is self-contained, and scopes the
  * tree with `SCENAR_CLASS` + `DemoViewport` exactly as the authoring surfaces do.
  *
+ * Interactions: the entry wires the full host-side interaction system —
+ * `useStepInteractions` + `<Cursor>` + `<ViewportTransformLayer>` — so packed
+ * embeds run the same narration-synced cursor moves, clicks, typing, hovers,
+ * drags, scrolls, and viewport transitions as the in-app player. (`ScenarioPlayer`
+ * itself owns none of this; the host must wire it, per DemoViewport's contract.)
+ *
+ * Theme: the embed reads `?theme` from its own URL and applies the `dark` class
+ * alongside `SCENAR_CLASS` when `theme=dark` (matching the `.scenar.dark` token
+ * selector). The default is light, so existing embeds are unaffected; a host can
+ * theme-sync simply by framing `…/?theme=dark`.
+ *
  * Pure function, no side effects — the caller writes the result to disk.
  */
 export function generateEmbedEntry(input: EmbedEntryInput): string {
@@ -43,11 +54,23 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   const lines: string[] = [];
 
   // --- Imports ---
+  // React hooks drive the host-side interaction system (the same one the
+  // in-app player wires): step tracking, cursor target, ripple/drag flags, and
+  // the viewport transform. Without these, the embed would render content but
+  // silently drop every cursor move and mid-step interaction.
+  lines.push(`import { useCallback, useRef, useState } from "react";`);
   lines.push(`import { createRoot } from "react-dom/client";`);
-  const reactImports = input.hasNarration
-    ? `ScenarioPlayer, DemoViewport, SCENAR_CLASS, useNarrationManifest`
-    : `ScenarioPlayer, DemoViewport, SCENAR_CLASS`;
-  lines.push(`import { ${reactImports} } from "@scenar/react";`);
+  const reactImports = [
+    "ScenarioPlayer",
+    "DemoViewport",
+    "SCENAR_CLASS",
+    "Cursor",
+    "useStepInteractions",
+    "ViewportTransformLayer",
+    "VIEWPORT_TRANSFORM_IDENTITY",
+  ];
+  if (input.hasNarration) reactImports.push("useNarrationManifest");
+  lines.push(`import { ${reactImports.join(", ")} } from "@scenar/react";`);
   lines.push(`import "@scenar/react/theme.css";`);
   lines.push(`import "@scenar/react/styles.css";`);
   lines.push(`import { renderStep } from ${JSON.stringify(renderImport)};`);
@@ -86,26 +109,74 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
     lines.push(`const _resolveManifestUrl = () => "./narration/manifest.json";`);
   }
 
+  // --- Theme: opt-in dark via ?theme=dark (default light; backward-compatible) ---
+  // Read once at module load from the embed's own URL. `theme=dark` adds the
+  // `dark` class next to SCENAR_CLASS so the `.scenar.dark` tokens apply; any
+  // other value (including absent) renders light, preserving prior behavior.
+  lines.push(``);
+  lines.push(`const _theme = (() => {`);
+  lines.push(`  try { return new URLSearchParams(window.location.search).get("theme"); }`);
+  lines.push(`  catch { return null; }`);
+  lines.push(`})();`);
+  lines.push(`const _rootClass = _theme === "dark" ? SCENAR_CLASS + " dark" : SCENAR_CLASS;`);
+
   // --- App tree ---
+  // The structure mirrors the in-app demo wiring exactly (see DemoViewport's
+  // contract and ViewportTransformLayer's "Cursor must be a sibling" invariant):
+  //   DemoViewport(containerRef)
+  //     └ ViewportTransformLayer(transform)
+  //         └ ScenarioPlayer(embed, onStepChange)
+  //     └ Cursor(target, containerRef)   ← sibling, not a child
+  // `useStepInteractions` reads the current step's `interactions` and drives the
+  // cursor / ripple / drag / viewport state, synced to narration duration.
+  const manifestExpr = input.hasNarration ? "_manifest" : "undefined";
   lines.push(``);
   lines.push(`function _App() {`);
   if (input.hasNarration) {
     lines.push(`  const _manifest = useNarrationManifest(${JSON.stringify(input.scenarioId)}, _resolveManifestUrl);`);
   }
+  lines.push(`  const _containerRef = useRef<HTMLDivElement>(null);`);
+  lines.push(`  const [_stepIndex, _setStepIndex] = useState(0);`);
+  lines.push(`  const [_cursorTarget, _setCursorTarget] = useState<string | undefined>(undefined);`);
+  lines.push(`  const [_showRipple, _setShowRipple] = useState(true);`);
+  lines.push(`  const [_dragging, _setDragging] = useState(false);`);
+  lines.push(`  const [_viewport, _setViewport] = useState(VIEWPORT_TRANSFORM_IDENTITY);`);
+  lines.push(``);
+  // Reset the cursor when the step changes so a prior step's target never
+  // lingers; the new step's interactions re-set it at their scheduled time.
+  lines.push(`  const _handleStepChange = useCallback((_data: any, index: number) => {`);
+  lines.push(`    _setStepIndex(index);`);
+  lines.push(`    _setCursorTarget(undefined);`);
+  lines.push(`  }, []);`);
+  lines.push(``);
+  lines.push(`  useStepInteractions({`);
+  lines.push(`    stepIndex: _stepIndex,`);
+  lines.push(`    narrationManifest: ${manifestExpr},`);
+  lines.push(`    containerRef: _containerRef,`);
+  lines.push(`    setCursorTarget: _setCursorTarget,`);
+  lines.push(`    setShowRipple: _setShowRipple,`);
+  lines.push(`    setDragging: _setDragging,`);
+  lines.push(`    setViewportTransform: _setViewport,`);
+  lines.push(`    steps: _steps,`);
+  lines.push(`  });`);
+  lines.push(``);
   lines.push(`  const _bundle = {`);
   lines.push(`    id: ${JSON.stringify(input.scenarioId)},`);
   lines.push(`    steps: _steps,`);
-  lines.push(`    narrationManifest: ${input.hasNarration ? "_manifest" : "undefined"},`);
+  lines.push(`    narrationManifest: ${manifestExpr},`);
   lines.push(`  };`);
   const open = input.providersPath ? `<_Providers>` : ``;
   const close = input.providersPath ? `</_Providers>` : ``;
   lines.push(`  return (`);
-  lines.push(`    <div className={SCENAR_CLASS}>`);
+  lines.push(`    <div className={_rootClass}>`);
   lines.push(`      ${open}`);
-  lines.push(`      <DemoViewport canonicalWidth={${input.canonicalWidth}} shellHeight={${input.shellHeight}}>`);
-  lines.push(`        <ScenarioPlayer bundle={_bundle} embed>`);
-  lines.push(`          {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
-  lines.push(`        </ScenarioPlayer>`);
+  lines.push(`      <DemoViewport containerRef={_containerRef} canonicalWidth={${input.canonicalWidth}} shellHeight={${input.shellHeight}}>`);
+  lines.push(`        <ViewportTransformLayer transform={_viewport}>`);
+  lines.push(`          <ScenarioPlayer bundle={_bundle} embed onStepChange={_handleStepChange}>`);
+  lines.push(`            {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
+  lines.push(`          </ScenarioPlayer>`);
+  lines.push(`        </ViewportTransformLayer>`);
+  lines.push(`        <Cursor target={_cursorTarget} containerRef={_containerRef} showRipple={_showRipple} isDragging={_dragging} />`);
   lines.push(`      </DemoViewport>`);
   lines.push(`      ${close}`);
   lines.push(`    </div>`);

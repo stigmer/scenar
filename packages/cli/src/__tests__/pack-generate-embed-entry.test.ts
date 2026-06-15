@@ -16,11 +16,51 @@ describe("generateEmbedEntry", () => {
   it("mounts ScenarioPlayer into #root with the renderStep contract", () => {
     const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
     expect(src).toContain('import { createRoot } from "react-dom/client";');
-    expect(src).toContain('import { ScenarioPlayer, DemoViewport, SCENAR_CLASS } from "@scenar/react";');
     expect(src).toContain('import { renderStep } from "/proj/scenarios/welcome-tour/index";');
-    expect(src).toContain("<ScenarioPlayer bundle={_bundle} embed>");
+    expect(src).toContain("<ScenarioPlayer bundle={_bundle} embed onStepChange={_handleStepChange}>");
     expect(src).toContain("renderStep(data, stepIndex)");
     expect(src).toContain('getElementById("root")');
+  });
+
+  it("imports the interaction primitives + React hooks the embed wiring needs", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    expect(src).toContain('import { useCallback, useRef, useState } from "react";');
+    // ScenarioPlayer/DemoViewport/SCENAR_CLASS plus Cursor, useStepInteractions,
+    // ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY all come from @scenar/react.
+    expect(src).toContain(
+      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, Cursor, useStepInteractions, ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY } from "@scenar/react";',
+    );
+  });
+
+  it("wires the host-side interaction system so packed embeds run interactions", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    // A shared container ref flows to DemoViewport, useStepInteractions, and Cursor.
+    expect(src).toContain("const _containerRef = useRef<HTMLDivElement>(null);");
+    expect(src).toContain("<DemoViewport containerRef={_containerRef}");
+    // Step index is tracked from the player and fed to the interaction scheduler.
+    expect(src).toContain("onStepChange={_handleStepChange}");
+    expect(src).toContain("useStepInteractions({");
+    expect(src).toContain("setCursorTarget: _setCursorTarget,");
+    expect(src).toContain("setViewportTransform: _setViewport,");
+    expect(src).toContain("steps: _steps,");
+    // Cursor is a sibling of the transform layer (absolute-positioned against the
+    // shared container) — the documented invariant.
+    expect(src).toContain("<ViewportTransformLayer transform={_viewport}>");
+    expect(src).toContain(
+      "<Cursor target={_cursorTarget} containerRef={_containerRef} showRipple={_showRipple} isDragging={_dragging} />",
+    );
+  });
+
+  it("feeds the narration manifest into the interaction scheduler when present", () => {
+    const without = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    // No narration: interactions are timed by step delays only.
+    expect(without).toContain("narrationManifest: undefined,");
+
+    const withNarration = generateEmbedEntry({ ...BASE, hasNarration: true, providersPath: null });
+    // With narration: both the bundle and useStepInteractions receive _manifest,
+    // so interaction timing tracks the spoken-clip durations.
+    expect(withNarration).toContain("narrationManifest: _manifest,");
+    expect(withNarration).not.toContain("narrationManifest: undefined,");
   });
 
   it("imports the @scenar/react theme + styles so the bundle is self-contained", () => {
@@ -31,9 +71,21 @@ describe("generateEmbedEntry", () => {
 
   it("scopes the tree with SCENAR_CLASS + DemoViewport sizing", () => {
     const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
-    expect(src).toContain("className={SCENAR_CLASS}");
     expect(src).toContain("canonicalWidth={896}");
     expect(src).toContain("shellHeight={480}");
+  });
+
+  it("derives the root class from ?theme so dark is opt-in and the default stays light", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    // The container class is theme-derived, not a hardcoded SCENAR_CLASS.
+    expect(src).toContain("className={_rootClass}");
+    expect(src).not.toContain("className={SCENAR_CLASS}");
+    // Reads the theme from the embed's own URL.
+    expect(src).toContain('new URLSearchParams(window.location.search).get("theme")');
+    // theme=dark adds the `dark` class (-> .scenar.dark tokens); else light.
+    expect(src).toContain(
+      'const _rootClass = _theme === "dark" ? SCENAR_CLASS + " dark" : SCENAR_CLASS;',
+    );
   });
 
   it("fetches the narration manifest at runtime only when present", () => {
@@ -45,10 +97,11 @@ describe("generateEmbedEntry", () => {
     const withNarration = generateEmbedEntry({ ...BASE, hasNarration: true, providersPath: null });
     // Never inlines the manifest as a build-time JSON import.
     expect(withNarration).not.toContain("import _manifest");
-    // Imports the hook and fetches the manifest from its own relative location,
-    // so clip src values resolve against ./narration/ at runtime.
+    // Imports the hook (appended after the interaction primitives) and fetches
+    // the manifest from its own relative location, so clip src values resolve
+    // against ./narration/ at runtime.
     expect(withNarration).toContain(
-      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, useNarrationManifest } from "@scenar/react";',
+      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, Cursor, useStepInteractions, ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY, useNarrationManifest } from "@scenar/react";',
     );
     expect(withNarration).toContain('const _resolveManifestUrl = () => "./narration/manifest.json";');
     expect(withNarration).toContain(
