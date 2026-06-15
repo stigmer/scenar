@@ -1,11 +1,11 @@
 import { type RefObject, useCallback, useEffect, useRef } from "react";
-import type { StepTimeline } from "@scenar/core";
 import {
   type ScenarEmbedCommand,
   type ScenarEmbedEvent,
+  type StepTimeline,
   frameEmbedEvent,
   parseEmbedCommand,
-} from "./protocol.js";
+} from "@scenar/core";
 
 type PlaybackState = "idle" | "playing" | "paused";
 

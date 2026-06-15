@@ -64,6 +64,8 @@ export { usePlaybackProgress } from "./player/usePlaybackProgress.js";
 export { useStepInteractions } from "./interactions/useStepInteractions.js";
 
 // Embed bridge (cross-origin iframe postMessage protocol)
+// The protocol + host controller live in @scenar/core; re-exported here so
+// existing `@scenar/react` consumers keep their imports unchanged.
 export { useScenarEmbedBridge } from "./embed/useScenarEmbedBridge.js";
 export type {
   ScenarEmbedControls,
@@ -76,13 +78,13 @@ export {
   frameEmbedCommand,
   parseEmbedCommand,
   parseEmbedEvent,
-} from "./embed/protocol.js";
+} from "@scenar/core";
 export type {
   ScenarEmbedEvent,
   ScenarEmbedCommand,
   ScenarEmbedEventMessage,
   ScenarEmbedCommandMessage,
-} from "./embed/protocol.js";
+} from "@scenar/core";
 
 // Theme
 export { SCENAR_CLASS } from "./theme/index.js";

@@ -1,11 +1,13 @@
 /**
  * The `scenar` embed postMessage protocol (v1).
  *
- * A packed scenario is delivered as a cross-origin iframe. This module defines
- * the wire contract between the embedded player and its host page: events the
- * player emits and commands the host may send. It is pure (no React, no DOM) so
- * the same contract can back the player runtime here and any future host-side
- * loader (`embed.js` / oEmbed).
+ * A packed scenario is delivered as a cross-origin iframe. This module is the
+ * wire contract between the embedded player and its host page: the events the
+ * player emits and the commands the host may send. It is pure (no React, no
+ * DOM) and lives in `@scenar/core` so every surface shares one definition — the
+ * React embed-side runtime (`useScenarEmbedBridge` in `@scenar/react`), the
+ * framework-free host driver ({@link createEmbedHostController}), and any future
+ * host loader (`embed.js` / oEmbed).
  *
  * Every message is stamped with a fixed {@link SCENAR_EMBED_SOURCE} and the
  * protocol {@link SCENAR_EMBED_PROTOCOL_VERSION}. Receivers MUST ignore any
@@ -103,7 +105,7 @@ function isFiniteNumber(value: unknown): value is number {
  * This is the schema boundary: it rejects anything that is not a well-formed
  * scenar command of the matching version, including unknown command types and
  * commands missing or mistyping their required fields. Origin/source-window
- * checks live in the bridge; this function validates the payload shape only.
+ * checks live in the receiver; this function validates the payload shape only.
  */
 export function parseEmbedCommand(data: unknown): ScenarEmbedCommand | null {
   if (!isScenarEnvelope(data)) return null;

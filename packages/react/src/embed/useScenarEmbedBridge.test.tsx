@@ -1,14 +1,14 @@
 import { useRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
-import type { StepTimeline } from "@scenar/core";
-import { type ScenarEmbedControls, useScenarEmbedBridge } from "./useScenarEmbedBridge.js";
 import {
   SCENAR_EMBED_PROTOCOL_VERSION,
   SCENAR_EMBED_SOURCE,
   type ScenarEmbedEvent,
+  type StepTimeline,
   frameEmbedCommand,
-} from "./protocol.js";
+} from "@scenar/core";
+import { type ScenarEmbedControls, useScenarEmbedBridge } from "./useScenarEmbedBridge.js";
 
 const TIMELINE: StepTimeline = { stepStartTimesMs: [0, 1000, 2000], totalDurationMs: 3000 };
 

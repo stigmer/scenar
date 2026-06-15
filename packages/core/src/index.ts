@@ -52,3 +52,27 @@ export {
   cursorTargetSelector,
   scrollTargetSelector,
 } from "./targeting/data-attributes.js";
+
+// Embed postMessage protocol (v1) — the cross-origin iframe wire contract
+export {
+  SCENAR_EMBED_SOURCE,
+  SCENAR_EMBED_PROTOCOL_VERSION,
+  frameEmbedEvent,
+  frameEmbedCommand,
+  parseEmbedCommand,
+  parseEmbedEvent,
+} from "./embed/protocol.js";
+export type {
+  ScenarEmbedEvent,
+  ScenarEmbedCommand,
+  ScenarEmbedEventMessage,
+  ScenarEmbedCommandMessage,
+} from "./embed/protocol.js";
+
+// Embed host controller — framework-free driver for an embedded player
+export { createEmbedHostController } from "./embed/host-controller.js";
+export type {
+  ScenarEmbedHostController,
+  ScenarEmbedHostTarget,
+  ScenarEmbedHostOptions,
+} from "./embed/host-controller.js";
