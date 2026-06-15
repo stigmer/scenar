@@ -182,6 +182,8 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  scripts: {}
+
 packages:
 
   '@adobe/css-tools@4.4.4':

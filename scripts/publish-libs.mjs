@@ -8,7 +8,9 @@
  * directory. The workspace package.json is never modified.
  *
  * Publish order respects the dependency graph:
- *   @scenar/core + @scenar/preview → @scenar/sdk + @scenar/react → @scenar/remotion → @scenar/cli
+ *   @scenar/stubs + @scenar/core + @scenar/preview → @scenar/sdk + @scenar/react → @scenar/remotion → @scenar/cli
+ * (@scenar/stubs is a leaf — only @bufbuild/protobuf — and @scenar/cli depends
+ * on it at runtime, so it must publish before cli.)
  *
  * Usage:
  *   node scripts/publish-libs.mjs --version 0.1.0              # build + publish
@@ -29,12 +31,20 @@ import {
   unlinkSync,
 } from "node:fs";
 import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 
-const PACKAGES = [
+/**
+ * Every publishable workspace package, in dependency order (leaves first).
+ * Exported so a guard test can assert this set stays in lockstep with the
+ * workspace — every package marked `publishConfig.access: public` must appear
+ * here, or a lockstep release would ship a dangling dependency (see
+ * publish-libs.test.ts).
+ */
+export const PACKAGES = [
+  "apis/stubs/ts",
   "packages/core",
   "packages/preview",
   "packages/sdk",
@@ -270,7 +280,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Only run the publish flow when invoked directly (e.g. `node publish-libs.mjs`),
+// not when imported (the guard test imports PACKAGES from this module).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
