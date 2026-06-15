@@ -60,6 +60,25 @@ The engine identifies interactive elements via data attributes. These constants 
 - `NarrationEntry` — `{ src, durationMs }` for one audio clip.
 - `NarrationManifest` — `{ steps: (NarrationEntry | null)[] }`.
 
+### Embed protocol (v1)
+
+The wire contract for a packed scenario delivered as a cross-origin iframe. The embedded player emits events; the host page sends commands. Every message carries a fixed source tag and version, and receivers ignore anything that does not match — the global `message` channel is shared with the host and every other widget on the page.
+
+- `SCENAR_EMBED_SOURCE` — `"scenar-embed"`, stamped on every message.
+- `SCENAR_EMBED_PROTOCOL_VERSION` — `1`. Bumped only on a breaking message-shape change.
+- `ScenarEmbedEvent` — events the player emits (`ready`, `resize`, `started`, `paused`, `stepchange`, `progress`, `completed`, `audioBlocked`, `error`).
+- `ScenarEmbedCommand` — commands the host sends (`play`, `pause`, `seek`, `setMuted`, `setVolume`, `prefetch`, `destroy`).
+- `frameEmbedEvent(event)` / `frameEmbedCommand(command)` — stamp a message with the source + version envelope, ready to post.
+- `parseEmbedEvent(data)` / `parseEmbedCommand(data)` — the schema boundary: validate an inbound `MessageEvent.data` and return the typed message, or `null`. Origin and source-window checks live in the receiver.
+- `ScenarEmbedEventMessage` / `ScenarEmbedCommandMessage` — a framed message (event/command plus the envelope) as it travels over `postMessage`.
+
+### Embed host controller
+
+- `createEmbedHostController(target, options?)` — a framework-free driver for an embedded player. It sends commands to the iframe and forwards validated events to `options.onEvent`. Both directions are pinned to `target.origin` (derive it with `new URL(embedUrl).origin`). The same controller backs both the React console preview and a vanilla `embed.js` loader, so host behavior never forks.
+- `ScenarEmbedHostController` — the returned handle: `play`, `pause`, `seek`, `setMuted`, `setVolume`, `prefetch`, `destroy`. `destroy()` tells the embed to stop and detaches the message listener; the host still owns the iframe element.
+- `ScenarEmbedHostTarget` — `{ iframe, origin }`, the embed this controller drives.
+- `ScenarEmbedHostOptions` — `{ onEvent? }`, invoked for every well-formed event from the pinned embed.
+
 ## License
 
 Apache-2.0
