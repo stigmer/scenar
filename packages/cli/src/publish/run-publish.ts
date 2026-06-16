@@ -1,7 +1,7 @@
 import { resolve, join, basename } from "node:path";
 import { stat, readFile } from "node:fs/promises";
 import { PACK_MANIFEST_FILE } from "../pack/pack-manifest.js";
-import { buildEmbedSnippet, buildEnhancedEmbedSnippet } from "../deploy/embed-snippet.js";
+import { buildEmbedSnippet, buildEnhancedEmbedSnippet } from "../embed/embed-snippet.js";
 import { readBundleViewport } from "../bundle/read-viewport.js";
 import type { Viewport } from "../pack/viewport.js";
 import { createGithubPublisher } from "./github.js";

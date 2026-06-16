@@ -37,14 +37,33 @@ cp -R node_modules/@scenar/mcp-server/skill .cursor/skills/scenar
 Restart the editor so it picks up the MCP server and skill. See
 [mcp-server.md](mcp-server.md) for other editors and configuration.
 
-## 2. Scan your app
+## 2. Create your demos project
+
+**Where to run it.** Use a dedicated demos repo (e.g. `your-app-demos`) so the
+`.scenar/` registry and packed bundles stay out of your product repo. You can
+also keep it in a `demos/` folder inside your app repo, or as a workspace member
+in a monorepo — the only difference is where these files land.
+
+In an empty directory, run `scenar install` with the component package(s) you
+want to demo:
 
 ```bash
-npx @scenar/cli preview init --source ./src
+npx @scenar/cli install @your-org/ui
 ```
 
-Or ask the AI: *"Run scenar preview init on ./src."* (it calls
-`scenar_preview_init`). This writes a `.scenar/` directory:
+Or ask the AI: *"Run scenar install with @your-org/ui."* (it calls
+`scenar_install`). This one command:
+
+- scaffolds a `package.json` and a starter view if the directory is empty,
+- adds `@your-org/ui` (plus `@scenar/*` and React) as dependencies and runs your
+  package manager,
+- scans your local `src/` views and writes the `.scenar/` registry.
+
+Specs are resolver-agnostic — a registry version (`@your-org/ui@1.2.0`),
+`workspace:*`, `file:../ui`, or a git URL all work. Inside a monorepo the
+project is detected as a workspace member and the install runs at the root.
+
+`.scenar/` contains:
 
 | File | Owner | Purpose |
 |------|-------|---------|
@@ -56,6 +75,20 @@ Or ask the AI: *"Run scenar preview init on ./src."* (it calls
 
 It also installs an MSW (Mock Service Worker) service worker into your public
 directory.
+
+**You author the views.** Compose your real components into the screens you want
+to narrate under `src/`, then re-run `scenar install` to refresh the registry —
+generated files are rewritten; your `views.custom.tsx`, `providers.tsx`, and
+scenario sources are preserved.
+
+**What to commit.** Version-control the files you own — `views.ts`,
+`views.custom.tsx`, `providers.tsx`, and your scenario sources
+(`steps.ts`/`index.tsx`). Ignore regenerable output:
+
+```gitignore
+*-bundle/                    # packed embeds (rebuild with `scenar pack`)
+.scenar/views.generated.ts   # re-created by `scenar install`
+```
 
 **Read `report.md` first.** It tells you which components were found, which were
 skipped, and what props/providers they expect.
@@ -150,8 +183,7 @@ your GitHub account — a **separate repo from your application's source** — a
 serves each tour from its own path, so publishing more tours never clobbers
 earlier ones and nothing lands in your app's repo. Paste the snippet into any
 page. Re-publishing a tour updates just its subfolder. See
-[hosting.md](hosting.md) for `--repo`/`--path`, custom domains, and the cloud
-option.
+[hosting.md](hosting.md) for `--repo`/`--path` and custom domains.
 
 ## Try it with the example
 

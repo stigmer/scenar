@@ -107,7 +107,7 @@ function registerRegistryFile(
         {
           uri: u.href,
           mimeType,
-          text: body ?? `No ${relativePath} yet. Run scenar_preview_init to generate it.`,
+          text: body ?? `No ${relativePath} yet. Run scenar_install to generate it.`,
         },
       ],
     };

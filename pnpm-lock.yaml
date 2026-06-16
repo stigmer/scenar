@@ -59,15 +59,6 @@ importers:
 
   packages/cli:
     dependencies:
-      '@bufbuild/protobuf':
-        specifier: ^2.2.2
-        version: 2.11.0
-      '@connectrpc/connect':
-        specifier: ^2.0.0
-        version: 2.1.1(@bufbuild/protobuf@2.11.0)
-      '@connectrpc/connect-node':
-        specifier: ^2.0.0
-        version: 2.1.1(@bufbuild/protobuf@2.11.0)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.11.0))
       '@remotion/bundler':
         specifier: 4.0.448
         version: 4.0.448(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -86,9 +77,6 @@ importers:
       '@scenar/sdk':
         specifier: workspace:*
         version: link:../sdk
-      '@scenar/stubs':
-        specifier: workspace:*
-        version: link:../../apis/stubs/ts
       commander:
         specifier: ^13.0.0
         version: 13.1.0
@@ -141,9 +129,6 @@ importers:
       '@scenar/cli':
         specifier: workspace:*
         version: link:../cli
-      '@scenar/preview':
-        specifier: workspace:*
-        version: link:../preview
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -475,18 +460,6 @@ packages:
 
   '@bufbuild/protobuf@2.11.0':
     resolution: {integrity: sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ==}
-
-  '@connectrpc/connect-node@2.1.1':
-    resolution: {integrity: sha512-s3TfsI1XF+n+1z6MBS9rTnFsxxR4Rw5wmdEnkQINli81ESGxcsfaEet8duzq8LVuuCupmhUsgpRo0Nv9pZkufg==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@bufbuild/protobuf': ^2.7.0
-      '@connectrpc/connect': 2.1.1
-
-  '@connectrpc/connect@2.1.1':
-    resolution: {integrity: sha512-JzhkaTvM73m2K1URT6tv53k2RwngSmCXLZJgK580qNQOXRzZRR/BCMfZw3h+90JpnG6XksP5bYT+cz0rpUzUWQ==}
-    peerDependencies:
-      '@bufbuild/protobuf': ^2.7.0
 
   '@csstools/color-helpers@5.1.0':
     resolution: {integrity: sha512-S11EXWJyy0Mz5SYvRmY8nJYTFFd1LCNV+7cXyAgQtOOuzb4EsgfqDufL+9esx72/eLhsRdGZwaldu/h+E4t4BA==}
@@ -4925,15 +4898,6 @@ snapshots:
       css-tree: 3.2.1
 
   '@bufbuild/protobuf@2.11.0': {}
-
-  '@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.11.0)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.11.0))':
-    dependencies:
-      '@bufbuild/protobuf': 2.11.0
-      '@connectrpc/connect': 2.1.1(@bufbuild/protobuf@2.11.0)
-
-  '@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.11.0)':
-    dependencies:
-      '@bufbuild/protobuf': 2.11.0
 
   '@csstools/color-helpers@5.1.0': {}
 

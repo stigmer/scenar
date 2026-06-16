@@ -43,6 +43,21 @@ export type {
 } from "./publish/publish-flow.js";
 export { createGithubPublisher } from "./publish/github.js";
 
+// Install (bootstrap a demos project) + the scan → .scenar/ generate pipeline
+export { runInstall } from "./install/run-install.js";
+export type {
+  RunInstallOptions,
+  RunInstallResult,
+  ParsedSpec,
+  PackageManager,
+} from "./install/run-install.js";
+export { appendPackageReport } from "./install/package-report.js";
+export { runGeneratePipeline } from "./preview/run-generate.js";
+export type {
+  GeneratePipelineOptions,
+  GeneratePipelineResult,
+} from "./preview/run-generate.js";
+
 // Validate
 export { validateScenario } from "./validate/scenario-validator.js";
 export { loadScenarioYaml } from "./util/load-yaml.js";
@@ -50,6 +65,6 @@ export { loadScenarioYaml } from "./util/load-yaml.js";
 // Bundle helpers (viewport + embed snippet)
 export { readBundleViewport } from "./bundle/read-viewport.js";
 export type { BundleViewport } from "./bundle/read-viewport.js";
-export { buildEmbedSnippet } from "./deploy/embed-snippet.js";
+export { buildEmbedSnippet } from "./embed/embed-snippet.js";
 export { DEFAULT_VIEWPORT, parseViewport } from "./pack/viewport.js";
 export type { Viewport } from "./pack/viewport.js";

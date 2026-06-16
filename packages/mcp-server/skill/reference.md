@@ -103,7 +103,7 @@ a free-form `data`. The output plugs straight into `<ScenarioPlayer>`.
 
 ## Path A — real components: provider + MSW wiring
 
-`scenar preview init --source ./src` writes `.scenar/`:
+`scenar install <your-component-package>` writes `.scenar/`:
 
 - `views.generated.ts` — scanner-owned; never edit
 - `views.custom.tsx` — your hand-added views
@@ -115,8 +115,8 @@ a free-form `data`. The output plugs straight into `<ScenarioPlayer>`.
 Also generates an MSW service worker. Add MSW handlers so components that fetch
 data render with realistic fixtures (no live backend). This wiring is the one
 step that can't be automated — do it explicitly with the user, using `report.md`
-to see what each component expects. Re-run `scenar preview sync` after code
-changes (it preserves `views.custom.tsx` and `providers.tsx`).
+to see what each component expects. Re-run `scenar install` after code changes
+(it preserves `views.custom.tsx` and `providers.tsx`).
 
 ## YAML / proto scenarios
 

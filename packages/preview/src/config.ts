@@ -1,7 +1,7 @@
 /** Supported framework types for entry point detection. */
 export type FrameworkType = "nextjs" | "vite" | "cra" | "remix" | "unknown";
 
-/** Configuration for `scenar preview init` / `scenar preview sync`. */
+/** Configuration for the `scenar install` scan. */
 export interface PreviewConfig {
   /**
    * Path to the project to scan (relative to config file location or absolute).

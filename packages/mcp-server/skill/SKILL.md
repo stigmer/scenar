@@ -1,32 +1,32 @@
 ---
 name: scenar
 description: >-
-  Author Scenar scenario tours from a React app: scan components with `scenar
-  preview`, write steps.ts + index.tsx (or use the createScenario SDK), add
-  cursor/scroll/type interactions and narration, then pack, serve, and publish
-  the embed. Use when the user wants to build a product tour, demo, or
+  Author Scenar scenario tours from a React app: bootstrap a demos project with
+  `scenar install`, write steps.ts + index.tsx (or use the createScenario SDK),
+  add cursor/scroll/type interactions and narration, then pack, serve, and
+  publish the embed. Use when the user wants to build a product tour, demo, or
   interactive embed with Scenar; mentions the @scenar/* packages; or asks to run
-  scenar preview/validate/narrate/pack/serve/publish (directly or via the
-  @scenar/mcp-server tools scenar_preview_init, scenar_pack, scenar_serve,
+  scenar install/validate/narrate/pack/serve/publish (directly or via the
+  @scenar/mcp-server tools scenar_install, scenar_pack, scenar_serve,
   scenar_publish, etc.).
 ---
 
 # Authoring Scenar Scenarios
 
 Scenar turns a React app into a narrated, interactive embed (and an MP4). You,
-the AI, are the authoring engine: you scan the app, write the scenario, and run
-the pipeline. This skill is the source of truth for the model and the workflow.
+the AI, are the authoring engine: you bootstrap the project, write the scenario,
+and run the pipeline. This skill is the source of truth for the model and the
+workflow.
 
 ## The pipeline
 
 ```
-scan → wire providers → author → narrate → pack → serve / publish
+install → wire providers → author → narrate → pack → serve / publish
 ```
 
 | Step | CLI | MCP tool |
 |------|-----|----------|
-| Scan a React app into a view registry | `scenar preview init` | `scenar_preview_init` |
-| Re-scan after code changes | `scenar preview sync` | `scenar_preview_sync` |
+| Bootstrap a demos project + view registry | `scenar install` | `scenar_install` |
 | Validate a scenario YAML | `scenar validate` | `scenar_validate` |
 | Generate narration audio (TTS) | `scenar narrate` | `scenar_narrate` |
 | Bundle into a static embed | `scenar pack` | `scenar_pack` |
@@ -40,9 +40,10 @@ structured results. Paths are resolved against the project root.
 ## Two authoring paths
 
 - **Path A — real components (recommended for real tours).** Run
-  `scenar preview init --source ./src`. It scans the project and writes a
-  `.scenar/` registry (`views.ts`, `views.custom.tsx`, `providers.tsx`,
-  `report.md`) plus an MSW service worker. You then author a scenario that
+  `scenar install <your-component-package>`. It scaffolds a demos project, adds
+  the component package as a dependency, and writes a `.scenar/` registry
+  (`views.ts`, `views.custom.tsx`, `providers.tsx`, `report.md`) plus an MSW
+  service worker from your local `src/` views. You then author a scenario that
   renders the user's *actual* components. The hard part is wiring
   `.scenar/providers.tsx` (theme/router/data) and MSW handlers so the components
   render without a live backend — do this deliberately, with the user.
@@ -175,7 +176,7 @@ CSS-drawn UI; import raster assets normally (Vite hashes them at pack time).
 ## Workflow checklist
 
 ```
-- [ ] Path A: scenar_preview_init, review report.md, wire providers.tsx + MSW
+- [ ] Path A: scenar_install, review report.md, wire providers.tsx + MSW
 - [ ] Write steps.ts (timeline, captions, narration, interactions)
 - [ ] Write index.tsx (renderStep with shells + data-cursor-target hooks)
 - [ ] scenar_narrate to synthesize audio

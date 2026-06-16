@@ -1,7 +1,7 @@
 import { resolve, join } from "node:path";
 import { stat } from "node:fs/promises";
-import { buildEmbedSnippet, buildEnhancedEmbedSnippet } from "../deploy/embed-snippet.js";
-import { localViewUrl } from "../deploy/deploy-flow.js";
+import { buildEmbedSnippet, buildEnhancedEmbedSnippet } from "../embed/embed-snippet.js";
+import { localViewUrl } from "./local-url.js";
 import { readBundleViewport } from "../bundle/read-viewport.js";
 import type { Viewport } from "../pack/viewport.js";
 import { startBundleServer, type BundleServerHandle } from "./static-server.js";

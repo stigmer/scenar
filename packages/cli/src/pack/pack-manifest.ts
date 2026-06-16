@@ -21,7 +21,7 @@ export interface PackFile {
   readonly contentType: string;
 }
 
-/** The deploy instruction file `scenar deploy` consumes. */
+/** The deploy instruction file the upload backend consumes. */
 export interface PackManifest {
   readonly schemaVersion: number;
   readonly scenarioId: string;

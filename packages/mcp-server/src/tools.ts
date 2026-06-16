@@ -1,8 +1,11 @@
-import { resolve, relative, dirname } from "node:path";
+import { existsSync } from "node:fs";
+import { resolve, relative } from "node:path";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { scanProject, generate, initMswServiceWorker } from "@scenar/preview";
 import {
+  runInstall,
+  runGeneratePipeline,
+  appendPackageReport,
   runPack,
   runServe,
   runPublish,
@@ -40,8 +43,7 @@ async function guard(
 
 /** Register every Scenar tool on the server. */
 export function registerTools(server: McpServer): void {
-  registerPreviewInit(server);
-  registerPreviewSync(server);
+  registerInstall(server);
   registerValidate(server);
   registerNarrate(server);
   registerPack(server);
@@ -51,84 +53,90 @@ export function registerTools(server: McpServer): void {
   registerRender(server);
 }
 
-function registerPreviewInit(server: McpServer): void {
+function registerInstall(server: McpServer): void {
   server.registerTool(
-    "scenar_preview_init",
+    "scenar_install",
     {
-      title: "Scan project & init preview registry",
+      title: "Bootstrap a Scenar demos project",
       description:
-        "Scan a React project and generate the .scenar/ view registry (views, " +
-        "providers scaffold, report.md) plus the MSW service worker. Run this first " +
-        "before authoring a scenario. Re-run with resetProviders to regenerate the " +
-        "providers scaffold.",
+        "Bootstrap a Scenar demos project in one step: scaffold a package.json (and a " +
+        "starter view) if the directory is empty, add the given component packages as " +
+        "ordinary dependencies, run the package manager, then generate the .scenar/ " +
+        "registry (views, providers scaffold, report.md) plus the MSW service worker. " +
+        "Run this first, before authoring a scenario. Re-run any time to refresh: " +
+        "generated files are rewritten while your providers.tsx, views.custom.tsx, and " +
+        "scenarios are preserved. Component specs are resolver-agnostic — a registry " +
+        "version (@stigmer/react@1.2.0), workspace:*, file:../pkg, or a git URL all work.",
       inputSchema: {
-        source: z.string().optional().describe("project dir to scan (default: project root)"),
-        output: z.string().optional().describe("output dir for generated files (default: .scenar)"),
-        resetProviders: z.boolean().optional().describe("force-regenerate providers.tsx"),
+        packages: z
+          .array(z.string())
+          .optional()
+          .describe("component packages to add as dependencies (e.g. @stigmer/react)"),
+        dir: z.string().optional().describe("project directory (default: project root)"),
+        skipInstall: z
+          .boolean()
+          .optional()
+          .describe("scaffold and record dependencies but skip the package-manager install"),
+        packageManager: z
+          .enum(["npm", "yarn", "pnpm"])
+          .optional()
+          .describe("force a package manager instead of auto-detecting"),
       },
     },
-    async ({ source, output, resetProviders }) =>
+    async ({ packages, dir, skipInstall, packageManager }) =>
       guard(async () => {
-        const sourceRoot = source ? resolveInProject(source) : projectRoot();
-        const outputDir = output ? resolveInProject(output) : resolve(projectRoot(), ".scenar");
+        const cwd = dir ? resolveInProject(dir) : projectRoot();
+        const outputDir = resolve(cwd, ".scenar");
+        // First-time registry generation is keyed on the .scenar/ dir, so user-owned
+        // files are scaffolded once and preserved on every later run.
+        const isInit = !existsSync(outputDir);
 
-        const scan = scanProject(sourceRoot);
-        const result = generate(scan, { sourceRoot, outputDir, isInit: true, resetProviders });
-        const msw = initMswServiceWorker(resolve(dirname(outputDir)), scan.framework);
+        const installResult = runInstall({
+          cwd,
+          packages: packages ?? [],
+          onLog: () => {}, // structured result below drives the report (no ANSI noise)
+          skipInstall,
+          packageManager,
+        });
+
+        const { scan, generate: gen, msw } = runGeneratePipeline({
+          sourceRoot: cwd,
+          outputDir,
+          isInit,
+          initMsw: true,
+        });
+
+        // Discovery aid: note the installed component packages in report.md.
+        appendPackageReport(outputDir, cwd, installResult.added.map((s) => s.name));
 
         const rel = (p: string) => relative(projectRoot(), p) || ".";
-        const lines = [
-          `Scanned ${sourceRoot}`,
-          `  framework: ${scan.framework}`,
-          `  entry: ${scan.entryPoint ?? "none detected"}`,
-          `  discovered: ${scan.discovered.length} component(s)`,
-          `  skipped: ${scan.skipped.length}`,
-          scan.detectedProviders.length > 0 ? `  providers: ${scan.detectedProviders.join(", ")}` : null,
-          ``,
-          `Generated ${rel(outputDir)}/:`,
-          ...result.written.map((f) => `  + ${f}`),
-          ...result.preserved.map((f) => `  = ${f} (preserved)`),
-          ``,
-          `MSW service worker: ${msw.status}${msw.path ? ` (${rel(msw.path)})` : ""}`,
-          msw.status === "error" ? `  ${msw.error}` : null,
-          ``,
-          `Next: review ${rel(outputDir)}/report.md, wire ${rel(outputDir)}/providers.tsx,`,
-          `then author a scenario (see the Scenar skill).`,
-        ].filter((l): l is string => l !== null);
-        return text(lines.join("\n"));
-      }),
-  );
-}
-
-function registerPreviewSync(server: McpServer): void {
-  server.registerTool(
-    "scenar_preview_sync",
-    {
-      title: "Re-scan project & update registry",
-      description:
-        "Re-scan the project and update scanner-owned files in .scenar/ after code " +
-        "changes. Preserves user-owned files (views.custom.tsx, providers.tsx).",
-      inputSchema: {
-        source: z.string().optional().describe("project dir to scan (default: project root)"),
-        output: z.string().optional().describe("output dir (default: .scenar)"),
-      },
-    },
-    async ({ source, output }) =>
-      guard(async () => {
-        const sourceRoot = source ? resolveInProject(source) : projectRoot();
-        const outputDir = output ? resolveInProject(output) : resolve(projectRoot(), ".scenar");
-
-        const scan = scanProject(sourceRoot);
-        const result = generate(scan, { sourceRoot, outputDir, isInit: false });
-
-        const rel = (p: string) => relative(projectRoot(), p) || ".";
-        const lines = [
-          `Re-scanned ${sourceRoot}: ${scan.discovered.length} discovered, ${scan.skipped.length} skipped`,
-          `Updated ${rel(outputDir)}/:`,
-          ...result.written.map((f) => `  ~ ${f} (updated)`),
-          ...result.preserved.map((f) => `  = ${f} (preserved)`),
-        ];
-        return text(lines.join("\n"));
+        const lines: Array<string | null> = [];
+        if (installResult.scaffolded) {
+          lines.push(`Scaffolded a new Scenar demos project:`);
+          for (const f of installResult.scaffoldCreated) lines.push(`  + ${f}`);
+          lines.push(``);
+        }
+        if (installResult.added.length > 0) {
+          lines.push(`Dependencies added: ${installResult.added.map((s) => s.name).join(", ")}`);
+        }
+        lines.push(
+          installResult.installRan
+            ? `Installed with ${installResult.packageManager}${installResult.workspaceRoot ? " (at the workspace root)" : ""}.`
+            : `Install skipped — run ${installResult.packageManager} before packing.`,
+        );
+        lines.push(``);
+        lines.push(`Generated ${rel(outputDir)}/:`);
+        for (const f of gen.written) lines.push(`  + ${f}`);
+        for (const f of gen.preserved) lines.push(`  = ${f} (preserved)`);
+        if (msw) lines.push(`MSW service worker: ${msw.status}${msw.path ? ` (${rel(msw.path)})` : ""}`);
+        lines.push(``);
+        lines.push(`Discovered ${scan.discovered.length} component(s), skipped ${scan.skipped.length}.`);
+        lines.push(``);
+        lines.push(
+          `Next: author tour views under src/ (compose your real components), wire ` +
+            `${rel(outputDir)}/providers.tsx, then scenar_pack.`,
+        );
+        return text(lines.filter((l): l is string => l !== null).join("\n"));
       }),
   );
 }
@@ -205,7 +213,7 @@ function registerPack(server: McpServer): void {
       description:
         "Bundle a scenario directory (steps.ts + index.tsx exporting renderStep) into a " +
         "self-contained static embed with Vite. Output defaults to ./<id>-bundle. " +
-        "The bundle is ready for scenar_serve, scenar_publish, or scenar deploy.",
+        "The bundle is ready for scenar_serve or scenar_publish.",
       inputSchema: {
         scenarioDir: z.string().describe("scenario directory (must contain steps.ts)"),
         outDir: z.string().optional().describe("output directory for the bundle"),

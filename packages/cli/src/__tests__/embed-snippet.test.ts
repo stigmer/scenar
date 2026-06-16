@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildEmbedSnippet, buildEnhancedEmbedSnippet } from "../deploy/embed-snippet.js";
+import { buildEmbedSnippet, buildEnhancedEmbedSnippet } from "../embed/embed-snippet.js";
 
 describe("buildEmbedSnippet", () => {
   const embedUrl = "https://d-dep1.scenarusercontent.net/";

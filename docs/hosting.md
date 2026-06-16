@@ -1,16 +1,15 @@
 # Hosting your embed
 
 A packed bundle (the output of `scenar pack`) is a self-contained static site. It
-runs anywhere static files do. Scenar gives you three tiers, from zero-setup local
-preview to a fully managed cloud.
+runs anywhere static files do. Scenar gives you two tiers, from zero-setup local
+preview to free public hosting.
 
 | Tier | Command | URL | Best for |
 |------|---------|-----|----------|
 | Local | `scenar serve` | `http://localhost:4173/` | Iterating while you author |
 | GitHub Pages | `scenar publish` | `https://<owner>.github.io/scenar-embeds/<slug>/` | Free public hosting |
-| Scenar Cloud | `scenar deploy` | CDN-backed embed URL | Custom domains, analytics, teams |
 
-All three print a responsive `<iframe>` snippet pinned to the bundle's recorded
+Both print a responsive `<iframe>` snippet pinned to the bundle's recorded
 aspect ratio (from `scenario.json`), plus an optional `<scenar-embed>` loader
 snippet that auto-fits and syncs your page's theme. See [Embedding](embedding.md).
 
@@ -100,20 +99,6 @@ Publishing or re-publishing one tour never disturbs the others.
 
 The embed CSP allows the bundle to be framed from any origin, so a custom domain
 just changes the URL you paste.
-
-## Scenar Cloud — `scenar deploy`
-
-The hosted offering: CDN-backed edge serving, custom domains, security headers,
-deploy history, and analytics. The OSS `pack` output is already
-contract-compatible (same allowlist, `pack-manifest.json`, and `scenario.json`),
-so the same bundle deploys without changes:
-
-```bash
-scenar deploy ./my-tour-bundle
-```
-
-`deploy` targets a Scenar Cloud backend. Use `serve`/`publish` for the
-self-hosted path; reach for `deploy` when you want a managed embed.
 
 ## Embedding
 

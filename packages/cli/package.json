@@ -30,14 +30,10 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@bufbuild/protobuf": "^2.2.2",
-    "@connectrpc/connect": "^2.0.0",
-    "@connectrpc/connect-node": "^2.0.0",
     "@scenar/core": "workspace:*",
     "@scenar/embed": "workspace:*",
     "@scenar/preview": "workspace:*",
     "@scenar/sdk": "workspace:*",
-    "@scenar/stubs": "workspace:*",
     "commander": "^13.0.0",
     "yaml": "^2.7.0"
   },

@@ -5,9 +5,8 @@ export interface GenerateOptions {
   /** Absolute path to the output directory for generated files. */
   readonly outputDir: string;
   /**
-   * When true, behaves like `scenar preview init`:
-   * creates all files including user-owned ones.
-   * When false (sync mode), only overwrites scanner-owned files.
+   * When true, this is a first run: creates all files including user-owned
+   * ones. When false (a re-run), only overwrites scanner-owned files.
    */
   readonly isInit?: boolean;
   /** Force-regenerate providers.tsx even in init mode. */

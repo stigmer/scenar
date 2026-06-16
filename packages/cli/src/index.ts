@@ -1,31 +1,29 @@
 import { Command } from "commander";
 import { registerValidateCommand } from "./commands/validate.js";
 import { registerNarrateCommand } from "./commands/narrate.js";
-import { registerPreviewCommand } from "./commands/preview.js";
+import { registerInstallCommand } from "./commands/install.js";
 import { registerRenderCommand } from "./commands/render.js";
 import { registerPackCommand } from "./commands/pack.js";
 import { registerServeCommand } from "./commands/serve.js";
 import { registerTryCommand } from "./commands/try.js";
 import { registerPublishCommand } from "./commands/publish.js";
-import { registerDeployCommand } from "./commands/deploy.js";
 
 export function createProgram(): Command {
   const program = new Command();
 
   program
     .name("scenar")
-    .description("Scenar CLI — validate scenarios, generate narration, render videos, pack embeds, and deploy.")
+    .description("Scenar CLI — install a demos project, author scenarios, then pack, serve, and publish embeds.")
     .version("0.0.1");
 
   registerValidateCommand(program);
   registerNarrateCommand(program);
   registerRenderCommand(program);
-  registerPreviewCommand(program);
+  registerInstallCommand(program);
   registerPackCommand(program);
   registerServeCommand(program);
   registerTryCommand(program);
   registerPublishCommand(program);
-  registerDeployCommand(program);
 
   return program;
 }

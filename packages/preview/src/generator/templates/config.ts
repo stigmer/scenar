@@ -6,7 +6,7 @@ import type { ScanResult } from "../../scanner/types.js";
  *
  * @param sourceRoot Absolute path to the scanned project.
  *   When it differs from the output directory's parent, a `source`
- *   field is emitted so `scenar preview sync` knows where to scan.
+ *   field is emitted so `scenar install` knows where to scan.
  */
 export function renderConfig(scanResult: ScanResult, sourceRoot: string): string {
   const lines: string[] = [];

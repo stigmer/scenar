@@ -1,9 +1,9 @@
 /**
  * GitHub Pages publishing — the OSS "permanent public URL" path of Phase 1.
  *
- * The flow is dependency-injected (mirroring deploy-flow.ts) so its ordering and
- * payloads are unit-testable against fakes, with zero live GitHub calls in the
- * test suite. The real `gh`/`git` implementations live in ./github.ts.
+ * The flow is dependency-injected so its ordering and payloads are unit-testable
+ * against fakes, with zero live GitHub calls in the test suite. The real
+ * `gh`/`git` implementations live in ./github.ts.
  */
 
 /** A repo name's allowed characters (GitHub: alphanumerics, ., _, -). */

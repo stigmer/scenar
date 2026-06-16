@@ -42,8 +42,7 @@ npm install -g @scenar/mcp-server
 
 | Tool | What it does |
 |------|-------------|
-| `scenar_preview_init` | Scan a React project → `.scenar/` registry + report |
-| `scenar_preview_sync` | Re-scan after code changes (preserves your edits) |
+| `scenar_install` | Bootstrap a demos project → add deps + `.scenar/` registry |
 | `scenar_validate` | Validate a scenario YAML or directory |
 | `scenar_narrate` | Synthesize TTS audio for a scenario |
 | `scenar_pack` | Bundle a scenario into a static embed |

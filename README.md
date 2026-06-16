@@ -20,7 +20,7 @@ Point Cursor at your app, describe the tour in plain English, and get an embedda
 
 ```mermaid
 flowchart LR
-    A["Your React app"] -->|"scenar preview init"| B[".scenar/ view registry"]
+    A["Your React app"] -->|"scenar install"| B[".scenar/ demos project"]
     B -->|"AI + Scenar skill"| C["Scenario<br/>(steps.ts + index.tsx)"]
     C -->|"scenar narrate"| D["TTS narration"]
     D -->|"scenar pack"| E["Static embed bundle"]
@@ -54,8 +54,8 @@ In Cursor, add this to `.cursor/mcp.json` (or your editor's MCP config):
 }
 ```
 
-This exposes tools like `scenar_preview_init`, `scenar_pack`, `scenar_serve`,
-and `scenar_publish` to the AI. See [docs/mcp-server.md](docs/mcp-server.md).
+This exposes tools like `scenar_pack`, `scenar_serve`, and `scenar_publish` to
+the AI. See [docs/mcp-server.md](docs/mcp-server.md).
 
 ### 2. Add the Scenar skill
 
@@ -69,14 +69,28 @@ cp -R node_modules/@scenar/mcp-server/skill .cursor/skills/scenar
 
 The skill teaches the AI the full step / view / interaction / narration model.
 
-### 3. Scan your app
+### 3. Create a demos project
+
+Run this in a new, empty directory (e.g. `your-app-demos`), kept separate so the
+`.scenar/` registry and packed bundles stay out of your product repo:
 
 ```bash
-npx @scenar/cli preview init --source ./src
+npx @scenar/cli install @your-org/ui
 ```
 
-This discovers your components and writes a `.scenar/` registry (views,
-providers scaffold, `report.md`) plus an MSW service worker.
+`scenar install` scaffolds a `package.json` and a starter view, adds your
+component package(s) as ordinary dependencies, runs your package manager, and
+generates the `.scenar/` registry from your local views. Your real components
+arrive as a normal dependency — author tour screens under `src/` that import
+from `@your-org/ui` and compose them. Re-run `scenar install` any time to
+refresh: generated files are rewritten; your `providers.tsx`, `views.custom.tsx`,
+and scenarios are preserved. Nothing leaves your machine until you `publish`
+(step 6).
+
+Specs are resolver-agnostic — a registry version (`@your-org/ui@1.2.0`),
+`workspace:*`, `file:../ui`, or a git URL all work; resolution is your package
+manager's job. Inside a monorepo, the demos project is detected as a workspace
+member and the install runs at the workspace root.
 
 ### 4. Ask the AI to build a tour
 
@@ -86,6 +100,10 @@ providers scaffold, `report.md`) plus an MSW service worker.
 The AI writes `steps.ts` + `index.tsx` against your real components. You'll wire
 `.scenar/providers.tsx` and MSW handlers together (the one step that needs a
 human — see [docs/getting-started.md](docs/getting-started.md)).
+
+If your components rely on a Tailwind/CSS build, import the package's prebuilt
+stylesheet (e.g. `@your-org/ui/styles.css`) in `.scenar/providers.tsx` —
+`scenar pack` bundles JS, not Tailwind.
 
 ### 5. Narrate, pack, and preview
 
@@ -141,9 +159,10 @@ Open the printed URL — you'll see the same demo as the
 
 ## Two ways to author
 
-- **Path A — your real components.** `scenar preview init` scans your app; you
-  author against the generated registry. Highest fidelity. The one manual step
-  is wiring providers + MSW so components render in isolation.
+- **Path A — your real components.** `scenar install` bootstraps a demos project
+  with your component package as a dependency; you author local views that compose
+  your real components against the generated registry. Highest fidelity. The one
+  manual step is wiring providers + mock data so components render in isolation.
 - **Path B — code / SDK.** Compose the `@scenar/react` shells and page templates
   (or your own components) with the type-safe `createScenario()` builder. No scan
   needed. The bundled [`welcome-tour`](packages/cli/examples/welcome-tour) is
@@ -157,15 +176,13 @@ See [docs/authoring-scenarios.md](docs/authoring-scenarios.md) for the full mode
 |------|---------|-----|-------|
 | Local | `scenar serve` | `http://localhost:4173/` | Ephemeral, zero setup |
 | GitHub Pages | `scenar publish` | `https://<you>.github.io/scenar-embeds/<slug>/` | Public, free, permanent; a dedicated `scenar-embeds` repo, many tours per repo |
-| Scenar Cloud | `scenar deploy` | CDN-backed embed URL | Custom domains, analytics (hosted offering) |
 
 Details in [docs/hosting.md](docs/hosting.md).
 
 ## CLI reference
 
 ```bash
-scenar preview init --source ./src   # scan a React app → .scenar/ registry
-scenar preview sync  --source ./src  # re-scan, preserving your customizations
+scenar install [packages...]         # bootstrap a demos project: scaffold + add deps + scan → .scenar/
 scenar validate demo.yaml            # validate a scenario YAML
 scenar try                           # serve the bundled welcome-tour example (no app needed)
 scenar narrate ./my-tour             # synthesize narration audio (TTS)
@@ -173,7 +190,6 @@ scenar pack ./my-tour                # bundle into a static embed
 scenar serve ./my-tour-bundle        # preview locally
 scenar publish ./my-tour-bundle      # publish to GitHub Pages
 scenar render ./my-tour              # export an MP4 (Remotion)
-scenar deploy ./my-tour-bundle       # deploy to Scenar Cloud
 ```
 
 Install the CLI globally with `npm install -g @scenar/cli`, or run it via `npx
@@ -184,10 +200,11 @@ Install the CLI globally with `npm install -g @scenar/cli`, or run it via `npx
 | Package | What it does |
 |---------|-------------|
 | [`@scenar/core`](packages/core) | Types, timeline math, step actions, embed protocol — no framework dependency |
+| [`@scenar/embed`](packages/embed) | `<scenar-embed>` web component + React wrapper for dropping a hosted tour on any page |
 | [`@scenar/sdk`](packages/sdk) | `createScenario()` builder + proto/YAML loader |
 | [`@scenar/react`](packages/react) | `ScenarioPlayer`, cursor, viewport, narration, shells, page templates |
 | [`@scenar/preview`](packages/preview) | Scan a React project, generate a view registry automatically |
-| [`@scenar/cli`](packages/cli) | `validate`, `narrate`, `preview`, `pack`, `serve`, `publish`, `render`, `deploy` |
+| [`@scenar/cli`](packages/cli) | `install`, `validate`, `narrate`, `pack`, `serve`, `publish`, `render` |
 | [`@scenar/mcp-server`](packages/mcp-server) | MCP server exposing the CLI to AI editors |
 | [`@scenar/remotion`](packages/remotion) | MP4 video export |
 
@@ -196,7 +213,8 @@ Install the CLI globally with `npm install -g @scenar/cli`, or run it via `npx
 - [Getting started](docs/getting-started.md) — the full walkthrough, including provider + MSW wiring
 - [Authoring scenarios](docs/authoring-scenarios.md) — the step / view / interaction / narration model
 - [MCP server](docs/mcp-server.md) — installing and configuring the MCP server
-- [Hosting](docs/hosting.md) — `serve` vs `publish` vs Scenar Cloud, custom domains
+- [Hosting](docs/hosting.md) — `serve` vs `publish`, custom domains
+- [Embedding](docs/embedding.md) — the no-JS snippet and the `<scenar-embed>` loader (auto-fit + theme sync)
 
 ## Contributing
 

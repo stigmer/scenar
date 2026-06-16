@@ -26,8 +26,7 @@ export function registerServeCommand(program: Command): void {
         "Prints the URL plus a ready-to-paste responsive <iframe> snippet, then\n" +
         "stays running until you press Ctrl+C.\n\n" +
         "This is the zero-infrastructure way to view an embed: no backend, no\n" +
-        "account. For a permanent public URL, use `scenar publish` (GitHub\n" +
-        "Pages) or `scenar deploy` (Scenar Cloud).",
+        "account. For a permanent public URL, use `scenar publish` (GitHub Pages).",
     )
     .argument("<bundleDir>", "path to a packed bundle directory (from scenar pack)")
     .option("--port <number>", `port to listen on (default: ${DEFAULT_PORT})`, String(DEFAULT_PORT))

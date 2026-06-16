@@ -1,8 +1,8 @@
 # Embedding a tour
 
-Once a tour is hosted (`scenar serve`, `scenar publish`, or `scenar deploy` —
-see [Hosting](hosting.md)), you embed it on any page with an iframe pointed at
-its URL. There are two ways to do it, and `serve`/`publish` print both.
+Once a tour is hosted (`scenar serve` or `scenar publish` — see
+[Hosting](hosting.md)), you embed it on any page with an iframe pointed at its
+URL. There are two ways to do it, and `serve`/`publish` print both.
 
 ## 1. The no-JS snippet (default)
 

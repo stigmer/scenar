@@ -37,7 +37,7 @@ export function registerTryCommand(program: Command): void {
         "ready-to-paste <iframe> snippet, then stays running until Ctrl+C.\n\n" +
         "This is the fastest way to see what a Scenar embed looks like before\n" +
         "wiring up your own app. To build a tour from your components, see\n" +
-        "`scenar preview`; to host one, see `scenar publish`.",
+        "`scenar install`; to host one, see `scenar publish`.",
     )
     .option("--port <number>", `port to listen on (default: ${DEFAULT_PORT})`, String(DEFAULT_PORT))
     .option("--host <host>", `host/interface to bind (default: ${DEFAULT_HOST})`, DEFAULT_HOST)

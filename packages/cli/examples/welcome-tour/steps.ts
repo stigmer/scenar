@@ -17,8 +17,8 @@ export interface TourStepData {
 
 /**
  * A minimal, fully playable scenario authored as a directory — the same shape
- * `scenar render` and `scenar preview` consume (steps.ts + an index.tsx that
- * exports `renderStep`). `scenar pack` bundles it into a hosted embed.
+ * `scenar render` consumes (steps.ts + an index.tsx that exports `renderStep`).
+ * `scenar pack` bundles it into a hosted embed.
  *
  * `delayMs` is the dwell time before each step is revealed; the first step is
  * shown immediately (0). Captions render beneath the player.

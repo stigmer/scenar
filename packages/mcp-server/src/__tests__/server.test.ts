@@ -21,10 +21,9 @@ describe("Scenar MCP server", () => {
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual(
       [
+        "scenar_install",
         "scenar_narrate",
         "scenar_pack",
-        "scenar_preview_init",
-        "scenar_preview_sync",
         "scenar_publish",
         "scenar_render",
         "scenar_serve",

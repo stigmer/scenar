@@ -20,11 +20,11 @@ export function registerPackCommand(program: Command): void {
     .command("pack")
     .description(
       "Bundle a scenario into a self-contained, hosted embed.\n\n" +
-        "Accepts the same scenario directory as `render`/`preview`\n" +
+        "Accepts the same scenario directory as `render`\n" +
         "(steps.ts + an index.tsx that exports renderStep, plus an\n" +
         "optional .scenar/providers.tsx and narration/). Produces a static\n" +
         "bundle that boots ScenarioPlayer in the browser, ready for\n" +
-        "`scenar serve`, `scenar publish`, or `scenar deploy`.\n\n" +
+        "`scenar serve` or `scenar publish`.\n\n" +
         "The bundle contains index.html, hashed JS/CSS, a scenario.json\n" +
         "descriptor, and a pack-manifest.json listing every file with its\n" +
         "lowercase-hex sha256 and content type. Output stays within the\n" +
