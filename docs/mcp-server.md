@@ -2,9 +2,9 @@
 
 `@scenar/mcp-server` exposes the Scenar pipeline to AI editors over the
 [Model Context Protocol](https://modelcontextprotocol.io). With it installed,
-your editor can scan an app, author a scenario, narrate, pack, serve, and publish
-— all from natural-language requests. It's a thin, type-safe wrapper over the
-`@scenar/cli` programmatic API (no shelling out).
+your editor can bootstrap a demos project, author a scenario, narrate, pack,
+serve, and publish — all from natural-language requests. It's a thin, type-safe
+wrapper over the `@scenar/cli` programmatic API (no shelling out).
 
 ## Install in Cursor
 
@@ -42,7 +42,7 @@ npm install -g @scenar/mcp-server
 
 | Tool | What it does |
 |------|-------------|
-| `scenar_install` | Bootstrap a demos project → add deps + `.scenar/` registry |
+| `scenar_install` | Bootstrap a demos project → scaffold + add deps + starter tour |
 | `scenar_validate` | Validate a scenario YAML or directory |
 | `scenar_narrate` | Synthesize TTS audio for a scenario |
 | `scenar_pack` | Bundle a scenario into a static embed |
@@ -60,9 +60,6 @@ Read-only context the model can inspect:
 
 | Resource | Provides |
 |----------|----------|
-| `scenar://registry/views` | the merged view registry (`.scenar/views.ts`) |
-| `scenar://registry/report` | the scan report — discovered/skipped and why |
-| `scenar://registry/providers` | current provider wiring |
 | `scenar://scenario/{name}/steps` | step definitions for a named scenario |
 | `scenar://scenario/{name}/manifest` | the pack manifest (after packing) |
 

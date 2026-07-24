@@ -8,12 +8,11 @@
  * directory. The workspace package.json is never modified.
  *
  * Publish order respects the dependency graph:
- *   @scenar/stubs + @scenar/core + @scenar/preview → @scenar/embed + @scenar/sdk + @scenar/react → @scenar/remotion → @scenar/cli → @scenar/mcp-server
+ *   @scenar/stubs + @scenar/core → @scenar/embed + @scenar/sdk + @scenar/react → @scenar/remotion → @scenar/cli → @scenar/mcp-server
  * (@scenar/stubs is a leaf — only @bufbuild/protobuf — and @scenar/cli depends
  * on it at runtime, so it must publish before cli. @scenar/embed depends only on
  * @scenar/core and @scenar/cli depends on it, so it publishes after core and
- * before cli. @scenar/mcp-server depends on @scenar/cli and @scenar/preview, so
- * it publishes last.)
+ * before cli. @scenar/mcp-server depends on @scenar/cli, so it publishes last.)
  *
  * Usage:
  *   node scripts/publish-libs.mjs --version 0.1.0              # build + publish
@@ -50,7 +49,6 @@ export const PACKAGES = [
   "apis/stubs/ts",
   "packages/core",
   "packages/embed",
-  "packages/preview",
   "packages/sdk",
   "packages/react",
   "packages/remotion",

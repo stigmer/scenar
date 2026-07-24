@@ -9,8 +9,8 @@ const RENDER_FILE_CANDIDATES = ["render.tsx", "render.ts", "index.tsx", "index.t
  *
  * Checks `render.tsx` first (recommended — a lean file that only imports
  * view components), then falls back to `index.tsx`. Using a dedicated
- * `render.tsx` avoids pulling browser-only dependencies (preview
- * runtime, MSW, etc.) into the Remotion webpack bundle.
+ * `render.tsx` avoids pulling browser-only dependencies (a product SDK
+ * client, data-mock wiring, etc.) into the Remotion webpack bundle.
  *
  * Uses a lightweight source-text scan rather than a dynamic import.
  * The actual module resolution and type checking happens later when

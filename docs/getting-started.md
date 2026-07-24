@@ -2,8 +2,8 @@
 
 This is the end-to-end walkthrough: from a React app to a published, narrated
 embed. It uses the AI-assisted flow (Cursor + the Scenar MCP server + the Scenar
-skill), and is honest about the one step that needs a human — wiring providers
-and API mocks so your real components render in isolation.
+skill), and is honest about the one step that needs a human — wiring a provider
+and mock data so your real components render in isolation.
 
 If you just want to see the pipeline run with zero setup, jump to
 [Try it with the example](#try-it-with-the-example).
@@ -40,9 +40,9 @@ Restart the editor so it picks up the MCP server and skill. See
 ## 2. Create your demos project
 
 **Where to run it.** Use a dedicated demos repo (e.g. `your-app-demos`) so the
-`.scenar/` registry and packed bundles stay out of your product repo. You can
-also keep it in a `demos/` folder inside your app repo, or as a workspace member
-in a monorepo — the only difference is where these files land.
+packed bundles stay out of your product repo. You can also keep it in a `demos/`
+folder inside your app repo, or as a workspace member in a monorepo — the only
+difference is where these files land.
 
 In an empty directory, run `scenar install` with the component package(s) you
 want to demo:
@@ -54,82 +54,83 @@ npx @scenar/cli install @your-org/ui
 Or ask the AI: *"Run scenar install with @your-org/ui."* (it calls
 `scenar_install`). This one command:
 
-- scaffolds a `package.json` and a starter view if the directory is empty,
-- adds `@your-org/ui` (plus `@scenar/*` and React) as dependencies and runs your
-  package manager,
-- scans your local `src/` views and writes the `.scenar/` registry.
+- scaffolds a `package.json`, a `tsconfig.json`, a `.gitignore`, and a runnable
+  **starter tour** under `tours/example-tour/` if the directory is empty,
+- adds `@your-org/ui` (plus `@scenar/react` and React) as dependencies and runs
+  your package manager.
 
 Specs are resolver-agnostic — a registry version (`@your-org/ui@1.2.0`),
 `workspace:*`, `file:../ui`, or a git URL all work. Inside a monorepo the
 project is detected as a workspace member and the install runs at the root.
 
-`.scenar/` contains:
+The starter tour is everything you author and own:
 
-| File | Owner | Purpose |
-|------|-------|---------|
-| `views.generated.ts` | scanner | discovered components — never edit |
-| `views.custom.tsx` | you | hand-added views |
-| `views.ts` | you | the merged registry you author against |
-| `providers.tsx` | you | wrap components in the providers they need |
-| `report.md` | scanner | what was discovered/skipped, and why |
+| File | Purpose |
+|------|---------|
+| `tours/example-tour/steps.ts` | the timeline: data, delayMs, captions, narration |
+| `tours/example-tour/index.tsx` | `renderStep(data, i)` — composes your components |
+| `tours/example-tour/.scenar/providers.tsx` | wraps the tour with providers + mock data |
 
-It also installs an MSW (Mock Service Worker) service worker into your public
-directory.
+It's built from `@scenar/react` shells so `scenar pack tours/example-tour` works
+immediately. There is **no generated registry and nothing to re-scan**: you
+import your real components directly in `index.tsx`. Re-running `scenar install`
+only adds more dependencies — it never overwrites your authored files, so it's
+always safe to run again.
 
-**You author the views.** Compose your real components into the screens you want
-to narrate under `src/`, then re-run `scenar install` to refresh the registry —
-generated files are rewritten; your `views.custom.tsx`, `providers.tsx`, and
-scenario sources are preserved.
-
-**What to commit.** Version-control the files you own — `views.ts`,
-`views.custom.tsx`, `providers.tsx`, and your scenario sources
-(`steps.ts`/`index.tsx`). Ignore regenerable output:
+**What to commit.** Version-control everything under `tours/`. Ignore
+regenerable output (the scaffolded `.gitignore` already does this):
 
 ```gitignore
-*-bundle/                    # packed embeds (rebuild with `scenar pack`)
-.scenar/views.generated.ts   # re-created by `scenar install`
+node_modules/
+*-bundle/   # packed embeds (rebuild with `scenar pack`)
 ```
 
-**Read `report.md` first.** It tells you which components were found, which were
-skipped, and what props/providers they expect.
+## 3. Wire providers and mock data (the manual step)
 
-## 3. Wire providers and mocks (the manual step)
+Real components rarely render in a vacuum — they need a theme/provider, and their
+data fetches need to resolve with no backend. This is the one part worth a human,
+and it lives in each tour's `.scenar/providers.tsx`. `scenar pack` and
+`scenar render` both wrap every step of the tour in your exported
+`PreviewProviders`.
 
-Real components rarely render in a vacuum — they need a theme, a router, a query
-client, auth context, etc., and their data fetches need to resolve. This is the
-one part the scanner can't do for you.
+The recommended pattern for **Connect-RPC SDKs** (e.g. `@stigmer/react`) is an
+in-process **router transport**: mock the RPCs your components call directly — no
+network, no service worker. Match the embed's light/dark mode with
+`getEmbedColorMode()` from `@scenar/react`:
 
-1. **Providers.** Edit `.scenar/providers.tsx` to wrap children in the providers
-   your components require:
+```tsx
+import type { ReactNode } from "react";
+import "@your-org/ui/styles.css";
+import { createRouterTransport } from "@connectrpc/connect";
+import { getEmbedColorMode } from "@scenar/react";
+import { YourClient } from "@your-org/sdk";
+import { YourProvider } from "@your-org/ui";
+import { ProjectController } from "@your-org/protos/project/v1/query_pb";
 
-   ```tsx
-   export function Providers({ children }: { children: React.ReactNode }) {
-     return (
-       <ThemeProvider theme={demoTheme}>
-         <QueryClientProvider client={new QueryClient()}>
-           <MemoryRouter>{children}</MemoryRouter>
-         </QueryClientProvider>
-       </ThemeProvider>
-     );
-   }
-   ```
+const transport = createRouterTransport((router) => {
+  router.service(ProjectController, {
+    list: () => ({ projects: [{ id: "1", name: "checkout-api" }] }),
+  });
+});
+const client = new YourClient({ baseUrl: "/", customTransport: transport });
 
-2. **API mocks.** Add MSW handlers so fetches resolve with realistic fixtures:
+export function PreviewProviders({ children }: { readonly children: ReactNode }) {
+  return (
+    <YourProvider client={client} colorMode={getEmbedColorMode()}>
+      {children}
+    </YourProvider>
+  );
+}
+```
 
-   ```ts
-   import { http, HttpResponse } from "msw";
+If your SDK isn't Connect-RPC based, use whatever in-process mock your client
+accepts — the only contract Scenar cares about is that `PreviewProviders` renders
+your components without a live backend. Keep fixtures small and representative:
+they become the data your tour shows.
 
-   export const handlers = [
-     http.get("/api/projects", () =>
-       HttpResponse.json([{ id: "1", name: "checkout-api", status: "healthy" }]),
-     ),
-   ];
-   ```
-
-   Wire these into the generated MSW setup so the preview uses them.
-
-Tip: keep fixtures small and representative — they become the data your tour
-shows.
+> The product-specific glue (client + provider + stylesheet) is the same across
+> every tour, so factor it into one local helper and let each tour's
+> `providers.tsx` supply just its fixtures.
 
 ## 4. Author the scenario (AI-assisted)
 
@@ -200,7 +201,8 @@ That's the same demo as the
 ## Troubleshooting
 
 - **A component renders blank or throws.** It's missing a provider or a mock —
-  add it to `.scenar/providers.tsx` or your MSW handlers.
+  add the provider, or register the RPC it calls, in the tour's
+  `.scenar/providers.tsx`.
 - **`pack` fails on an SVG.** SVG isn't a served file type. Inline it as a React
   component or a `data:` URI. See [authoring-scenarios.md](authoring-scenarios.md#bundle-constraints).
 - **`publish` says gh isn't authenticated.** Run `gh auth login`.

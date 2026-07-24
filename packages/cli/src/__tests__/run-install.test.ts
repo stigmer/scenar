@@ -133,13 +133,15 @@ describe("runInstall (skipInstall)", () => {
     return JSON.parse(await readFile(join(d, "package.json"), "utf-8"));
   }
 
-  it("scaffolds a fresh project", () => {
+  it("scaffolds a fresh project with a runnable starter tour", () => {
     const result = runInstall({ cwd: dir, packages: [], onLog: silent, skipInstall: true });
     expect(result.scaffolded).toBe(true);
     expect(existsSync(join(dir, "package.json"))).toBe(true);
-    expect(existsSync(join(dir, "src/views/WelcomeView.tsx"))).toBe(true);
     expect(existsSync(join(dir, ".gitignore"))).toBe(true);
     expect(existsSync(join(dir, "tsconfig.json"))).toBe(true);
+    expect(existsSync(join(dir, "tours/example-tour/steps.ts"))).toBe(true);
+    expect(existsSync(join(dir, "tours/example-tour/index.tsx"))).toBe(true);
+    expect(existsSync(join(dir, "tours/example-tour/.scenar/providers.tsx"))).toBe(true);
   });
 
   it("records a bare package as '*'", async () => {

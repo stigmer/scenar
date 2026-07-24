@@ -1,5 +1,4 @@
 import { resolve, isAbsolute, join } from "node:path";
-import { readFile } from "node:fs/promises";
 
 /**
  * The project root the server reads relative paths against. Cursor launches the
@@ -13,13 +12,4 @@ export function projectRoot(): string {
 /** Resolve a possibly-relative path against the project root. */
 export function resolveInProject(path: string): string {
   return isAbsolute(path) ? path : join(projectRoot(), path);
-}
-
-/** Read a project-relative text file, or null if it is missing/unreadable. */
-export async function readProjectFile(relativePath: string): Promise<string | null> {
-  try {
-    return await readFile(join(projectRoot(), relativePath), "utf-8");
-  } catch {
-    return null;
-  }
 }

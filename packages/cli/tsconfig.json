@@ -11,7 +11,6 @@
     { "path": "../core" },
     { "path": "../embed" },
     { "path": "../sdk" },
-    { "path": "../preview" },
     { "path": "../../apis/stubs/ts" }
   ]
 }

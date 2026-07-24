@@ -43,7 +43,7 @@ export type {
 } from "./publish/publish-flow.js";
 export { createGithubPublisher } from "./publish/github.js";
 
-// Install (bootstrap a demos project) + the scan → .scenar/ generate pipeline
+// Install (bootstrap a demos project: scaffold + add deps + run the package manager)
 export { runInstall } from "./install/run-install.js";
 export type {
   RunInstallOptions,
@@ -51,12 +51,6 @@ export type {
   ParsedSpec,
   PackageManager,
 } from "./install/run-install.js";
-export { appendPackageReport } from "./install/package-report.js";
-export { runGeneratePipeline } from "./preview/run-generate.js";
-export type {
-  GeneratePipelineOptions,
-  GeneratePipelineResult,
-} from "./preview/run-generate.js";
 
 // Validate
 export { validateScenario } from "./validate/scenario-validator.js";

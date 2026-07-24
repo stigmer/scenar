@@ -8,7 +8,6 @@
     { "path": "packages/mcp-server" },
     { "path": "packages/react" },
     { "path": "packages/sdk" },
-    { "path": "packages/preview" },
     { "path": "packages/remotion" }
   ]
 }

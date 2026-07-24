@@ -1,44 +1,15 @@
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { projectRoot, readProjectFile } from "./project.js";
+import { projectRoot } from "./project.js";
 
 /**
- * Register read-only resources the AI can inspect for authoring context: the
- * generated view registry + scan report (in .scenar/), and per-scenario steps +
- * pack manifest. All are read relative to the project root; a missing file
- * returns a short explanatory body rather than an error so the client degrades
- * gracefully.
+ * Register read-only resources the AI can inspect for authoring context: a
+ * scenario's steps and its packed bundle's manifest. Both are read relative to
+ * the project root; a missing file returns a short explanatory body rather than
+ * an error so the client degrades gracefully.
  */
 export function registerResources(server: McpServer): void {
-  registerRegistryFile(
-    server,
-    "scenar-views",
-    "scenar://registry/views",
-    "Scenar view registry",
-    "The generated .scenar/views.ts — the components available to scenarios.",
-    ".scenar/views.ts",
-    "text/plain",
-  );
-  registerRegistryFile(
-    server,
-    "scenar-report",
-    "scenar://registry/report",
-    "Scenar scan report",
-    "The .scenar/report.md — what the scanner discovered, skipped, and why.",
-    ".scenar/report.md",
-    "text/markdown",
-  );
-  registerRegistryFile(
-    server,
-    "scenar-providers",
-    "scenar://registry/providers",
-    "Scenar provider wiring",
-    "The .scenar/providers.tsx — how real components are wrapped for preview.",
-    ".scenar/providers.tsx",
-    "text/plain",
-  );
-
   // Per-scenario resources: {name} is a scenario directory under the project.
   server.registerResource(
     "scenar-scenario-steps",
@@ -89,29 +60,6 @@ export function registerResources(server: McpServer): void {
       };
     },
   );
-}
-
-function registerRegistryFile(
-  server: McpServer,
-  id: string,
-  uri: string,
-  title: string,
-  description: string,
-  relativePath: string,
-  mimeType: string,
-): void {
-  server.registerResource(id, uri, { title, description, mimeType }, async (u) => {
-    const body = await readProjectFile(relativePath);
-    return {
-      contents: [
-        {
-          uri: u.href,
-          mimeType,
-          text: body ?? `No ${relativePath} yet. Run scenar_install to generate it.`,
-        },
-      ],
-    };
-  });
 }
 
 async function readFirstExisting(paths: string[]): Promise<string | null> {

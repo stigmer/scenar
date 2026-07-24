@@ -87,7 +87,8 @@ export type {
 } from "@scenar/core";
 
 // Theme
-export { SCENAR_CLASS } from "./theme/index.js";
+export { SCENAR_CLASS, getEmbedColorMode } from "./theme/index.js";
+export type { ColorMode } from "./theme/index.js";
 
 // Shells
 export {

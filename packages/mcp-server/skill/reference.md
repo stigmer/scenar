@@ -1,8 +1,8 @@
 # Scenar Authoring Reference
 
 Deep reference for the [scenar skill](SKILL.md): the shell catalog, page parts,
-the `createScenario` SDK (Path B), provider/MSW wiring (Path A), the proto/YAML
-shape, and bundle constraints.
+the `createScenario` SDK (Path B), provider + router-transport wiring (Path A),
+the proto/YAML shape, and bundle constraints.
 
 ## Canonical example
 
@@ -101,22 +101,54 @@ export default createScenario({
 `StepInput` uses `narrationText` (not `narration`) and carries `props` instead of
 a free-form `data`. The output plugs straight into `<ScenarioPlayer>`.
 
-## Path A — real components: provider + MSW wiring
+## Path A — real components: provider + router-transport wiring
 
-`scenar install <your-component-package>` writes `.scenar/`:
+`scenar install <your-component-package>` adds the package as a dependency and
+scaffolds a runnable starter tour. There is **no registry and no scan**: your
+`index.tsx` imports the real components directly, exactly like any React app.
 
-- `views.generated.ts` — scanner-owned; never edit
-- `views.custom.tsx` — your hand-added views
-- `views.ts` — the merged registry you author against
-- `providers.tsx` — **you wire this**: wrap components in the theme/router/data
-  providers they need to render in isolation
-- `report.md` — what was discovered/skipped and why (read this first)
+The one piece to wire by hand is each tour's `.scenar/providers.tsx`, which
+exports `PreviewProviders`. `scenar pack` (embed) and `scenar render` (video)
+both wrap every step of the tour in it, so this is where the components get the
+provider and the data they need to render with no live backend.
 
-Also generates an MSW service worker. Add MSW handlers so components that fetch
-data render with realistic fixtures (no live backend). This wiring is the one
-step that can't be automated — do it explicitly with the user, using `report.md`
-to see what each component expects. Re-run `scenar install` after code changes
-(it preserves `views.custom.tsx` and `providers.tsx`).
+For **Connect-RPC SDKs** (e.g. `@stigmer/react`), mock the RPCs your components
+call with an in-process router transport — no network, no service worker — and
+resolve the embed's light/dark mode with `getEmbedColorMode()` from
+`@scenar/react`:
+
+```tsx
+import type { ReactNode } from "react";
+import "@your-org/ui/styles.css";              // pack bundles JS, not Tailwind
+import { createRouterTransport } from "@connectrpc/connect";
+import { getEmbedColorMode } from "@scenar/react";
+import { YourClient } from "@your-org/sdk";
+import { YourProvider } from "@your-org/ui";
+import { ProjectController } from "@your-org/protos/project/v1/query_pb";
+
+const transport = createRouterTransport((router) => {
+  router.service(ProjectController, {
+    list: () => ({ projects: [{ id: "1", name: "checkout-api" }] }),
+  });
+});
+const client = new YourClient({ baseUrl: "/", customTransport: transport });
+
+export function PreviewProviders({ children }: { readonly children: ReactNode }) {
+  return (
+    <YourProvider client={client} colorMode={getEmbedColorMode()}>
+      {children}
+    </YourProvider>
+  );
+}
+```
+
+If the SDK isn't Connect-RPC based, use whatever in-process mock the client
+accepts — the only contract is that `PreviewProviders` renders the components
+without a backend. The product glue (client + provider + stylesheet) repeats
+across tours, so factor it into one local helper and let each tour's
+`providers.tsx` pass only its fixtures. This wiring is the one step that can't be
+automated — do it explicitly with the user. Re-running `scenar install` never
+overwrites it.
 
 ## YAML / proto scenarios
 

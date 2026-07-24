@@ -1,11 +1,8 @@
-import { existsSync } from "node:fs";
-import { resolve, relative } from "node:path";
+import { relative } from "node:path";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   runInstall,
-  runGeneratePipeline,
-  appendPackageReport,
   runPack,
   runServe,
   runPublish,
@@ -59,14 +56,15 @@ function registerInstall(server: McpServer): void {
     {
       title: "Bootstrap a Scenar demos project",
       description:
-        "Bootstrap a Scenar demos project in one step: scaffold a package.json (and a " +
-        "starter view) if the directory is empty, add the given component packages as " +
-        "ordinary dependencies, run the package manager, then generate the .scenar/ " +
-        "registry (views, providers scaffold, report.md) plus the MSW service worker. " +
-        "Run this first, before authoring a scenario. Re-run any time to refresh: " +
-        "generated files are rewritten while your providers.tsx, views.custom.tsx, and " +
-        "scenarios are preserved. Component specs are resolver-agnostic — a registry " +
-        "version (@stigmer/react@1.2.0), workspace:*, file:../pkg, or a git URL all work.",
+        "Bootstrap a Scenar demos project in one step: scaffold a package.json and a " +
+        "runnable starter tour under tours/example-tour/ if the directory is empty, add " +
+        "the given component packages as ordinary dependencies, and run the package " +
+        "manager. Run this first, before authoring a scenario. Re-run any time — existing " +
+        "files are never overwritten, so authored tours are preserved. Component specs are " +
+        "resolver-agnostic: a registry version (@stigmer/react@1.2.0), workspace:*, " +
+        "file:../pkg, or a git URL all work. After bootstrapping, edit " +
+        "tours/example-tour/index.tsx to render your real components and wire any data " +
+        "they fetch in tours/example-tour/.scenar/providers.tsx.",
       inputSchema: {
         packages: z
           .array(z.string())
@@ -86,10 +84,6 @@ function registerInstall(server: McpServer): void {
     async ({ packages, dir, skipInstall, packageManager }) =>
       guard(async () => {
         const cwd = dir ? resolveInProject(dir) : projectRoot();
-        const outputDir = resolve(cwd, ".scenar");
-        // First-time registry generation is keyed on the .scenar/ dir, so user-owned
-        // files are scaffolded once and preserved on every later run.
-        const isInit = !existsSync(outputDir);
 
         const installResult = runInstall({
           cwd,
@@ -99,20 +93,10 @@ function registerInstall(server: McpServer): void {
           packageManager,
         });
 
-        const { scan, generate: gen, msw } = runGeneratePipeline({
-          sourceRoot: cwd,
-          outputDir,
-          isInit,
-          initMsw: true,
-        });
-
-        // Discovery aid: note the installed component packages in report.md.
-        appendPackageReport(outputDir, cwd, installResult.added.map((s) => s.name));
-
         const rel = (p: string) => relative(projectRoot(), p) || ".";
         const lines: Array<string | null> = [];
         if (installResult.scaffolded) {
-          lines.push(`Scaffolded a new Scenar demos project:`);
+          lines.push(`Scaffolded a new Scenar demos project in ${rel(cwd)}/:`);
           for (const f of installResult.scaffoldCreated) lines.push(`  + ${f}`);
           lines.push(``);
         }
@@ -125,16 +109,10 @@ function registerInstall(server: McpServer): void {
             : `Install skipped — run ${installResult.packageManager} before packing.`,
         );
         lines.push(``);
-        lines.push(`Generated ${rel(outputDir)}/:`);
-        for (const f of gen.written) lines.push(`  + ${f}`);
-        for (const f of gen.preserved) lines.push(`  = ${f} (preserved)`);
-        if (msw) lines.push(`MSW service worker: ${msw.status}${msw.path ? ` (${rel(msw.path)})` : ""}`);
-        lines.push(``);
-        lines.push(`Discovered ${scan.discovered.length} component(s), skipped ${scan.skipped.length}.`);
-        lines.push(``);
         lines.push(
-          `Next: author tour views under src/ (compose your real components), wire ` +
-            `${rel(outputDir)}/providers.tsx, then scenar_pack.`,
+          `Next: scenar_pack tours/example-tour to preview, then edit its index.tsx to ` +
+            `render your real components and wire any data they fetch in ` +
+            `tours/example-tour/.scenar/providers.tsx.`,
         );
         return text(lines.filter((l): l is string => l !== null).join("\n"));
       }),

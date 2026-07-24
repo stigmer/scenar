@@ -26,7 +26,7 @@ install → wire providers → author → narrate → pack → serve / publish
 
 | Step | CLI | MCP tool |
 |------|-----|----------|
-| Bootstrap a demos project + view registry | `scenar install` | `scenar_install` |
+| Bootstrap a demos project + starter tour | `scenar install` | `scenar_install` |
 | Validate a scenario YAML | `scenar validate` | `scenar_validate` |
 | Generate narration audio (TTS) | `scenar narrate` | `scenar_narrate` |
 | Bundle into a static embed | `scenar pack` | `scenar_pack` |
@@ -41,15 +41,17 @@ structured results. Paths are resolved against the project root.
 
 - **Path A — real components (recommended for real tours).** Run
   `scenar install <your-component-package>`. It scaffolds a demos project, adds
-  the component package as a dependency, and writes a `.scenar/` registry
-  (`views.ts`, `views.custom.tsx`, `providers.tsx`, `report.md`) plus an MSW
-  service worker from your local `src/` views. You then author a scenario that
-  renders the user's *actual* components. The hard part is wiring
-  `.scenar/providers.tsx` (theme/router/data) and MSW handlers so the components
-  render without a live backend — do this deliberately, with the user.
+  the component package as a dependency, and writes a runnable starter tour under
+  `tours/example-tour/`. You then author a scenario whose `index.tsx`
+  **imports the user's actual components directly** (no registry, no scan). The
+  hard part is wiring the tour's `.scenar/providers.tsx` (client + provider +
+  mock data) so the components render without a live backend — do this
+  deliberately, with the user. The recommended mock for Connect-RPC SDKs is an
+  in-process router transport (`createRouterTransport`); resolve the embed theme
+  with `getEmbedColorMode()` from `@scenar/react`. See [reference.md](reference.md).
 - **Path B — illustrative components (fastest for generic flows).** Compose the
-  `@scenar/react` shells and page templates (no scan needed). The bundled
-  `welcome-tour` example is Path B; study it before authoring.
+  `@scenar/react` shells and page templates (no product dependency needed). The
+  bundled `welcome-tour` example is Path B; study it before authoring.
 
 Both paths produce the same artifact: a **scenario directory**.
 
@@ -164,7 +166,8 @@ templates. Common shells: `BrowserView`, `TerminalView`, `CodeEditorView`,
 `FormCard`, `DataTable`, `StatusBadge`, `PulseHighlight`.
 
 See [reference.md](reference.md) for the full catalog, the `createScenario` SDK
-(type-safe Path B), provider/MSW wiring for Path A, and the bundle constraints.
+(type-safe Path B), the provider + router-transport wiring for Path A, and the
+bundle constraints.
 
 ## The one hard constraint: the bundle allowlist
 
@@ -176,7 +179,7 @@ CSS-drawn UI; import raster assets normally (Vite hashes them at pack time).
 ## Workflow checklist
 
 ```
-- [ ] Path A: scenar_install, review report.md, wire providers.tsx + MSW
+- [ ] Path A: scenar_install, then wire the tour's .scenar/providers.tsx (provider + mock data)
 - [ ] Write steps.ts (timeline, captions, narration, interactions)
 - [ ] Write index.tsx (renderStep with shells + data-cursor-target hooks)
 - [ ] scenar_narrate to synthesize audio

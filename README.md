@@ -20,7 +20,7 @@ Point Cursor at your app, describe the tour in plain English, and get an embedda
 
 ```mermaid
 flowchart LR
-    A["Your React app"] -->|"scenar install"| B[".scenar/ demos project"]
+    A["Your React app"] -->|"scenar install"| B["Demos project<br/>(deps + starter tour)"]
     B -->|"AI + Scenar skill"| C["Scenario<br/>(steps.ts + index.tsx)"]
     C -->|"scenar narrate"| D["TTS narration"]
     D -->|"scenar pack"| E["Static embed bundle"]
@@ -30,8 +30,8 @@ flowchart LR
 ```
 
 You bring the app. The AI — guided by the Scenar skill and the Scenar MCP server
-— scans your components, writes the scenario, and runs the pipeline. You review,
-tweak the wording and pacing, and ship.
+— writes the scenario from your real components and runs the pipeline. You
+review, tweak the wording and pacing, and ship.
 
 ## The 5-minute path
 
@@ -72,20 +72,19 @@ The skill teaches the AI the full step / view / interaction / narration model.
 ### 3. Create a demos project
 
 Run this in a new, empty directory (e.g. `your-app-demos`), kept separate so the
-`.scenar/` registry and packed bundles stay out of your product repo:
+packed bundles stay out of your product repo:
 
 ```bash
 npx @scenar/cli install @your-org/ui
 ```
 
-`scenar install` scaffolds a `package.json` and a starter view, adds your
-component package(s) as ordinary dependencies, runs your package manager, and
-generates the `.scenar/` registry from your local views. Your real components
-arrive as a normal dependency — author tour screens under `src/` that import
-from `@your-org/ui` and compose them. Re-run `scenar install` any time to
-refresh: generated files are rewritten; your `providers.tsx`, `views.custom.tsx`,
-and scenarios are preserved. Nothing leaves your machine until you `publish`
-(step 6).
+`scenar install` scaffolds a `package.json` and a **runnable starter tour** under
+`tours/example-tour/`, adds your component package(s) as ordinary dependencies,
+and runs your package manager. The starter is built from `@scenar/react` shells
+so `scenar pack` works immediately; you then swap in your real components.
+Re-run `scenar install` any time to add more packages — existing files are never
+overwritten, so your authored tours are always preserved. Nothing leaves your
+machine until you `publish` (step 6).
 
 Specs are resolver-agnostic — a registry version (`@your-org/ui@1.2.0`),
 `workspace:*`, `file:../ui`, or a git URL all work; resolution is your package
@@ -97,9 +96,13 @@ member and the install runs at the workspace root.
 > "Build a Scenar tour of our onboarding flow: sign-up, workspace setup, and the
 > dashboard. Keep it to four steps."
 
-The AI writes `steps.ts` + `index.tsx` against your real components. You'll wire
-`.scenar/providers.tsx` and MSW handlers together (the one step that needs a
-human — see [docs/getting-started.md](docs/getting-started.md)).
+The AI writes `steps.ts` + `index.tsx` (a `renderStep` that imports and composes
+your real components directly). When a component fetches data, you give it
+something to render in isolation by wiring a tour's `.scenar/providers.tsx` — the
+one step that benefits from a human. The recommended pattern for Connect-RPC SDKs
+is an in-process **router transport**: mock the RPCs your components call with no
+network and no service worker. See
+[docs/getting-started.md](docs/getting-started.md).
 
 If your components rely on a Tailwind/CSS build, import the package's prebuilt
 stylesheet (e.g. `@your-org/ui/styles.css`) in `.scenar/providers.tsx` —
@@ -160,13 +163,14 @@ Open the printed URL — you'll see the same demo as the
 ## Two ways to author
 
 - **Path A — your real components.** `scenar install` bootstraps a demos project
-  with your component package as a dependency; you author local views that compose
-  your real components against the generated registry. Highest fidelity. The one
-  manual step is wiring providers + mock data so components render in isolation.
+  with your component package as a dependency; your `index.tsx` imports and
+  composes those real components directly. Highest fidelity. The one manual step
+  is wiring a tour's `.scenar/providers.tsx` (client + provider + mock data) so
+  the components render in isolation.
 - **Path B — code / SDK.** Compose the `@scenar/react` shells and page templates
-  (or your own components) with the type-safe `createScenario()` builder. No scan
-  needed. The bundled [`welcome-tour`](packages/cli/examples/welcome-tour) is
-  Path B.
+  (or your own components) with the type-safe `createScenario()` builder. No
+  product dependency needed. The bundled
+  [`welcome-tour`](packages/cli/examples/welcome-tour) is Path B.
 
 See [docs/authoring-scenarios.md](docs/authoring-scenarios.md) for the full model.
 
@@ -182,7 +186,7 @@ Details in [docs/hosting.md](docs/hosting.md).
 ## CLI reference
 
 ```bash
-scenar install [packages...]         # bootstrap a demos project: scaffold + add deps + scan → .scenar/
+scenar install [packages...]         # bootstrap a demos project: scaffold + add deps + starter tour
 scenar validate demo.yaml            # validate a scenario YAML
 scenar try                           # serve the bundled welcome-tour example (no app needed)
 scenar narrate ./my-tour             # synthesize narration audio (TTS)
@@ -203,14 +207,13 @@ Install the CLI globally with `npm install -g @scenar/cli`, or run it via `npx
 | [`@scenar/embed`](packages/embed) | `<scenar-embed>` web component + React wrapper for dropping a hosted tour on any page |
 | [`@scenar/sdk`](packages/sdk) | `createScenario()` builder + proto/YAML loader |
 | [`@scenar/react`](packages/react) | `ScenarioPlayer`, cursor, viewport, narration, shells, page templates |
-| [`@scenar/preview`](packages/preview) | Scan a React project, generate a view registry automatically |
 | [`@scenar/cli`](packages/cli) | `install`, `validate`, `narrate`, `pack`, `serve`, `publish`, `render` |
 | [`@scenar/mcp-server`](packages/mcp-server) | MCP server exposing the CLI to AI editors |
 | [`@scenar/remotion`](packages/remotion) | MP4 video export |
 
 ## Documentation
 
-- [Getting started](docs/getting-started.md) — the full walkthrough, including provider + MSW wiring
+- [Getting started](docs/getting-started.md) — the full walkthrough, including provider + mock-data wiring
 - [Authoring scenarios](docs/authoring-scenarios.md) — the step / view / interaction / narration model
 - [MCP server](docs/mcp-server.md) — installing and configuring the MCP server
 - [Hosting](docs/hosting.md) — `serve` vs `publish`, custom domains

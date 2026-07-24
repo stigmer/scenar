@@ -32,7 +32,6 @@
   "dependencies": {
     "@scenar/core": "workspace:*",
     "@scenar/embed": "workspace:*",
-    "@scenar/preview": "workspace:*",
     "@scenar/sdk": "workspace:*",
     "commander": "^13.0.0",
     "yaml": "^2.7.0"

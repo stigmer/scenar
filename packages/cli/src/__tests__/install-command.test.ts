@@ -53,43 +53,41 @@ describe("scenar install (end-to-end, --no-install)", () => {
     }
   }
 
-  it("scaffolds a project and generates the registry on first run", async () => {
+  it("scaffolds a runnable starter tour on first run", async () => {
     await runInstallCommand(["--no-install", "--dir", dir]);
 
     expect(process.exitCode).not.toBe(1);
     expect(existsSync(join(dir, "package.json"))).toBe(true);
-    expect(existsSync(join(dir, "src/views/WelcomeView.tsx"))).toBe(true);
-    expect(existsSync(join(dir, ".scenar/views.generated.ts"))).toBe(true);
-    expect(existsSync(join(dir, ".scenar/providers.tsx"))).toBe(true);
-    expect(existsSync(join(dir, ".scenar/scenar.config.ts"))).toBe(true);
+    expect(existsSync(join(dir, "tsconfig.json"))).toBe(true);
+    expect(existsSync(join(dir, ".gitignore"))).toBe(true);
+    expect(existsSync(join(dir, "tours/example-tour/steps.ts"))).toBe(true);
+    expect(existsSync(join(dir, "tours/example-tour/index.tsx"))).toBe(true);
+    expect(existsSync(join(dir, "tours/example-tour/.scenar/providers.tsx"))).toBe(true);
 
-    const registry = await readFile(join(dir, ".scenar/views.generated.ts"), "utf-8");
-    expect(registry).toContain("WelcomeView");
+    const index = await readFile(join(dir, "tours/example-tour/index.tsx"), "utf-8");
+    expect(index).toContain("renderStep");
   });
 
-  it("preserves user-owned files on re-run (generated-only)", async () => {
+  it("never overwrites authored files on re-run", async () => {
     await runInstallCommand(["--no-install", "--dir", dir]);
 
-    const providersPath = join(dir, ".scenar/providers.tsx");
-    const marker = "// EDITED BY USER — must survive re-run\n";
-    const original = await readFile(providersPath, "utf-8");
-    await writeFile(providersPath, marker + original, "utf-8");
+    // Every scaffolded file is author-owned, so edits must survive a re-run.
+    const indexPath = join(dir, "tours/example-tour/index.tsx");
+    const marker = "// EDITED BY AUTHOR — must survive re-run\n";
+    const original = await readFile(indexPath, "utf-8");
+    await writeFile(indexPath, marker + original, "utf-8");
 
     await runInstallCommand(["--no-install", "--dir", dir]);
 
-    const after = await readFile(providersPath, "utf-8");
+    const after = await readFile(indexPath, "utf-8");
     expect(after.startsWith(marker)).toBe(true);
   });
 
-  it("records a named dependency and notes it in the report", async () => {
+  it("records a named dependency in package.json", async () => {
     await runInstallCommand(["--no-install", "--dir", dir, "@stigmer/react@^1.0.0"]);
 
     const pkg = JSON.parse(await readFile(join(dir, "package.json"), "utf-8"));
     expect(pkg.dependencies["@stigmer/react"]).toBe("^1.0.0");
-
-    const report = await readFile(join(dir, ".scenar/report.md"), "utf-8");
-    expect(report).toContain("Component packages");
-    expect(report).toContain("@stigmer/react");
   });
 
   it("rejects an invalid --package-manager", async () => {

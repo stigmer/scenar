@@ -33,14 +33,8 @@ describe("Scenar MCP server", () => {
     );
   });
 
-  it("exposes the registry resources and scenario templates", async () => {
+  it("exposes the per-scenario resource templates", async () => {
     const client = await connectClient();
-    const { resources } = await client.listResources();
-    const uris = resources.map((r) => r.uri);
-    expect(uris).toContain("scenar://registry/views");
-    expect(uris).toContain("scenar://registry/report");
-    expect(uris).toContain("scenar://registry/providers");
-
     const { resourceTemplates } = await client.listResourceTemplates();
     const templates = resourceTemplates.map((t) => t.uriTemplate);
     expect(templates).toContain("scenar://scenario/{name}/steps");
@@ -67,11 +61,13 @@ describe("Scenar MCP server", () => {
     }
   });
 
-  it("reads a registry resource, returning guidance when absent", async () => {
+  it("reads a scenario steps resource, returning guidance when absent", async () => {
     const client = await connectClient();
-    const result = await client.readResource({ uri: "scenar://registry/views" });
+    const result = await client.readResource({
+      uri: "scenar://scenario/nope/steps",
+    });
     expect(result.contents).toHaveLength(1);
-    // With no .scenar/ in the test cwd, the body should guide the user.
+    // With no such scenario in the test cwd, the body should guide the user.
     const text = String(result.contents[0]!.text);
     expect(text.length).toBeGreaterThan(0);
   });
