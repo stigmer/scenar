@@ -67,7 +67,7 @@ The starter tour is everything you author and own:
 
 | File | Purpose |
 |------|---------|
-| `tours/example-tour/steps.ts` | the timeline: data, delayMs, captions, narration |
+| `tours/example-tour/steps.ts` | the timeline: data, delayMs, narration |
 | `tours/example-tour/index.tsx` | `renderStep(data, i)` — composes your components |
 | `tours/example-tour/.scenar/providers.tsx` | wraps the tour with providers + mock data |
 
@@ -144,11 +144,11 @@ Guided by the skill, the AI writes a **scenario directory**:
 
 ```
 onboarding-tour/
-├── steps.ts    # timeline: data, delayMs, captions, narration, interactions
+├── steps.ts    # timeline: data, delayMs, narration, interactions
 └── index.tsx   # renderStep(data, stepIndex) → ReactNode (your real components)
 ```
 
-Review it: check the component props, the captions read as a story, and the
+Review it: check the component props, the narration reads as a story, and the
 interactions (`data-cursor-target` hooks) point at the right elements. See
 [authoring-scenarios.md](authoring-scenarios.md) for the full model.
 
@@ -169,8 +169,8 @@ npx @scenar/cli pack ./onboarding-tour
 npx @scenar/cli serve ./onboarding-tour-bundle   # → http://localhost:4173/
 ```
 
-Open the URL and watch it play. Iterate: adjust `delayMs` dwell times, tighten
-captions, refine narration, re-run `narrate`/`pack`/`serve`.
+Open the URL and watch it play. Iterate: adjust `delayMs` dwell times, refine
+narration, re-run `narrate`/`pack`/`serve`.
 
 ## 7. Publish
 

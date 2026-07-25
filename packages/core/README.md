@@ -12,7 +12,7 @@ pnpm add @scenar/core
 
 ### Scenario types
 
-- **`ScenarioStep<T>`** — A single step in a scenario timeline with typed data payload, delay, caption, narration text, and inline interactions.
+- **`ScenarioStep<T>`** — A single step in a scenario timeline with typed data payload, delay, narration text, and inline interactions.
 - **`StepAction`** — A timed interaction within a step (click, type, hover, drag, scroll_to, set_cursor, clear_cursor, viewport_transition).
 
 ### Timeline computation

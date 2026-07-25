@@ -4,11 +4,9 @@ viewport:
 steps:
   - view: new-session
     delay_ms: 0
-    caption: "Start here"
     narration_text: "Let's walk through the setup."
   - view: settings-api-keys
     delay_ms: 1500
-    caption: "Your API keys"
     interactions:
       - at_percent: 0.3
         type: hover
@@ -17,7 +15,6 @@ steps:
           hover_duration_ms: 1500
   - view: create-form
     delay_ms: 2500
-    caption: "Name your key"
     interactions:
       - at_percent: 0.15
         type: type

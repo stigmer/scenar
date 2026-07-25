@@ -31,18 +31,15 @@ import "google/protobuf/struct.proto";
 //     steps:
 //       - view: new-session
 //         delay_ms: 0
-//         caption: "Start here"
 //         narration_text: "Let's walk through the setup."
 //       - view: settings-api-keys
 //         delay_ms: 1500
-//         caption: "Your API keys"
 //         interactions:
 //           - at_percent: 0.3
 //             type: hover
 //             target: create-api-key
 //       - view: create-form
 //         delay_ms: 2500
-//         caption: "Name your key"
 //         interactions:
 //           - at_percent: 0.15
 //             type: type
@@ -96,6 +93,14 @@ message ViewportConfig {
 // from view name to component is defined by the scenario author in their
 // render function — the engine treats it as an opaque string identifier.
 message Step {
+  // Field 3 was `string caption` — a short label rendered beneath the demo
+  // content. Removed in 0.5.0: the label duplicated the narration, wasted
+  // vertical space in embeds, and rendered on the unthemed page canvas.
+  // Reserved so the field number and name can never be reused with a
+  // different meaning.
+  reserved 3;
+  reserved "caption";
+
   // Component identifier for this step. Maps to a React component via
   // the scenario's render function (e.g., "new-session", "settings-api-keys",
   // "create-form").
@@ -112,11 +117,6 @@ message Step {
   // max(delay_ms, previous_step_narration_duration) — narration always
   // plays to completion before the next step begins.
   int32 delay_ms = 2 [(buf.validate.field).int32.gte = 0];
-
-  // Short label displayed below the demo content describing the current
-  // action (e.g., "Click your profile", "Copy your API key"). Shown in
-  // both interactive embeds and video exports.
-  string caption = 3;
 
   // Narration script for text-to-speech generation. Consumed by the
   // build script to produce audio files — not rendered at runtime.

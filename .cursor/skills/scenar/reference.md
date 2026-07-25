@@ -89,10 +89,10 @@ export default createScenario({
   viewport: { width: 896, height: 480 },
   views: { login: LoginScreen, dashboard: Dashboard },
   steps: [
-    { view: "login", delayMs: 0, caption: "Sign in",
+    { view: "login", delayMs: 0,
       narrationText: "Sign in to your workspace.",
       props: { email: "jordan@acme.cloud" } },          // typed to LoginScreen's props
-    { view: "dashboard", delayMs: 2400, caption: "Your dashboard",
+    { view: "dashboard", delayMs: 2400,
       props: { userName: "Jordan" } },
   ],
 });

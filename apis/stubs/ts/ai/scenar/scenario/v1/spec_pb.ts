@@ -14,7 +14,7 @@ import type { JsonObject, Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/scenario/v1/spec.proto.
  */
 export const file_ai_scenar_scenario_v1_spec: GenFile = /*@__PURE__*/
-  fileDesc("CiBhaS9zY2VuYXIvc2NlbmFyaW8vdjEvc3BlYy5wcm90bxIVYWkuc2NlbmFyLnNjZW5hcmlvLnYxIn0KDFNjZW5hcmlvU3BlYxI3Cgh2aWV3cG9ydBgBIAEoCzIlLmFpLnNjZW5hci5zY2VuYXJpby52MS5WaWV3cG9ydENvbmZpZxI0CgVzdGVwcxgCIAMoCzIbLmFpLnNjZW5hci5zY2VuYXJpby52MS5TdGVwQgi6SAWSAQIIASJBCg5WaWV3cG9ydENvbmZpZxIWCgV3aWR0aBgBIAEoBUIHukgEGgIgABIXCgZoZWlnaHQYAiABKAVCB7pIBBoCIAAiwgEKBFN0ZXASFQoEdmlldxgBIAEoCUIHukgEcgIQARIZCghkZWxheV9tcxgCIAEoBUIHukgEGgIoABIPCgdjYXB0aW9uGAMgASgJEhYKDm5hcnJhdGlvbl90ZXh0GAQgASgJEiYKBXByb3BzGAUgASgLMhcuZ29vZ2xlLnByb3RvYnVmLlN0cnVjdBI3CgxpbnRlcmFjdGlvbnMYBiADKAsyIS5haS5zY2VuYXIuc2NlbmFyaW8udjEuU3RlcEFjdGlvbiKMBAoKU3RlcEFjdGlvbhIjCgphdF9wZXJjZW50GAEgASgCQg+6SAwKCh0AAIA/LQAAAAASOQoEdHlwZRgCIAEoDjIhLmFpLnNjZW5hci5zY2VuYXJpby52MS5BY3Rpb25UeXBlQgi6SAWCAQIQARIOCgZ0YXJnZXQYAyABKAkSOgoMY2xpY2tfY29uZmlnGAogASgLMiIuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLkNsaWNrQ29uZmlnSAASOAoLdHlwZV9jb25maWcYCyABKAsyIS5haS5zY2VuYXIuc2NlbmFyaW8udjEuVHlwZUNvbmZpZ0gAEjoKDGhvdmVyX2NvbmZpZxgMIAEoCzIiLmFpLnNjZW5hci5zY2VuYXJpby52MS5Ib3ZlckNvbmZpZ0gAEjgKC2RyYWdfY29uZmlnGA0gASgLMiEuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLkRyYWdDb25maWdIABJBChBzY3JvbGxfdG9fY29uZmlnGA4gASgLMiUuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlNjcm9sbFRvQ29uZmlnSAASVQoadmlld3BvcnRfdHJhbnNpdGlvbl9jb25maWcYDyABKAsyLy5haS5zY2VuYXIuc2NlbmFyaW8udjEuVmlld3BvcnRUcmFuc2l0aW9uQ29uZmlnSABCCAoGY29uZmlnIg0KC0NsaWNrQ29uZmlnIkMKClR5cGVDb25maWcSFQoEdGV4dBgBIAEoCUIHukgEcgIQARIeCg10eXBlX2RlbGF5X21zGAIgASgFQge6SAQaAigAIjEKC0hvdmVyQ29uZmlnEiIKEWhvdmVyX2R1cmF0aW9uX21zGAEgASgFQge6SAQaAigAIioKCkRyYWdDb25maWcSHAoLZHJhZ190YXJnZXQYASABKAlCB7pIBHICEAEiEAoOU2Nyb2xsVG9Db25maWciSQoYVmlld3BvcnRUcmFuc2l0aW9uQ29uZmlnEhUKDXZpZXdwb3J0X3pvb20YASABKAISFgoOdmlld3BvcnRfcmVzZXQYAiABKAhiBnByb3RvMw", [file_ai_scenar_scenario_v1_enum, file_buf_validate_validate, file_google_protobuf_struct]);
+  fileDesc("CiBhaS9zY2VuYXIvc2NlbmFyaW8vdjEvc3BlYy5wcm90bxIVYWkuc2NlbmFyLnNjZW5hcmlvLnYxIn0KDFNjZW5hcmlvU3BlYxI3Cgh2aWV3cG9ydBgBIAEoCzIlLmFpLnNjZW5hci5zY2VuYXJpby52MS5WaWV3cG9ydENvbmZpZxI0CgVzdGVwcxgCIAMoCzIbLmFpLnNjZW5hci5zY2VuYXJpby52MS5TdGVwQgi6SAWSAQIIASJBCg5WaWV3cG9ydENvbmZpZxIWCgV3aWR0aBgBIAEoBUIHukgEGgIgABIXCgZoZWlnaHQYAiABKAVCB7pIBBoCIAAiwAEKBFN0ZXASFQoEdmlldxgBIAEoCUIHukgEcgIQARIZCghkZWxheV9tcxgCIAEoBUIHukgEGgIoABIWCg5uYXJyYXRpb25fdGV4dBgEIAEoCRImCgVwcm9wcxgFIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3QSNwoMaW50ZXJhY3Rpb25zGAYgAygLMiEuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlN0ZXBBY3Rpb25KBAgDEARSB2NhcHRpb24ijAQKClN0ZXBBY3Rpb24SIwoKYXRfcGVyY2VudBgBIAEoAkIPukgMCgodAACAPy0AAAAAEjkKBHR5cGUYAiABKA4yIS5haS5zY2VuYXIuc2NlbmFyaW8udjEuQWN0aW9uVHlwZUIIukgFggECEAESDgoGdGFyZ2V0GAMgASgJEjoKDGNsaWNrX2NvbmZpZxgKIAEoCzIiLmFpLnNjZW5hci5zY2VuYXJpby52MS5DbGlja0NvbmZpZ0gAEjgKC3R5cGVfY29uZmlnGAsgASgLMiEuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlR5cGVDb25maWdIABI6Cgxob3Zlcl9jb25maWcYDCABKAsyIi5haS5zY2VuYXIuc2NlbmFyaW8udjEuSG92ZXJDb25maWdIABI4CgtkcmFnX2NvbmZpZxgNIAEoCzIhLmFpLnNjZW5hci5zY2VuYXJpby52MS5EcmFnQ29uZmlnSAASQQoQc2Nyb2xsX3RvX2NvbmZpZxgOIAEoCzIlLmFpLnNjZW5hci5zY2VuYXJpby52MS5TY3JvbGxUb0NvbmZpZ0gAElUKGnZpZXdwb3J0X3RyYW5zaXRpb25fY29uZmlnGA8gASgLMi8uYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlZpZXdwb3J0VHJhbnNpdGlvbkNvbmZpZ0gAQggKBmNvbmZpZyINCgtDbGlja0NvbmZpZyJDCgpUeXBlQ29uZmlnEhUKBHRleHQYASABKAlCB7pIBHICEAESHgoNdHlwZV9kZWxheV9tcxgCIAEoBUIHukgEGgIoACIxCgtIb3ZlckNvbmZpZxIiChFob3Zlcl9kdXJhdGlvbl9tcxgBIAEoBUIHukgEGgIoACIqCgpEcmFnQ29uZmlnEhwKC2RyYWdfdGFyZ2V0GAEgASgJQge6SARyAhABIhAKDlNjcm9sbFRvQ29uZmlnIkkKGFZpZXdwb3J0VHJhbnNpdGlvbkNvbmZpZxIVCg12aWV3cG9ydF96b29tGAEgASgCEhYKDnZpZXdwb3J0X3Jlc2V0GAIgASgIYgZwcm90bzM", [file_ai_scenar_scenario_v1_enum, file_buf_validate_validate, file_google_protobuf_struct]);
 
 /**
  * ScenarioSpec defines the desired state of a Scenario resource — the complete
@@ -42,18 +42,15 @@ export const file_ai_scenar_scenario_v1_spec: GenFile = /*@__PURE__*/
  *     steps:
  *       - view: new-session
  *         delay_ms: 0
- *         caption: "Start here"
  *         narration_text: "Let's walk through the setup."
  *       - view: settings-api-keys
  *         delay_ms: 1500
- *         caption: "Your API keys"
  *         interactions:
  *           - at_percent: 0.3
  *             type: hover
  *             target: create-api-key
  *       - view: create-form
  *         delay_ms: 2500
- *         caption: "Name your key"
  *         interactions:
  *           - at_percent: 0.15
  *             type: type
@@ -172,15 +169,6 @@ export type Step = Message<"ai.scenar.scenario.v1.Step"> & {
    * @generated from field: int32 delay_ms = 2;
    */
   delayMs: number;
-
-  /**
-   * Short label displayed below the demo content describing the current
-   * action (e.g., "Click your profile", "Copy your API key"). Shown in
-   * both interactive embeds and video exports.
-   *
-   * @generated from field: string caption = 3;
-   */
-  caption: string;
 
   /**
    * Narration script for text-to-speech generation. Consumed by the

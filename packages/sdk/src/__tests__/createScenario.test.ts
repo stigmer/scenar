@@ -23,11 +23,10 @@ describe("createScenario", () => {
       viewport: { width: 896, height: 540 },
       views: { settings: SettingsView, form: FormView },
       steps: [
-        { view: "settings", delayMs: 0, caption: "Start", props: { org: "acme" } },
+        { view: "settings", delayMs: 0, props: { org: "acme" } },
         {
           view: "form",
           delayMs: 1500,
-          caption: "Fill",
           narrationText: "Enter your key name.",
           props: { defaultName: "demo" },
           interactions: [
@@ -43,7 +42,6 @@ describe("createScenario", () => {
     expect(scenario.steps[0]!.delayMs).toBe(0);
     expect(scenario.steps[0]!.data.view).toBe("settings");
     expect(scenario.steps[0]!.data.props).toEqual({ org: "acme" });
-    expect(scenario.steps[0]!.caption).toBe("Start");
     expect(scenario.steps[0]!.interactions).toBeUndefined();
 
     expect(scenario.steps[1]!.delayMs).toBe(1500);

@@ -50,7 +50,6 @@ export function createScenario<Views extends ViewRegistry>(
     steps.push({
       delayMs: step.delayMs,
       data: { view: step.view, props: step.props } as AuthoredStepData<Views>,
-      caption: step.caption,
       narration: step.narrationText,
       interactions: step.interactions,
     });

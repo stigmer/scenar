@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, useReducedMotion } from "framer-motion";
 import { type NarrationManifest, type ScenarioBundle, type ScenarioStep, computeStepTimeline, deriveStepFromTime } from "@scenar/core";
 import { useVideoExport } from "../video/VideoExportContext.js";
 import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
@@ -47,8 +47,11 @@ interface ScenarioPlayerProps<T> {
  *
  * Renders a poster overlay with a centered play button on initial load.
  * The user clicks to start playback. When playing, a YouTube-style
- * progress bar with chapter markers and transport controls auto-hides
- * after 3 seconds. Only one ScenarioPlayer plays at a time on a page.
+ * progress bar with chapter markers and transport controls overlays the
+ * content's bottom edge and auto-hides after 3 seconds. The player's box
+ * is always exactly the content box — overlays never add height — so
+ * embeds report one stable size across idle/playing/paused. Only one
+ * ScenarioPlayer plays at a time on a page.
  *
  * Renders content via a children render prop — the engine knows nothing
  * about what is being displayed. Respects `prefers-reduced-motion`.
@@ -255,7 +258,6 @@ export function ScenarioPlayer<T>({
     },
   });
 
-  const caption = steps[stepIndex]!.caption;
   const showPoster = playbackState === "idle" && !isVideoExport && !prefersReducedMotion;
   const showPauseOverlay = playbackState === "paused" && !isVideoExport;
   const showControlBar = playbackState !== "idle" && !hideControls;
@@ -285,44 +287,33 @@ export function ScenarioPlayer<T>({
           {showPauseOverlay && <ScenarioPauseOverlay onResume={handlePlay} />}
           {showAudioNotice && <ScenarioAudioNotice onEnableAudio={handleEnableAudio} />}
         </AnimatePresence>
+
+        {/*
+         * Controls overlay the content's bottom edge instead of flowing below
+         * it. Invariant: the player's box IS the content box in every playback
+         * state — nothing outside it ever appears or disappears — so the embed
+         * bridge reports one stable size and host pages never reflow on Play.
+         */}
+        {showControlBar && (
+          <ScenarioControls
+            visible={controlsVisible}
+            playing={playing}
+            muted={muted}
+            playbackRate={playbackRate}
+            stepTimeline={stepTimeline}
+            showSpeedControl={showSpeedControl}
+            hasNarration={!!narrationManifest}
+            progressTrackRef={progressTrackRef}
+            playheadRef={playheadRef}
+            onTogglePlay={togglePlay}
+            onToggleMute={toggleMute}
+            onSelectSpeed={setPlaybackRate}
+            onSeekToTime={handleSeekToTime}
+          />
+        )}
       </div>
 
       {narrationManifest && <audio ref={audioRef} preload="none" hidden />}
-
-      <div className="mt-2 flex h-6 items-center justify-center">
-        <AnimatePresence mode="wait">
-          {caption && (
-            <motion.p
-              key={caption}
-              className="text-sm font-medium text-foreground/70"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.2 }}
-            >
-              {caption}
-            </motion.p>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {showControlBar && (
-        <ScenarioControls
-          visible={controlsVisible}
-          playing={playing}
-          muted={muted}
-          playbackRate={playbackRate}
-          stepTimeline={stepTimeline}
-          showSpeedControl={showSpeedControl}
-          hasNarration={!!narrationManifest}
-          progressTrackRef={progressTrackRef}
-          playheadRef={playheadRef}
-          onTogglePlay={togglePlay}
-          onToggleMute={toggleMute}
-          onSelectSpeed={setPlaybackRate}
-          onSeekToTime={handleSeekToTime}
-        />
-      )}
     </div>
   );
 }

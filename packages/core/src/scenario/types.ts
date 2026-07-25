@@ -17,8 +17,6 @@ export interface ScenarioStep<T> {
   readonly delayMs: number;
   /** Data snapshot at this point in the timeline. */
   readonly data: T;
-  /** Short label shown below the demo content describing the current action. */
-  readonly caption?: string;
   /**
    * Narration script for TTS generation. Consumed by the build script
    * to produce audio files — not rendered at runtime.

@@ -22,6 +22,18 @@ interface ScenarioControlsProps {
 /**
  * Video-style transport controls: progress bar, play/pause,
  * mute toggle, and optional speed selector.
+ *
+ * Rendered as an overlay pinned to the content's bottom edge (z-20, above the
+ * pause overlay's z-10 so transport stays clickable while paused). Keeping the
+ * controls *inside* the content box — rather than in flow below it — makes the
+ * player's box identical to the content box in every playback state, which is
+ * what keeps embed iframes from resizing (and host pages from reflowing) when
+ * playback starts.
+ *
+ * Styling is scrim-relative (white over a bottom gradient), not theme-token
+ * based: the controls sit on top of arbitrary tour content, so they follow the
+ * video-player convention the poster's pill already uses instead of the
+ * light/dark palette of the content behind them.
  */
 export function ScenarioControls({
   visible,
@@ -58,15 +70,19 @@ export function ScenarioControls({
 
   return (
     <motion.div
-      className="mt-1 px-1"
+      className="absolute inset-x-0 bottom-0 z-20 rounded-b-lg bg-gradient-to-t from-black/60 via-black/25 to-transparent px-3 pb-1.5 pt-8"
       initial={false}
       animate={{ opacity: visible ? 1 : 0 }}
       transition={{ duration: 0.2 }}
       style={{ pointerEvents: visible ? "auto" : "none" }}
+      // The overlay lives inside the content box, whose own click toggles
+      // play/pause — a click anywhere on the controls (including the scrim
+      // padding between buttons) must not double as a content click.
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Progress bar */}
       <div
-        className="group relative mb-2 h-1 w-full cursor-pointer rounded-full bg-foreground/25 transition-[height] duration-150 hover:h-1.5"
+        className="group relative mb-2 h-1 w-full cursor-pointer rounded-full bg-white/30 transition-[height] duration-150 hover:h-1.5"
         onClick={handleProgressClick}
         role="progressbar"
         aria-label="Playback progress"
@@ -75,16 +91,16 @@ export function ScenarioControls({
       >
         <div
           ref={progressTrackRef}
-          className="absolute inset-y-0 left-0 rounded-full bg-foreground/60"
+          className="absolute inset-y-0 left-0 rounded-full bg-white/80"
         />
         <div
           ref={playheadRef}
-          className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+          className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
         />
         {stepTicks.map((pct, i) => (
           <div
             key={i}
-            className="absolute top-0 h-full w-0.5 rounded-full bg-background"
+            className="absolute top-0 h-full w-0.5 rounded-full bg-black/50"
             style={{ left: `${pct}%` }}
           />
         ))}
@@ -97,7 +113,7 @@ export function ScenarioControls({
             e.stopPropagation();
             onTogglePlay();
           }}
-          className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
+          className="flex h-6 w-6 items-center justify-center rounded text-white/75 transition-colors hover:text-white"
           aria-label={playing ? "Pause" : "Play"}
         >
           {playing ? <PauseIcon /> : <PlayIcon />}
@@ -109,7 +125,7 @@ export function ScenarioControls({
               e.stopPropagation();
               onToggleMute();
             }}
-            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
+            className="flex h-6 w-6 items-center justify-center rounded text-white/75 transition-colors hover:text-white"
             aria-label={muted ? "Unmute narration" : "Mute narration"}
           >
             {muted ? <VolumeXIcon /> : <VolumeIcon />}

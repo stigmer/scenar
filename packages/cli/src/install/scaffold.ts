@@ -123,19 +123,17 @@ export interface ExampleStepData {
 
 /**
  * The tour timeline. \`delayMs\` is the dwell before each step (the first is
- * shown immediately); \`caption\` renders under the player; \`narration\` is the
- * spoken script synthesized by \`scenar narrate\`.
+ * shown immediately); \`narration\` is the spoken script synthesized by
+ * \`scenar narrate\`.
  */
 export const steps: ScenarioStep<ExampleStepData>[] = [
   {
     delayMs: 0,
-    caption: "Sign in",
     narration: "Sign in to your workspace.",
     data: { url: "app.example.com/login", screen: "login" },
   },
   {
     delayMs: 2400,
-    caption: "Your dashboard",
     narration: "And you land on your dashboard.",
     data: { url: "app.example.com/home", screen: "dashboard" },
   },

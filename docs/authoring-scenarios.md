@@ -4,8 +4,8 @@ The scenario model in depth — for humans. (The AI gets the same model from the
 [Scenar skill](../.cursor/skills/scenar/SKILL.md).)
 
 A scenario is a **timeline of steps**. Each step shows a snapshot of your UI for
-a moment, with an optional caption, narration, and timed interactions (cursor,
-typing, scrolling, zoom). Scenar plays the timeline in the browser and can render
+a moment, with optional narration and timed interactions (cursor, typing,
+scrolling, zoom). Scenar plays the timeline in the browser and can render
 the identical timeline to an MP4.
 
 ## The scenario directory
@@ -34,7 +34,6 @@ export interface StepData {
 export const steps: ScenarioStep<StepData>[] = [
   {
     delayMs: 0,                              // dwell before reveal; first step = 0
-    caption: "Sign in to Acme Cloud",        // short label under the player
     narration: "Start by signing in.",       // TTS script (build-time only)
     data: { url: "app.acme.cloud/login", screen: "login" },
     interactions: [/* see below */],
@@ -46,7 +45,6 @@ export const steps: ScenarioStep<StepData>[] = [
 |-------|----------|---------|
 | `delayMs` | yes | milliseconds to dwell before this step is revealed |
 | `data` | yes | the snapshot passed to `renderStep` |
-| `caption` | no | short text shown beneath the player |
 | `narration` | no | sentence(s) for TTS; not rendered visually |
 | `interactions` | no | timed actions during the step |
 
@@ -135,10 +133,10 @@ export default createScenario({
   viewport: { width: 896, height: 480 },
   views: { login: LoginScreen, dashboard: Dashboard },
   steps: [
-    { view: "login", delayMs: 0, caption: "Sign in",
+    { view: "login", delayMs: 0,
       narrationText: "Sign in to your workspace.",
       props: { email: "jordan@acme.cloud" } },
-    { view: "dashboard", delayMs: 2400, caption: "Your dashboard",
+    { view: "dashboard", delayMs: 2400,
       props: { userName: "Jordan" } },
   ],
 });
@@ -169,6 +167,6 @@ YAML at runtime with `loadScenarioFromProto()` from `@scenar/sdk`.
 ## Authoring for quality
 
 - One idea per step; 2–3s dwell (`delayMs`) is a comfortable default.
-- Captions should read as a narrative when skimmed top to bottom.
+- Narration should read as a narrative when skimmed top to bottom.
 - Interactions should mirror what a real user does — don't over-animate.
 - Keep narration to one or two present-tense sentences per step.

@@ -8,7 +8,6 @@ function validScenario() {
       {
         view: "intro",
         delayMs: 0,
-        caption: "Welcome",
         narrationText: "Welcome to the demo.",
       },
     ],

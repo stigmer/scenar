@@ -49,18 +49,15 @@ const (
 //	  steps:
 //	    - view: new-session
 //	      delay_ms: 0
-//	      caption: "Start here"
 //	      narration_text: "Let's walk through the setup."
 //	    - view: settings-api-keys
 //	      delay_ms: 1500
-//	      caption: "Your API keys"
 //	      interactions:
 //	        - at_percent: 0.3
 //	          type: hover
 //	          target: create-api-key
 //	    - view: create-form
 //	      delay_ms: 2500
-//	      caption: "Name your key"
 //	      interactions:
 //	        - at_percent: 0.15
 //	          type: type
@@ -222,10 +219,6 @@ type Step struct {
 	// max(delay_ms, previous_step_narration_duration) — narration always
 	// plays to completion before the next step begins.
 	DelayMs int32 `protobuf:"varint,2,opt,name=delay_ms,json=delayMs,proto3" json:"delay_ms,omitempty"`
-	// Short label displayed below the demo content describing the current
-	// action (e.g., "Click your profile", "Copy your API key"). Shown in
-	// both interactive embeds and video exports.
-	Caption string `protobuf:"bytes,3,opt,name=caption,proto3" json:"caption,omitempty"`
 	// Narration script for text-to-speech generation. Consumed by the
 	// build script to produce audio files — not rendered at runtime.
 	//
@@ -298,13 +291,6 @@ func (x *Step) GetDelayMs() int32 {
 		return x.DelayMs
 	}
 	return 0
-}
-
-func (x *Step) GetCaption() string {
-	if x != nil {
-		return x.Caption
-	}
-	return ""
 }
 
 func (x *Step) GetNarrationText() string {
@@ -872,14 +858,13 @@ const file_ai_scenar_scenario_v1_spec_proto_rawDesc = "" +
 	"\x05steps\x18\x02 \x03(\v2\x1b.ai.scenar.scenario.v1.StepB\b\xbaH\x05\x92\x01\x02\b\x01R\x05steps\"P\n" +
 	"\x0eViewportConfig\x12\x1d\n" +
 	"\x05width\x18\x01 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00R\x05width\x12\x1f\n" +
-	"\x06height\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00R\x06height\"\xfe\x01\n" +
+	"\x06height\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00R\x06height\"\xf3\x01\n" +
 	"\x04Step\x12\x1b\n" +
 	"\x04view\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04view\x12\"\n" +
-	"\bdelay_ms\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\adelayMs\x12\x18\n" +
-	"\acaption\x18\x03 \x01(\tR\acaption\x12%\n" +
+	"\bdelay_ms\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\adelayMs\x12%\n" +
 	"\x0enarration_text\x18\x04 \x01(\tR\rnarrationText\x12-\n" +
 	"\x05props\x18\x05 \x01(\v2\x17.google.protobuf.StructR\x05props\x12E\n" +
-	"\finteractions\x18\x06 \x03(\v2!.ai.scenar.scenario.v1.StepActionR\finteractions\"\x81\x05\n" +
+	"\finteractions\x18\x06 \x03(\v2!.ai.scenar.scenario.v1.StepActionR\finteractionsJ\x04\b\x03\x10\x04R\acaption\"\x81\x05\n" +
 	"\n" +
 	"StepAction\x12.\n" +
 	"\n" +

@@ -120,6 +120,26 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`})();`);
   lines.push(`const _rootClass = _theme === "dark" ? SCENAR_CLASS + " dark" : SCENAR_CLASS;`);
 
+  // --- Page canvas: transparent when framed, theme surface when top-level ---
+  // The static HTML keeps html/body transparent (see generateEmbedHtml): a
+  // framed embed's canvas then shows the *host page's* background through any
+  // pixel the tour doesn't paint (aspect-ratio rounding slivers, load-in), so
+  // an embed can never flash a white band on a dark docs page. Do NOT pin
+  // `document.documentElement.style.colorScheme` to the resolved theme here —
+  // the `light dark` meta must stay authoritative, because a scheme mismatch
+  // with the framing document is exactly what makes browsers force an opaque
+  // white canvas. Top-level (scenar serve verification, direct bundle links)
+  // has no host background to show through, so paint the theme surface token
+  // for an intentional-looking page instead of the browser's default white.
+  // The body gets the scenar root class so `--scenar-surface` resolves there —
+  // referencing the token keeps this in lockstep with the palette instead of
+  // duplicating hex values that would drift.
+  lines.push(``);
+  lines.push(`if (window.parent === window) {`);
+  lines.push(`  document.body.classList.add(..._rootClass.split(" "));`);
+  lines.push(`  document.body.style.background = "var(--scenar-surface)";`);
+  lines.push(`}`);
+
   // --- App tree ---
   // The structure mirrors the in-app demo wiring exactly (see DemoViewport's
   // contract and ViewportTransformLayer's "Cursor must be a sibling" invariant):
@@ -197,6 +217,17 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
  * Produce the index.html that boots the embed. The entry is referenced as an
  * external module script (`<script type="module" src>`) — never inline — so the
  * server CSP (`script-src 'self'`) is satisfied without loosening.
+ *
+ * Canvas contract: the page declares `color-scheme: light dark` and keeps
+ * html/body transparent. When the embed is framed by a same-origin host (the
+ * shipped stigmer.ai layout), the browser propagates the host's color scheme
+ * into the frame; because the embed supports both schemes they always match,
+ * so the iframe canvas stays *transparent* — every pixel the tour doesn't
+ * paint shows the host page's own background, in both themes, even before the
+ * entry script loads. (A scheme mismatch is what makes browsers force an
+ * opaque white canvas — the historical "white band under the embed".) The
+ * margin reset guards against a host stylesheet-less load; the entry paints a
+ * theme surface only when the page is top-level (see generateEmbedEntry).
  */
 export function generateEmbedHtml(scenarioId: string, entryFileName: string): string {
   return [
@@ -205,7 +236,11 @@ export function generateEmbedHtml(scenarioId: string, entryFileName: string): st
     `  <head>`,
     `    <meta charset="utf-8" />`,
     `    <meta name="viewport" content="width=device-width, initial-scale=1" />`,
+    `    <meta name="color-scheme" content="light dark" />`,
     `    <title>${escapeHtml(scenarioId)}</title>`,
+    `    <style>`,
+    `      html, body { margin: 0; background: transparent; }`,
+    `    </style>`,
     `  </head>`,
     `  <body>`,
     `    <div id="root"></div>`,

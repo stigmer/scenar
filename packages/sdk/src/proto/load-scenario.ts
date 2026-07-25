@@ -67,7 +67,6 @@ export function loadScenarioFromProto<Views extends ViewRegistry>(
         view: protoStep.view,
         props: (protoStep.props ?? {}) as AuthoredStepData<Views>["props"],
       } as AuthoredStepData<Views>,
-      caption: protoStep.caption || undefined,
       narration: protoStep.narrationText || undefined,
       interactions: interactions.length > 0 ? interactions : undefined,
     });

@@ -88,6 +88,18 @@ describe("generateEmbedEntry", () => {
     );
   });
 
+  it("paints the theme surface only when top-level, never when framed", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    // Top-level pages (scenar serve, direct links) get an intentional surface;
+    // framed embeds must stay transparent so the host background shows through.
+    expect(src).toContain("if (window.parent === window) {");
+    expect(src).toContain('document.body.style.background = "var(--scenar-surface)";');
+    // The entry must not pin color-scheme — the HTML's `light dark` meta is
+    // what keeps a same-origin host's scheme matched (and the canvas
+    // transparent); a JS override would reintroduce the opaque white canvas.
+    expect(src).not.toContain("colorScheme");
+  });
+
   it("fetches the narration manifest at runtime only when present", () => {
     const without = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
     expect(without).toContain("narrationManifest: undefined,");
@@ -139,5 +151,15 @@ describe("generateEmbedHtml", () => {
   it("escapes the title", () => {
     const html = generateEmbedHtml("a<b>&c", "entry.tsx");
     expect(html).toContain("<title>a&lt;b&gt;&amp;c</title>");
+  });
+
+  it("declares the dual color-scheme and a transparent canvas", () => {
+    // The canvas contract: `light dark` keeps the embed's scheme matched to a
+    // same-origin host (mismatch forces an opaque white iframe canvas), and
+    // transparent html/body let the host page's background show through any
+    // pixel the tour doesn't paint. See generateEmbedHtml's doc comment.
+    const html = generateEmbedHtml("welcome-tour", "entry.tsx");
+    expect(html).toContain('<meta name="color-scheme" content="light dark" />');
+    expect(html).toContain("html, body { margin: 0; background: transparent; }");
   });
 });

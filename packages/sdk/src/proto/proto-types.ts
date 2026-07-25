@@ -80,7 +80,6 @@ export interface ProtoStepAction {
 export interface ProtoStep {
   readonly view: string;
   readonly delayMs: number;
-  readonly caption: string;
   readonly narrationText: string;
   readonly props?: Record<string, unknown>;
   readonly interactions: readonly ProtoStepAction[];

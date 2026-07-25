@@ -25,20 +25,18 @@ class ViewportConfig(_message.Message):
     def __init__(self, width: _Optional[int] = ..., height: _Optional[int] = ...) -> None: ...
 
 class Step(_message.Message):
-    __slots__ = ("view", "delay_ms", "caption", "narration_text", "props", "interactions")
+    __slots__ = ("view", "delay_ms", "narration_text", "props", "interactions")
     VIEW_FIELD_NUMBER: _ClassVar[int]
     DELAY_MS_FIELD_NUMBER: _ClassVar[int]
-    CAPTION_FIELD_NUMBER: _ClassVar[int]
     NARRATION_TEXT_FIELD_NUMBER: _ClassVar[int]
     PROPS_FIELD_NUMBER: _ClassVar[int]
     INTERACTIONS_FIELD_NUMBER: _ClassVar[int]
     view: str
     delay_ms: int
-    caption: str
     narration_text: str
     props: _struct_pb2.Struct
     interactions: _containers.RepeatedCompositeFieldContainer[StepAction]
-    def __init__(self, view: _Optional[str] = ..., delay_ms: _Optional[int] = ..., caption: _Optional[str] = ..., narration_text: _Optional[str] = ..., props: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., interactions: _Optional[_Iterable[_Union[StepAction, _Mapping]]] = ...) -> None: ...
+    def __init__(self, view: _Optional[str] = ..., delay_ms: _Optional[int] = ..., narration_text: _Optional[str] = ..., props: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., interactions: _Optional[_Iterable[_Union[StepAction, _Mapping]]] = ...) -> None: ...
 
 class StepAction(_message.Message):
     __slots__ = ("at_percent", "type", "target", "click_config", "type_config", "hover_config", "drag_config", "scroll_to_config", "viewport_transition_config")

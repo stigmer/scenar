@@ -31,7 +31,6 @@ function makeValidScenario(): ProtoScenarioSpec {
       {
         view: "settings",
         delayMs: 0,
-        caption: "Start here",
         narrationText: "Welcome.",
         props: { org: "acme" },
         interactions: [],
@@ -39,7 +38,6 @@ function makeValidScenario(): ProtoScenarioSpec {
       {
         view: "form",
         delayMs: 1500,
-        caption: "Fill the form",
         narrationText: "",
         props: { defaultName: "demo" },
         interactions: [
@@ -68,7 +66,6 @@ describe("loadScenarioFromProto", () => {
 
     expect(scenario.steps[0]!.data.view).toBe("settings");
     expect(scenario.steps[0]!.delayMs).toBe(0);
-    expect(scenario.steps[0]!.caption).toBe("Start here");
     expect(scenario.steps[0]!.narration).toBe("Welcome.");
     expect(scenario.steps[0]!.interactions).toBeUndefined();
 
@@ -123,7 +120,6 @@ describe("loadScenarioFromProto", () => {
         {
           view: "unknown-view",
           delayMs: 0,
-          caption: "",
           narrationText: "",
           interactions: [],
         },
@@ -170,13 +166,12 @@ describe("loadScenarioFromProto", () => {
     }
   });
 
-  it("omits empty narration and caption strings", () => {
+  it("omits empty narration strings", () => {
     const modified: ProtoScenarioSpec = {
       steps: [
         {
           view: "settings",
           delayMs: 0,
-          caption: "",
           narrationText: "",
           interactions: [],
         },
@@ -184,7 +179,6 @@ describe("loadScenarioFromProto", () => {
     };
 
     const scenario = loadScenarioFromProto(modified, { views });
-    expect(scenario.steps[0]!.caption).toBeUndefined();
     expect(scenario.steps[0]!.narration).toBeUndefined();
   });
 });

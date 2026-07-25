@@ -46,7 +46,6 @@ export type StepInput<Views extends ViewRegistry> = {
   [K in keyof Views & string]: {
     readonly view: K;
     readonly delayMs: number;
-    readonly caption?: string;
     readonly narrationText?: string;
     readonly props: PropsOf<Views[K]>;
     readonly interactions?: readonly StepAction[];
