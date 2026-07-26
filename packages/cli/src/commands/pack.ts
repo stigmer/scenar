@@ -12,6 +12,7 @@ interface PackOptions {
   out?: string;
   width?: string;
   shellHeight?: string;
+  stage?: boolean;
   keepTemp?: boolean;
 }
 
@@ -41,6 +42,11 @@ export function registerPackCommand(program: Command): void {
       `shell height in px (default: ${DEFAULT_SHELL_HEIGHT})`,
       String(DEFAULT_SHELL_HEIGHT),
     )
+    .option(
+      "--stage",
+      "float the scenario on a backdrop with a window shadow (screen-recording framing); " +
+        "the embed paints its own background instead of staying transparent",
+    )
     .option("--keep-temp", "keep the generated entry directory for debugging")
     .action(async (dir: string, options: PackOptions) => {
       try {
@@ -49,6 +55,7 @@ export function registerPackCommand(program: Command): void {
           outDir: options.out,
           width: Number(options.width) || DEFAULT_WIDTH,
           shellHeight: Number(options.shellHeight) || DEFAULT_SHELL_HEIGHT,
+          stage: options.stage ?? false,
           keepTemp: options.keepTemp,
           onLog: (message) => process.stderr.write(`${message}\n`),
         });

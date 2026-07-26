@@ -51,6 +51,7 @@ export { Cursor } from "./cursor/Cursor.js";
 // Viewport
 export { ViewportTransformLayer } from "./viewport/ViewportTransformLayer.js";
 export { DemoViewport } from "./viewport/DemoViewport.js";
+export { ScenarioStage } from "./stage/ScenarioStage.js";
 
 // Player
 export { ScenarioPlayer } from "./player/ScenarioPlayer.js";

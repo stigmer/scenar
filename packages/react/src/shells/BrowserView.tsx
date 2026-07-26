@@ -60,7 +60,7 @@ export function BrowserView({
       }}
     >
       {/* Tab strip */}
-      <div className="flex items-center bg-[#202124] px-2 pt-1.5">
+      <div className="flex items-center bg-[var(--scenar-chrome)] px-2 pt-1.5">
         {/* Traffic lights */}
         <div className="mr-3 flex gap-2 pl-1.5">
           <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
@@ -69,7 +69,7 @@ export function BrowserView({
         </div>
 
         {/* Active tab — bg matches toolbar so the tab visually flows into it */}
-        <div className="flex items-center gap-1.5 rounded-t-lg bg-[#35363a] px-3 py-1.5">
+        <div className="flex items-center gap-1.5 rounded-t-lg bg-[var(--scenar-chrome-raised)] px-3 py-1.5">
           <Globe className="h-3.5 w-3.5 shrink-0 text-[#9aa0a6]" />
           <span className="max-w-[180px] truncate text-xs text-[#e8eaed]">
             {tabTitle(url)}
@@ -91,7 +91,7 @@ export function BrowserView({
       </div>
 
       {/* Navigation toolbar */}
-      <div className="flex items-center gap-2 bg-[#35363a] px-2 py-1">
+      <div className="flex items-center gap-2 bg-[var(--scenar-chrome-raised)] px-2 py-1">
         {/* Nav buttons */}
         <div className="flex items-center gap-1">
           <ChevronLeft className="h-4 w-4 text-[#9aa0a6]" />
@@ -100,9 +100,9 @@ export function BrowserView({
         </div>
 
         {/* Address bar */}
-        <div className="flex flex-1 items-center gap-1.5 rounded-full bg-[#202124] px-3 py-1.5">
+        <div className="flex flex-1 items-center gap-1.5 rounded-full bg-[var(--scenar-chrome)] px-3 py-1.5">
           <Lock className="h-3 w-3 shrink-0 text-[#9aa0a6]" />
-          <span className="truncate text-xs text-[#bdc1c6]">{url}</span>
+          <span className="truncate text-xs text-[var(--scenar-chrome-foreground)]">{url}</span>
         </div>
 
         {/* Toolbar right — star + extension + kebab menu */}

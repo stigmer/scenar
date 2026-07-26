@@ -18,8 +18,12 @@
      * Window chrome. `--scenar-chrome` is the browser/desktop title-bar
      * surface (deliberately dark in both themes, as real browser chrome is);
      * consumed by BrowserView/DesktopView, previously a hardcoded #202124.
+     * `-raised` is the active tab / toolbar layer; `-foreground` the text
+     * on either surface.
      */
     --scenar-chrome: #202124;
+    --scenar-chrome-raised: #35363a;
+    --scenar-chrome-foreground: #bdc1c6;
 
     /* Cursor glyph stroke — consumed by Cursor's SVG icons. */
     --scenar-cursor-stroke: #ffffff;
@@ -47,6 +51,8 @@
     --scenar-ring: #f8fafc;
 
     --scenar-chrome: #202124;
+    --scenar-chrome-raised: #35363a;
+    --scenar-chrome-foreground: #bdc1c6;
     --scenar-cursor-stroke: #ffffff;
 
     --scenar-backdrop: linear-gradient(135deg, #16202f 0%, #101827 55%, #0b111d 100%);

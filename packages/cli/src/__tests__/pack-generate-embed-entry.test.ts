@@ -22,6 +22,24 @@ describe("generateEmbedEntry", () => {
     expect(src).toContain('getElementById("root")');
   });
 
+  it("wraps step content in ScenarioStage only when stage is requested", () => {
+    const plain = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    expect(plain).not.toContain("ScenarioStage");
+
+    const staged = generateEmbedEntry({
+      ...BASE,
+      hasNarration: false,
+      providersPath: null,
+      stage: true,
+    });
+    expect(staged).toContain("ScenarioStage");
+    // The stage wraps the step's content inside the camera, not the player
+    // chrome: it lives in the render prop.
+    expect(staged).toContain(
+      "<ScenarioStage>{renderStep(data, stepIndex)}</ScenarioStage>",
+    );
+  });
+
   it("imports the interaction primitives + React hooks the embed wiring needs", () => {
     const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
     expect(src).toContain('import { useCallback, useRef, useState } from "react";');
@@ -169,5 +187,16 @@ describe("generateEmbedHtml", () => {
     const html = generateEmbedHtml("welcome-tour", "entry.tsx");
     expect(html).toContain('<meta name="color-scheme" content="light dark" />');
     expect(html).toContain("html, body { margin: 0; background: transparent; }");
+    expect(html).not.toContain("light-dark(");
+  });
+
+  it("pre-paints the scheme-matched backdrop when staged, before any script runs", () => {
+    // A staged embed trades the transparent canvas for the stage backdrop.
+    // The static pre-paint prevents a backdrop flash at script load and must
+    // key off the propagated color scheme, never a pinned one.
+    const html = generateEmbedHtml("welcome-tour", "entry.tsx", true);
+    expect(html).toContain("light-dark(");
+    expect(html).toContain('<meta name="color-scheme" content="light dark" />');
+    expect(html).not.toContain("colorScheme");
   });
 });
