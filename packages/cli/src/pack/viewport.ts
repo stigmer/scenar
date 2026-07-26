@@ -20,7 +20,13 @@ export interface Viewport {
   readonly height: number;
 }
 
-/** Defaults matching `DemoViewport`: 896 canonical width, 480 shell height. */
+/**
+ * Pack-time defaults. The width matches `DemoViewport`'s default canonical
+ * width (896); the height is the CLI's own default — `DemoViewport` has no
+ * height default of its own, and the baked `--scenar-shell-height` variable
+ * overrides every per-shell fallback in `@scenar/react`'s `shells/tokens.ts`
+ * (380/420/460/500), so this number is what framed shells actually render at.
+ */
 export const DEFAULT_VIEWPORT: Viewport = { width: 896, height: 480 };
 
 /**

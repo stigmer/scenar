@@ -21,6 +21,12 @@ export interface EmbedEntryInput {
   canonicalWidth: number;
   /** Shell height in px, exposed as --scenar-shell-height. */
   shellHeight: number;
+  /**
+   * Wrap each step's content in `<ScenarioStage>` (backdrop + window shadow),
+   * and paint the backdrop in the static HTML so it shows before the entry
+   * script runs. Opt-in: staged embeds give up the transparent canvas.
+   */
+  stage?: boolean;
 }
 
 /**
@@ -69,6 +75,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
     "ViewportTransformLayer",
     "VIEWPORT_TRANSFORM_IDENTITY",
   ];
+  if (input.stage) reactImports.push("ScenarioStage");
   if (input.hasNarration) reactImports.push("useNarrationManifest");
   lines.push(`import { ${reactImports.join(", ")} } from "@scenar/react";`);
   lines.push(`import "@scenar/react/theme.css";`);
@@ -142,11 +149,15 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
 
   // --- App tree ---
   // The structure mirrors the in-app demo wiring exactly (see DemoViewport's
-  // contract and ViewportTransformLayer's "Cursor must be a sibling" invariant):
+  // and ViewportTransformLayer's contracts):
   //   DemoViewport(containerRef)
-  //     └ ViewportTransformLayer(transform)
+  //     └ ViewportTransformLayer(transform, contentRef=cameraRef)
   //         └ ScenarioPlayer(embed, onStepChange)
-  //     └ Cursor(target, containerRef)   ← sibling, not a child
+  //         └ Cursor(target, containerRef=cameraRef)   ← child of the camera
+  // The cursor lives INSIDE the camera so it scales and pans with the content
+  // during viewport transitions — like a recorded pointer under a camera zoom.
+  // Both the cursor and the viewport-transition target math take the camera's
+  // contentRef so canonical coordinates stay correct at any camera state.
   // `useStepInteractions` reads the current step's `interactions` and drives the
   // cursor / ripple / drag / viewport state, synced to narration duration.
   const manifestExpr = input.hasNarration ? "_manifest" : "undefined";
@@ -156,6 +167,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
     lines.push(`  const _manifest = useNarrationManifest(${JSON.stringify(input.scenarioId)}, _resolveManifestUrl);`);
   }
   lines.push(`  const _containerRef = useRef<HTMLDivElement>(null);`);
+  lines.push(`  const _cameraRef = useRef<HTMLDivElement>(null);`);
   lines.push(`  const [_stepIndex, _setStepIndex] = useState(0);`);
   lines.push(`  const [_cursorTarget, _setCursorTarget] = useState<string | undefined>(undefined);`);
   lines.push(`  const [_showRipple, _setShowRipple] = useState(true);`);
@@ -173,6 +185,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`    stepIndex: _stepIndex,`);
   lines.push(`    narrationManifest: ${manifestExpr},`);
   lines.push(`    containerRef: _containerRef,`);
+  lines.push(`    cameraRef: _cameraRef,`);
   lines.push(`    setCursorTarget: _setCursorTarget,`);
   lines.push(`    setShowRipple: _setShowRipple,`);
   lines.push(`    setDragging: _setDragging,`);
@@ -190,13 +203,19 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`  return (`);
   lines.push(`    <div className={_rootClass}>`);
   lines.push(`      ${open}`);
+  // Staged embeds wrap each step's content — not the player chrome — in the
+  // stage, inside the camera, so a zoom scales the whole recording, backdrop
+  // included, while controls keep overlaying the stable content box.
+  const stepRender = input.stage
+    ? `{(data: any, stepIndex: number) => <ScenarioStage>{renderStep(data, stepIndex)}</ScenarioStage>}`
+    : `{(data: any, stepIndex: number) => renderStep(data, stepIndex)}`;
   lines.push(`      <DemoViewport containerRef={_containerRef} canonicalWidth={${input.canonicalWidth}} shellHeight={${input.shellHeight}}>`);
-  lines.push(`        <ViewportTransformLayer transform={_viewport}>`);
+  lines.push(`        <ViewportTransformLayer transform={_viewport} contentRef={_cameraRef}>`);
   lines.push(`          <ScenarioPlayer bundle={_bundle} embed onStepChange={_handleStepChange}>`);
-  lines.push(`            {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
+  lines.push(`            ${stepRender}`);
   lines.push(`          </ScenarioPlayer>`);
+  lines.push(`          <Cursor target={_cursorTarget} containerRef={_cameraRef} showRipple={_showRipple} isDragging={_dragging} />`);
   lines.push(`        </ViewportTransformLayer>`);
-  lines.push(`        <Cursor target={_cursorTarget} containerRef={_containerRef} showRipple={_showRipple} isDragging={_dragging} />`);
   lines.push(`      </DemoViewport>`);
   lines.push(`      ${close}`);
   lines.push(`    </div>`);
@@ -228,8 +247,31 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
  * opaque white canvas — the historical "white band under the embed".) The
  * margin reset guards against a host stylesheet-less load; the entry paints a
  * theme surface only when the page is top-level (see generateEmbedEntry).
+ *
+ * Staged embeds (`--stage`) deliberately trade that transparency away: the
+ * scenario floats on a backdrop, so the page pre-paints the same backdrop in
+ * static CSS — before the entry script runs — and there is no flash when the
+ * React-rendered stage takes over. `light-dark()` keys the pre-paint to the
+ * propagated color scheme; the values mirror `--scenar-backdrop` in
+ * @scenar/react's theme/tokens.css (the token itself is not loadable before
+ * the script, so keep the two in sync when retuning the backdrop). Do NOT
+ * pin `colorScheme` here either — the `light dark` meta stays authoritative.
  */
-export function generateEmbedHtml(scenarioId: string, entryFileName: string): string {
+export function generateEmbedHtml(
+  scenarioId: string,
+  entryFileName: string,
+  stage = false,
+): string {
+  const bodyBackground = stage
+    ? [
+        `      body {`,
+        `        background: light-dark(`,
+        `          linear-gradient(135deg, #e7ebf1 0%, #dde3ec 55%, #d3dae6 100%),`,
+        `          linear-gradient(135deg, #16202f 0%, #101827 55%, #0b111d 100%)`,
+        `        );`,
+        `      }`,
+      ]
+    : [];
   return [
     `<!doctype html>`,
     `<html lang="en">`,
@@ -240,6 +282,7 @@ export function generateEmbedHtml(scenarioId: string, entryFileName: string): st
     `    <title>${escapeHtml(scenarioId)}</title>`,
     `    <style>`,
     `      html, body { margin: 0; background: transparent; }`,
+    ...bodyBackground,
     `    </style>`,
     `  </head>`,
     `  <body>`,

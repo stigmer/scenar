@@ -11,6 +11,10 @@ interface ScenarioControlsProps {
   stepTimeline: StepTimeline;
   showSpeedControl: boolean;
   hasNarration: boolean;
+  /** Render the fullscreen toggle. Undefined hides the control entirely. */
+  onToggleFullscreen?: () => void;
+  /** Whether the page is currently fullscreen (drives the toggle icon). */
+  isFullscreen?: boolean;
   progressTrackRef: RefObject<HTMLDivElement | null>;
   playheadRef: RefObject<HTMLDivElement | null>;
   onTogglePlay: () => void;
@@ -43,6 +47,8 @@ export function ScenarioControls({
   stepTimeline,
   showSpeedControl,
   hasNarration,
+  onToggleFullscreen,
+  isFullscreen = false,
   progressTrackRef,
   playheadRef,
   onTogglePlay,
@@ -135,6 +141,19 @@ export function ScenarioControls({
         {showSpeedControl && (
           <SpeedMenu playbackRate={playbackRate} onSelectSpeed={onSelectSpeed} />
         )}
+
+        {onToggleFullscreen && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFullscreen();
+            }}
+            className="ml-auto flex h-6 w-6 items-center justify-center rounded text-white/75 transition-colors hover:text-white"
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {isFullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
+          </button>
+        )}
       </div>
     </motion.div>
   );
@@ -173,6 +192,28 @@ function VolumeXIcon() {
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
       <line x1="23" y1="9" x2="17" y2="15" />
       <line x1="17" y1="9" x2="23" y2="15" />
+    </svg>
+  );
+}
+
+function MaximizeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+      <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+      <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+      <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+    </svg>
+  );
+}
+
+function MinimizeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+      <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+      <path d="M3 16h3a2 2 0 0 1 2 2v3" />
+      <path d="M16 21v-3a2 2 0 0 1 2-2h3" />
     </svg>
   );
 }

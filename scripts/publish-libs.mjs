@@ -20,6 +20,11 @@
  *   node scripts/publish-libs.mjs --version 0.1.0 --skip-build # publish pre-built dist/
  *   NPM_TOKEN=npm_xxx node scripts/publish-libs.mjs --version 0.1.0  # CI with token
  *
+ *   # Local tarballs instead of publishing — for testing unreleased engine
+ *   # changes in a consumer (e.g. stigmer's demos workspace installs the
+ *   # tarballs via file: specs). Exactly the publish flow, minus the registry.
+ *   node scripts/publish-libs.mjs --version 0.6.0-dev.0 --pack-dest .packs
+ *
  * --version is required. Pre-release versions (e.g. 0.1.0-rc.1) publish
  * under the "next" tag; stable versions publish under "latest".
  */
@@ -76,6 +81,9 @@ function parseArgs() {
     version,
     dryRun: args.includes("--dry-run"),
     skipBuild: args.includes("--skip-build"),
+    packDest: args.includes("--pack-dest")
+      ? args[args.indexOf("--pack-dest") + 1]
+      : undefined,
   };
 }
 
@@ -83,7 +91,7 @@ function isPrerelease(version) {
   return version.includes("-");
 }
 
-function generateDistPackageJson(pkgDir, version) {
+function generateDistPackageJson(pkgDir, version, { stripInternalDeps = false } = {}) {
   const srcPkg = JSON.parse(
     readFileSync(resolve(pkgDir, "package.json"), "utf8"),
   );
@@ -110,7 +118,9 @@ function generateDistPackageJson(pkgDir, version) {
   }
 
   if (srcPkg.dependencies) {
-    distPkg.dependencies = pinWorkspaceDeps(srcPkg.dependencies, version);
+    distPkg.dependencies = stripInternalDeps
+      ? stripWorkspaceDeps(srcPkg.dependencies)
+      : pinWorkspaceDeps(srcPkg.dependencies, version);
   }
   if (srcPkg.peerDependencies) {
     distPkg.peerDependencies = srcPkg.peerDependencies;
@@ -172,6 +182,24 @@ function pinWorkspaceDeps(deps, version) {
 }
 
 /**
+ * Drop internal @scenar/* deps entirely — used only in --pack-dest mode.
+ *
+ * A version pin inside a local tarball sends npm to the registry for a
+ * version that does not exist there (arborist will not dedupe a registry
+ * spec onto a sibling file: install). Local-tarball consumers must instead
+ * declare every @scenar/* package they transitively need as a direct file:
+ * dependency; a missing one fails loudly at import time, never silently
+ * mixes registry and local builds.
+ */
+function stripWorkspaceDeps(deps) {
+  const stripped = { ...deps };
+  for (const name of Object.keys(stripped)) {
+    if (name.startsWith("@scenar/")) delete stripped[name];
+  }
+  return stripped;
+}
+
+/**
  * Copy src/ into dist/src/ so declaration maps resolve to readable TypeScript.
  */
 function copySrcForDeclarationMaps(pkgDir) {
@@ -219,12 +247,14 @@ function teardownNpmrc(created) {
 }
 
 async function main() {
-  const { version, dryRun, skipBuild } = parseArgs();
+  const { version, dryRun, skipBuild, packDest } = parseArgs();
   const tag = isPrerelease(version) ? "next" : "latest";
 
   console.log(`\n  version: ${version}`);
   console.log(`  tag:     ${tag}`);
-  console.log(`  dry-run: ${dryRun}\n`);
+  console.log(`  dry-run: ${dryRun}`);
+  if (packDest) console.log(`  pack-dest: ${packDest} (tarballs, no publish)`);
+  console.log("");
 
   if (!skipBuild) {
     console.log("=== Building all packages ===\n");
@@ -234,10 +264,11 @@ async function main() {
     console.log("=== Skipping build (--skip-build) ===\n");
   }
 
-  const npmrcCreated = setupNpmrc();
+  // Packing to local tarballs needs no registry auth.
+  const npmrcCreated = packDest ? false : setupNpmrc();
 
   try {
-    console.log("=== Publishing packages ===\n");
+    console.log(packDest ? "=== Packing packages ===\n" : "=== Publishing packages ===\n");
 
     for (const relPath of PACKAGES) {
       const pkgDir = resolve(root, relPath);
@@ -255,7 +286,9 @@ async function main() {
         process.exit(1);
       }
 
-      const distPkgPath = generateDistPackageJson(pkgDir, version);
+      const distPkgPath = generateDistPackageJson(pkgDir, version, {
+        stripInternalDeps: Boolean(packDest),
+      });
       console.log(`  Generated ${distPkgPath}`);
 
       copySrcForDeclarationMaps(pkgDir);
@@ -278,10 +311,15 @@ async function main() {
         cpSync(skillSrc, resolve(distDir, "skill"), { recursive: true });
       }
 
-      let publishCmd = `npm publish ${distDir} --access public --tag ${tag}`;
-      if (dryRun) publishCmd += " --dry-run";
-
-      run(publishCmd);
+      if (packDest) {
+        const dest = resolve(root, packDest);
+        run(`mkdir -p ${dest}`);
+        run(`npm pack ${distDir} --pack-destination ${dest}`);
+      } else {
+        let publishCmd = `npm publish ${distDir} --access public --tag ${tag}`;
+        if (dryRun) publishCmd += " --dry-run";
+        run(publishCmd);
+      }
       console.log("");
     }
 

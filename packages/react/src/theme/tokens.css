@@ -13,6 +13,31 @@
     --scenar-accent: #f1f5f9;
     --scenar-primary: #0f172a;
     --scenar-ring: #0f172a;
+
+    /*
+     * Window chrome. `--scenar-chrome` is the browser/desktop title-bar
+     * surface (deliberately dark in both themes, as real browser chrome is);
+     * consumed by BrowserView/DesktopView, previously a hardcoded #202124.
+     * `-raised` is the active tab / toolbar layer; `-foreground` the text
+     * on either surface.
+     */
+    --scenar-chrome: #202124;
+    --scenar-chrome-raised: #35363a;
+    --scenar-chrome-foreground: #bdc1c6;
+
+    /* Cursor glyph stroke — consumed by Cursor's SVG icons. */
+    --scenar-cursor-stroke: #ffffff;
+
+    /*
+     * Stage: the backdrop a framed window floats on, plus the window's
+     * elevation and radius. Backdrop is a soft neutral gradient by default;
+     * hosts theme it by overriding the token.
+     */
+    --scenar-backdrop: linear-gradient(135deg, #e7ebf1 0%, #dde3ec 55%, #d3dae6 100%);
+    --scenar-shadow-window:
+      0 24px 64px -16px rgb(15 23 42 / 0.35),
+      0 4px 16px -4px rgb(15 23 42 / 0.2);
+    --scenar-radius-window: 10px;
   }
   .scenar.dark {
     --scenar-surface: #0f172a;
@@ -24,5 +49,16 @@
     --scenar-accent: #1e293b;
     --scenar-primary: #f8fafc;
     --scenar-ring: #f8fafc;
+
+    --scenar-chrome: #202124;
+    --scenar-chrome-raised: #35363a;
+    --scenar-chrome-foreground: #bdc1c6;
+    --scenar-cursor-stroke: #ffffff;
+
+    --scenar-backdrop: linear-gradient(135deg, #16202f 0%, #101827 55%, #0b111d 100%);
+    --scenar-shadow-window:
+      0 24px 64px -16px rgb(0 0 0 / 0.65),
+      0 4px 16px -4px rgb(0 0 0 / 0.4);
+    --scenar-radius-window: 10px;
   }
 }

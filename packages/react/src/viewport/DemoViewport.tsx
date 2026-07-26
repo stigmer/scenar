@@ -1,14 +1,32 @@
-import { type ReactNode, type RefObject, useEffect, useRef, useState } from "react";
+import { type ReactNode, type RefObject, useLayoutEffect, useRef, useState } from "react";
 import { useVideoExport } from "../video/VideoExportContext.js";
 
 /** Default canonical width for the virtual viewport (pixels). */
 const DEFAULT_CANONICAL_WIDTH = 896;
 
-/** Default minimum zoom level to prevent the viewport from becoming too small. */
-const DEFAULT_MIN_ZOOM = 0.5;
+/**
+ * Default minimum zoom level.
+ *
+ * Zero: on containers narrower than the canonical width, content scales all
+ * the way down and stays complete. Any positive floor combines with the
+ * wrapper's `overflow-hidden` to silently crop the right edge (a 0.5 floor
+ * clipped ~16% of every 896-canonical tour on a 375px phone, with no
+ * scrollbar and no affordance). Smaller-but-complete beats hidden. Callers
+ * who prefer a floor can still pass `minZoom`.
+ */
+const DEFAULT_MIN_ZOOM = 0;
 
-/** Default CSS classes applied to the viewport wrapper. */
-const DEFAULT_WRAPPER_CLASS = "relative mx-auto max-w-4xl overflow-hidden";
+/**
+ * Default CSS classes applied to the viewport wrapper.
+ *
+ * Deliberately carries no `max-w-*` class: the wrapper's width cap must track
+ * `canonicalWidth` (applied as an inline style below), because zoom is capped
+ * at 1 and content never lays out wider than canonical — a wrapper wider than
+ * canonical only centers. A hardcoded class cap (the former `max-w-4xl`,
+ * a 896px twin of the default canonical width) silently pinned zoom at
+ * `896 / canonicalWidth` for any larger canonical width.
+ */
+const DEFAULT_WRAPPER_CLASS = "relative mx-auto overflow-hidden";
 
 interface DemoViewportProps {
   /**
@@ -57,17 +75,24 @@ export function DemoViewport({
 
   const innerRef = containerRef ?? internalRef;
 
-  useEffect(() => {
+  // Layout effect + an immediate synchronous measure: the first paint must
+  // already be at the fitted zoom. With observer-only updates the first frame
+  // renders at zoom 1, which on canonical widths larger than the container
+  // flashes a cropped canvas before the observer fires.
+  useLayoutEffect(() => {
     if (isVideoExport) return;
     const outer = outerRef.current;
     if (!outer) return;
 
-    const update = (entries: ResizeObserverEntry[]) => {
-      const width = entries[0]!.contentRect.width;
+    const apply = (width: number) => {
       setZoom(Math.max(Math.min(width / canonicalWidth, 1), minZoom));
     };
 
-    const ro = new ResizeObserver(update);
+    apply(outer.getBoundingClientRect().width);
+
+    const ro = new ResizeObserver((entries) => {
+      apply(entries[0]!.contentRect.width);
+    });
     ro.observe(outer);
     return () => ro.disconnect();
   }, [isVideoExport, canonicalWidth, minZoom]);
@@ -90,8 +115,16 @@ export function DemoViewport({
     style["--scenar-shell-height"] = `${shellHeight}px`;
   }
 
+  // Cap the wrapper at the canonical width so the two cannot drift: zoom is
+  // capped at 1, so a wider wrapper only adds empty gutters around the
+  // canonical-width content. Applied as an inline style (not a class) so it
+  // tracks `canonicalWidth` — but only for the default wrapper, so a caller
+  // who overrides `wrapperClassName` keeps full control of their own layout.
+  const outerStyle: React.CSSProperties | undefined =
+    wrapperClassName === DEFAULT_WRAPPER_CLASS ? { maxWidth: canonicalWidth } : undefined;
+
   return (
-    <div ref={outerRef} className={classes}>
+    <div ref={outerRef} className={classes} style={outerStyle}>
       <div ref={innerRef} className="relative" style={style}>
         {children}
       </div>

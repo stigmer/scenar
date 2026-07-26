@@ -22,6 +22,24 @@ describe("generateEmbedEntry", () => {
     expect(src).toContain('getElementById("root")');
   });
 
+  it("wraps step content in ScenarioStage only when stage is requested", () => {
+    const plain = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    expect(plain).not.toContain("ScenarioStage");
+
+    const staged = generateEmbedEntry({
+      ...BASE,
+      hasNarration: false,
+      providersPath: null,
+      stage: true,
+    });
+    expect(staged).toContain("ScenarioStage");
+    // The stage wraps the step's content inside the camera, not the player
+    // chrome: it lives in the render prop.
+    expect(staged).toContain(
+      "<ScenarioStage>{renderStep(data, stepIndex)}</ScenarioStage>",
+    );
+  });
+
   it("imports the interaction primitives + React hooks the embed wiring needs", () => {
     const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
     expect(src).toContain('import { useCallback, useRef, useState } from "react";');
@@ -42,13 +60,21 @@ describe("generateEmbedEntry", () => {
     expect(src).toContain("useStepInteractions({");
     expect(src).toContain("setCursorTarget: _setCursorTarget,");
     expect(src).toContain("setViewportTransform: _setViewport,");
+    expect(src).toContain("cameraRef: _cameraRef,");
     expect(src).toContain("steps: _steps,");
-    // Cursor is a sibling of the transform layer (absolute-positioned against the
-    // shared container) — the documented invariant.
-    expect(src).toContain("<ViewportTransformLayer transform={_viewport}>");
+    // The cursor lives INSIDE the camera layer with the camera's contentRef as
+    // its container, so it scales and pans with the content during viewport
+    // transitions — the documented contract on ViewportTransformLayer.
     expect(src).toContain(
-      "<Cursor target={_cursorTarget} containerRef={_containerRef} showRipple={_showRipple} isDragging={_dragging} />",
+      "<ViewportTransformLayer transform={_viewport} contentRef={_cameraRef}>",
     );
+    expect(src).toContain(
+      "<Cursor target={_cursorTarget} containerRef={_cameraRef} showRipple={_showRipple} isDragging={_dragging} />",
+    );
+    const cursorIndex = src.indexOf("<Cursor ");
+    const layerCloseIndex = src.indexOf("</ViewportTransformLayer>");
+    expect(cursorIndex).toBeGreaterThan(-1);
+    expect(cursorIndex).toBeLessThan(layerCloseIndex);
   });
 
   it("feeds the narration manifest into the interaction scheduler when present", () => {
@@ -161,5 +187,16 @@ describe("generateEmbedHtml", () => {
     const html = generateEmbedHtml("welcome-tour", "entry.tsx");
     expect(html).toContain('<meta name="color-scheme" content="light dark" />');
     expect(html).toContain("html, body { margin: 0; background: transparent; }");
+    expect(html).not.toContain("light-dark(");
+  });
+
+  it("pre-paints the scheme-matched backdrop when staged, before any script runs", () => {
+    // A staged embed trades the transparent canvas for the stage backdrop.
+    // The static pre-paint prevents a backdrop flash at script load and must
+    // key off the propagated color scheme, never a pinned one.
+    const html = generateEmbedHtml("welcome-tour", "entry.tsx", true);
+    expect(html).toContain("light-dark(");
+    expect(html).toContain('<meta name="color-scheme" content="light dark" />');
+    expect(html).not.toContain("colorScheme");
   });
 });

@@ -14,8 +14,13 @@ export type {
 export type { NarrationEntry, NarrationManifest } from "./narration/types.js";
 
 // Viewport types
-export type { ViewportTransform } from "./viewport/transform.js";
-export { VIEWPORT_TRANSFORM_IDENTITY } from "./viewport/transform.js";
+export type { ViewportTransform, ViewportCameraMove } from "./viewport/transform.js";
+export {
+  VIEWPORT_TRANSFORM_IDENTITY,
+  VIEWPORT_CAMERA_AT_REST,
+  cameraEase,
+  interpolateViewportTransform,
+} from "./viewport/transform.js";
 
 // Cursor types
 export type { Position } from "./cursor/compute-position.js";
@@ -33,6 +38,7 @@ export {
   TYPE_CHAR_DELAY_MS,
   HOVER_HOLD_MS,
   DRAG_SETTLE_MS,
+  CAMERA_TRANSITION_MS,
   VIEWPORT_SETTLE_MS,
 } from "./timing/constants.js";
 

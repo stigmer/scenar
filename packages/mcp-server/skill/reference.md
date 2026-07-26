@@ -173,6 +173,28 @@ The packed bundle must satisfy the deploy allowlist (enforced at pack time):
   embed aspect ratio) and `pack-manifest.json` (every file + sha256 + content
   type). Don't hand-edit these.
 
+## Sizing: one scale factor per frame
+
+A scenario should read like a screen recording: a real app laid out at real
+size, scaled once at the viewport boundary. Author content at real
+application metrics and let `DemoViewport` (browser) or the export
+composition own the single scale factor.
+
+- Pick the canonical viewport with `--width` / `--shell-height` at pack time
+  (e.g. `--width 1280 --shell-height 800` for a 16:10 desktop app window).
+  The defaults (896x480) suit single-card content, not full app depictions.
+- **Never author per-element `zoom` or `transform: scale()` inside views** to
+  "make things fit" — composed scale factors are what make a scenario read
+  as a shrunken mockup instead of a recording. If content doesn't fit, the
+  canonical viewport is wrong or the content shows too much.
+- `viewport_transition` (the camera) is how small text stays legible at
+  desktop metrics: zoom into the region the narration discusses, reset
+  before the beat ends. The camera is a deterministic 600ms ease-out tween,
+  identical in browser playback and video export.
+- `--stage` floats the scenario on a backdrop with a window shadow
+  (screen-recording framing). Pair it with a window shell (`BrowserView` for
+  web apps) so the depicted app lives in a believable container.
+
 ## Hosting the embed
 
 - `scenar serve <bundle>` → `http://localhost:4173/` (ephemeral local preview).

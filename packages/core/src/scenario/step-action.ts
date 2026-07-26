@@ -110,4 +110,12 @@ export interface UseStepInteractionsOptions<T> {
    * needed to center the target element and calls this callback.
    */
   setViewportTransform?: (transform: ViewportTransform) => void;
+  /**
+   * The camera's content element (`ViewportTransformLayer`'s `contentRef`).
+   * `viewport_transition` target math measures against it so canonical
+   * coordinates stay correct at any camera state. Optional — effects fall
+   * back to `containerRef`, which is only exact while the camera is at
+   * identity.
+   */
+  cameraRef?: { current: HTMLElement | null };
 }

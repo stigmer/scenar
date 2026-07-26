@@ -219,6 +219,30 @@ export function ScenarioPlayer<T>({
     unlock();
   }, [unlock]);
 
+  // Fullscreen: offered only in the packed embed (the iframe already carries
+  // `allowfullscreen`), where fullscreening the embed *document* is exactly
+  // right — DemoViewport re-fits its zoom to the grown viewport. In-app
+  // integrators are not offered a control that would fullscreen their whole
+  // page.
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const fullscreenAvailable =
+    embed && typeof document !== "undefined" && document.fullscreenEnabled;
+
+  useEffect(() => {
+    if (!fullscreenAvailable) return;
+    const onChange = () => setIsFullscreen(document.fullscreenElement != null);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, [fullscreenAvailable]);
+
+  const handleToggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => {});
+    } else {
+      void document.documentElement.requestFullscreen().catch(() => {});
+    }
+  }, []);
+
   // Progress bar refs
   const progressTrackRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
@@ -303,6 +327,8 @@ export function ScenarioPlayer<T>({
             stepTimeline={stepTimeline}
             showSpeedControl={showSpeedControl}
             hasNarration={!!narrationManifest}
+            onToggleFullscreen={fullscreenAvailable ? handleToggleFullscreen : undefined}
+            isFullscreen={isFullscreen}
             progressTrackRef={progressTrackRef}
             playheadRef={playheadRef}
             onTogglePlay={togglePlay}

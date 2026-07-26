@@ -27,6 +27,12 @@ export interface RunPackOptions {
   readonly width?: number;
   /** Shell/container height in px (default: {@link DEFAULT_VIEWPORT}.height). */
   readonly shellHeight?: number;
+  /**
+   * Float the scenario on a backdrop with a window shadow (screen-recording
+   * framing). Opt-in: a staged embed paints its own background, giving up
+   * the default transparent canvas that lets the host page show through.
+   */
+  readonly stage?: boolean;
   /** Keep the generated entry directory for debugging (default: false). */
   readonly keepTemp?: boolean;
   /** Progress sink for mid-operation messages. */
@@ -86,6 +92,7 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
     onLog(`Output:    ${outDir}`);
 
     // 1. Generate the browser entry + index.html into the temp dir.
+    const stage = options.stage ?? false;
     const entrySource = generateEmbedEntry({
       scenarioDir,
       renderFilePath,
@@ -94,12 +101,13 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
       providersPath,
       canonicalWidth: width,
       shellHeight,
+      stage,
     });
     await mkdir(tempDir, { recursive: true });
     const entryFileName = "entry.tsx";
     const entryHtmlPath = join(tempDir, "index.html");
     await writeFile(join(tempDir, entryFileName), entrySource, "utf-8");
-    await writeFile(entryHtmlPath, generateEmbedHtml(scenarioId, entryFileName), "utf-8");
+    await writeFile(entryHtmlPath, generateEmbedHtml(scenarioId, entryFileName, stage), "utf-8");
 
     // 2. Build the static bundle with Vite.
     onLog("Bundling embed with Vite...");
