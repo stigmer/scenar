@@ -91,7 +91,7 @@ function isPrerelease(version) {
   return version.includes("-");
 }
 
-function generateDistPackageJson(pkgDir, version) {
+function generateDistPackageJson(pkgDir, version, { stripInternalDeps = false } = {}) {
   const srcPkg = JSON.parse(
     readFileSync(resolve(pkgDir, "package.json"), "utf8"),
   );
@@ -118,7 +118,9 @@ function generateDistPackageJson(pkgDir, version) {
   }
 
   if (srcPkg.dependencies) {
-    distPkg.dependencies = pinWorkspaceDeps(srcPkg.dependencies, version);
+    distPkg.dependencies = stripInternalDeps
+      ? stripWorkspaceDeps(srcPkg.dependencies)
+      : pinWorkspaceDeps(srcPkg.dependencies, version);
   }
   if (srcPkg.peerDependencies) {
     distPkg.peerDependencies = srcPkg.peerDependencies;
@@ -177,6 +179,24 @@ function pinWorkspaceDeps(deps, version) {
     }
   }
   return pinned;
+}
+
+/**
+ * Drop internal @scenar/* deps entirely — used only in --pack-dest mode.
+ *
+ * A version pin inside a local tarball sends npm to the registry for a
+ * version that does not exist there (arborist will not dedupe a registry
+ * spec onto a sibling file: install). Local-tarball consumers must instead
+ * declare every @scenar/* package they transitively need as a direct file:
+ * dependency; a missing one fails loudly at import time, never silently
+ * mixes registry and local builds.
+ */
+function stripWorkspaceDeps(deps) {
+  const stripped = { ...deps };
+  for (const name of Object.keys(stripped)) {
+    if (name.startsWith("@scenar/")) delete stripped[name];
+  }
+  return stripped;
 }
 
 /**
@@ -266,7 +286,9 @@ async function main() {
         process.exit(1);
       }
 
-      const distPkgPath = generateDistPackageJson(pkgDir, version);
+      const distPkgPath = generateDistPackageJson(pkgDir, version, {
+        stripInternalDeps: Boolean(packDest),
+      });
       console.log(`  Generated ${distPkgPath}`);
 
       copySrcForDeclarationMaps(pkgDir);
