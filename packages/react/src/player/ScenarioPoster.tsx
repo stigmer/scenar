@@ -57,16 +57,24 @@ function activateOnKey(handler: () => void) {
 }
 
 /**
- * Poster overlay with a centered play button. Shown before playback starts and
- * dismissed on click. When the scenario has narration, the poster labels the
- * action so the viewer knows the click starts audio. Keyboard-operable.
+ * Poster overlay with a centered play button over a dimming scrim. Shown
+ * before playback starts and dismissed on click.
+ *
+ * The scrim is what gives the disc contrast on *light* content — without it
+ * a white disc over a white app is invisible and only the triangle survives
+ * (the "naked play glyph" defect). The disc itself carries a hairline dark
+ * ring and a real drop shadow so it reads as an element on both themes.
+ *
+ * When the scenario has narration, a small icon-only speaker chip signals
+ * that the click starts audio; the full wording lives in the `aria-label`,
+ * so screen readers hear exactly what sighted viewers infer.
  */
 export function ScenarioPoster({ onPlay, PlayIcon, hasNarration = false }: ScenarioPosterProps) {
   const Icon = PlayIcon ?? DefaultPlayIcon;
   const label = hasNarration ? "Play walkthrough with narration" : "Play demo";
   return (
     <motion.div
-      className="absolute inset-0 z-10 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg"
+      className="absolute inset-0 z-10 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg bg-black/30"
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
@@ -79,13 +87,15 @@ export function ScenarioPoster({ onPlay, PlayIcon, hasNarration = false }: Scena
       tabIndex={0}
       aria-label={label}
     >
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 ring-1 ring-white/30 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-transform hover:scale-110">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white ring-1 ring-black/10 shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-105">
         <Icon size={28} className="ml-1 text-neutral-900" />
       </div>
       {hasNarration && (
-        <span className="flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+        <span
+          aria-hidden
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white"
+        >
           <SpeakerIcon size={14} />
-          {label}
         </span>
       )}
     </motion.div>
@@ -121,7 +131,7 @@ export function ScenarioPauseOverlay({ onResume, PlayIcon }: ScenarioPauseOverla
       tabIndex={0}
       aria-label="Resume demo"
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/80 ring-1 ring-white/30 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-transform hover:scale-110">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 ring-1 ring-black/10 shadow-[0_6px_18px_rgba(0,0,0,0.3)] transition-transform duration-200 hover:scale-105">
         <Icon size={24} className="ml-1 text-neutral-900" />
       </div>
     </motion.div>

@@ -13,13 +13,18 @@ describe("ScenarioPoster", () => {
     expect(within(container).queryByText("Play walkthrough with narration")).toBeNull();
   });
 
-  it("names the audible payoff when narration is present", () => {
+  it("names the audible payoff in the accessible name only, with an icon-not-text chip", () => {
     const onPlay = vi.fn();
     const { container } = render(<ScenarioPoster onPlay={onPlay} hasNarration />);
+    // Screen readers hear the full wording…
     expect(
       within(container).getByRole("button", { name: "Play walkthrough with narration" }),
     ).toBeDefined();
-    expect(within(container).getByText("Play walkthrough with narration")).toBeDefined();
+    // …while sighted viewers see no text pill (removed by design: the poster
+    // signals audio with a speaker glyph, hidden from the a11y tree because
+    // the aria-label already carries the meaning).
+    expect(within(container).queryByText("Play walkthrough with narration")).toBeNull();
+    expect(container.querySelector('[aria-hidden="true"] svg, [aria-hidden] svg')).not.toBeNull();
   });
 
   it("is operable by click and keyboard (Enter / Space)", () => {
