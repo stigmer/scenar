@@ -7,8 +7,17 @@ const DEFAULT_CANONICAL_WIDTH = 896;
 /** Default minimum zoom level to prevent the viewport from becoming too small. */
 const DEFAULT_MIN_ZOOM = 0.5;
 
-/** Default CSS classes applied to the viewport wrapper. */
-const DEFAULT_WRAPPER_CLASS = "relative mx-auto max-w-4xl overflow-hidden";
+/**
+ * Default CSS classes applied to the viewport wrapper.
+ *
+ * Deliberately carries no `max-w-*` class: the wrapper's width cap must track
+ * `canonicalWidth` (applied as an inline style below), because zoom is capped
+ * at 1 and content never lays out wider than canonical — a wrapper wider than
+ * canonical only centers. A hardcoded class cap (the former `max-w-4xl`,
+ * a 896px twin of the default canonical width) silently pinned zoom at
+ * `896 / canonicalWidth` for any larger canonical width.
+ */
+const DEFAULT_WRAPPER_CLASS = "relative mx-auto overflow-hidden";
 
 interface DemoViewportProps {
   /**
@@ -90,8 +99,16 @@ export function DemoViewport({
     style["--scenar-shell-height"] = `${shellHeight}px`;
   }
 
+  // Cap the wrapper at the canonical width so the two cannot drift: zoom is
+  // capped at 1, so a wider wrapper only adds empty gutters around the
+  // canonical-width content. Applied as an inline style (not a class) so it
+  // tracks `canonicalWidth` — but only for the default wrapper, so a caller
+  // who overrides `wrapperClassName` keeps full control of their own layout.
+  const outerStyle: React.CSSProperties | undefined =
+    wrapperClassName === DEFAULT_WRAPPER_CLASS ? { maxWidth: canonicalWidth } : undefined;
+
   return (
-    <div ref={outerRef} className={classes}>
+    <div ref={outerRef} className={classes} style={outerStyle}>
       <div ref={innerRef} className="relative" style={style}>
         {children}
       </div>
