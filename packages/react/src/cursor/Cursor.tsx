@@ -32,12 +32,27 @@ interface CursorProps {
   isDragging?: boolean;
 }
 
-const SPRING = {
-  type: "spring",
-  stiffness: 170,
-  damping: 22,
-  mass: 0.6,
-} as const;
+/**
+ * Distance-adaptive travel: short hops settle quickly, long moves take
+ * visibly longer — how a hand actually moves a mouse. The duration is
+ * clamped so every move settles inside `CLICK_DELAY_MS` (the shared
+ * arrival contract that times the click ripple on both output paths);
+ * exceeding it would fire the ripple mid-flight.
+ */
+const TRAVEL_MIN_S = 0.24;
+const TRAVEL_MAX_S = 0.42;
+/** Pixels of travel that add one second of duration (before clamping). */
+const TRAVEL_PX_PER_S = 1400;
+/** Slight settle-overshoot so the pointer feels physical, never bouncy. */
+const TRAVEL_BOUNCE = 0.15;
+
+function travelTransition(distancePx: number) {
+  const visualDuration = Math.min(
+    TRAVEL_MAX_S,
+    Math.max(TRAVEL_MIN_S, TRAVEL_MIN_S + distancePx / TRAVEL_PX_PER_S),
+  );
+  return { type: "spring", visualDuration, bounce: TRAVEL_BOUNCE } as const;
+}
 
 const RETRY_INTERVAL_MS = 80;
 const MAX_RETRIES = 12;
@@ -74,7 +89,24 @@ export function Cursor({
   showRipple = true,
   isDragging = false,
 }: CursorProps) {
-  const [pos, setPos] = useState<Position | null>(null);
+  // Position and the travel distance that led to it are set together so the
+  // render can derive a distance-adaptive transition without extra effects.
+  const [move, setMove] = useState<{ pos: Position; distancePx: number } | null>(null);
+  const lastPosRef = useRef<Position | null>(null);
+
+  const setPos = useCallback((next: Position | null) => {
+    if (next === null) {
+      lastPosRef.current = null;
+      setMove(null);
+      return;
+    }
+    const prev = lastPosRef.current;
+    const distancePx = prev ? Math.hypot(next.x - prev.x, next.y - prev.y) : 0;
+    lastPosRef.current = next;
+    setMove({ pos: next, distancePx });
+  }, []);
+
+  const pos = move?.pos ?? null;
   const timeSource = useTimeSource();
 
   const [browserClicking, setBrowserClicking] = useState(false);
@@ -237,19 +269,27 @@ export function Cursor({
           initial={{ x: pos.x, y: pos.y, opacity: 0 }}
           animate={{ x: pos.x, y: pos.y, opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={SPRING}
+          transition={travelTransition(move?.distancePx ?? 0)}
         >
-          {isDragging ? <GrabCursorIcon /> : <CursorIcon />}
+          {/* Press feedback: the pointer dips as the click ripple fires. */}
+          <motion.span
+            className="block"
+            animate={isClicking ? { scale: [1, 0.85, 1] } : { scale: 1 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            style={{ transformOrigin: "top left" }}
+          >
+            {isDragging ? <GrabCursorIcon /> : <CursorIcon />}
+          </motion.span>
 
           <AnimatePresence>
             {isClicking && (
               <motion.span
                 key="ripple"
-                className="absolute left-0 top-0 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/50"
-                initial={{ scale: 0.4, opacity: 0.9 }}
-                animate={{ scale: 3, opacity: 0 }}
+                className="absolute left-0 top-0 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/25"
+                initial={{ scale: 0.5, opacity: 0.8 }}
+                animate={{ scale: 2.8, opacity: 0 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
+                transition={{ duration: 0.45, ease: "easeOut" }}
               />
             )}
           </AnimatePresence>
