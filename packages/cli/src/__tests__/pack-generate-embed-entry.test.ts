@@ -42,13 +42,21 @@ describe("generateEmbedEntry", () => {
     expect(src).toContain("useStepInteractions({");
     expect(src).toContain("setCursorTarget: _setCursorTarget,");
     expect(src).toContain("setViewportTransform: _setViewport,");
+    expect(src).toContain("cameraRef: _cameraRef,");
     expect(src).toContain("steps: _steps,");
-    // Cursor is a sibling of the transform layer (absolute-positioned against the
-    // shared container) — the documented invariant.
-    expect(src).toContain("<ViewportTransformLayer transform={_viewport}>");
+    // The cursor lives INSIDE the camera layer with the camera's contentRef as
+    // its container, so it scales and pans with the content during viewport
+    // transitions — the documented contract on ViewportTransformLayer.
     expect(src).toContain(
-      "<Cursor target={_cursorTarget} containerRef={_containerRef} showRipple={_showRipple} isDragging={_dragging} />",
+      "<ViewportTransformLayer transform={_viewport} contentRef={_cameraRef}>",
     );
+    expect(src).toContain(
+      "<Cursor target={_cursorTarget} containerRef={_cameraRef} showRipple={_showRipple} isDragging={_dragging} />",
+    );
+    const cursorIndex = src.indexOf("<Cursor ");
+    const layerCloseIndex = src.indexOf("</ViewportTransformLayer>");
+    expect(cursorIndex).toBeGreaterThan(-1);
+    expect(cursorIndex).toBeLessThan(layerCloseIndex);
   });
 
   it("feeds the narration manifest into the interaction scheduler when present", () => {

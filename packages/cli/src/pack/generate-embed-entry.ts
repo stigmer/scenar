@@ -142,11 +142,15 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
 
   // --- App tree ---
   // The structure mirrors the in-app demo wiring exactly (see DemoViewport's
-  // contract and ViewportTransformLayer's "Cursor must be a sibling" invariant):
+  // and ViewportTransformLayer's contracts):
   //   DemoViewport(containerRef)
-  //     └ ViewportTransformLayer(transform)
+  //     └ ViewportTransformLayer(transform, contentRef=cameraRef)
   //         └ ScenarioPlayer(embed, onStepChange)
-  //     └ Cursor(target, containerRef)   ← sibling, not a child
+  //         └ Cursor(target, containerRef=cameraRef)   ← child of the camera
+  // The cursor lives INSIDE the camera so it scales and pans with the content
+  // during viewport transitions — like a recorded pointer under a camera zoom.
+  // Both the cursor and the viewport-transition target math take the camera's
+  // contentRef so canonical coordinates stay correct at any camera state.
   // `useStepInteractions` reads the current step's `interactions` and drives the
   // cursor / ripple / drag / viewport state, synced to narration duration.
   const manifestExpr = input.hasNarration ? "_manifest" : "undefined";
@@ -156,6 +160,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
     lines.push(`  const _manifest = useNarrationManifest(${JSON.stringify(input.scenarioId)}, _resolveManifestUrl);`);
   }
   lines.push(`  const _containerRef = useRef<HTMLDivElement>(null);`);
+  lines.push(`  const _cameraRef = useRef<HTMLDivElement>(null);`);
   lines.push(`  const [_stepIndex, _setStepIndex] = useState(0);`);
   lines.push(`  const [_cursorTarget, _setCursorTarget] = useState<string | undefined>(undefined);`);
   lines.push(`  const [_showRipple, _setShowRipple] = useState(true);`);
@@ -173,6 +178,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`    stepIndex: _stepIndex,`);
   lines.push(`    narrationManifest: ${manifestExpr},`);
   lines.push(`    containerRef: _containerRef,`);
+  lines.push(`    cameraRef: _cameraRef,`);
   lines.push(`    setCursorTarget: _setCursorTarget,`);
   lines.push(`    setShowRipple: _setShowRipple,`);
   lines.push(`    setDragging: _setDragging,`);
@@ -191,12 +197,12 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`    <div className={_rootClass}>`);
   lines.push(`      ${open}`);
   lines.push(`      <DemoViewport containerRef={_containerRef} canonicalWidth={${input.canonicalWidth}} shellHeight={${input.shellHeight}}>`);
-  lines.push(`        <ViewportTransformLayer transform={_viewport}>`);
+  lines.push(`        <ViewportTransformLayer transform={_viewport} contentRef={_cameraRef}>`);
   lines.push(`          <ScenarioPlayer bundle={_bundle} embed onStepChange={_handleStepChange}>`);
   lines.push(`            {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
   lines.push(`          </ScenarioPlayer>`);
+  lines.push(`          <Cursor target={_cursorTarget} containerRef={_cameraRef} showRipple={_showRipple} isDragging={_dragging} />`);
   lines.push(`        </ViewportTransformLayer>`);
-  lines.push(`        <Cursor target={_cursorTarget} containerRef={_containerRef} showRipple={_showRipple} isDragging={_dragging} />`);
   lines.push(`      </DemoViewport>`);
   lines.push(`      ${close}`);
   lines.push(`    </div>`);

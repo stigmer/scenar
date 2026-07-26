@@ -22,6 +22,7 @@ export function useStepInteractions<T>(options: UseStepInteractionsOptions<T>): 
   const ctx: InteractionContext = useMemo(
     () => ({
       containerRef: options.containerRef,
+      cameraRef: options.cameraRef,
       setCursorTarget: options.setCursorTarget,
       setShowRipple: options.setShowRipple,
       setDragging: options.setDragging,
@@ -30,6 +31,7 @@ export function useStepInteractions<T>(options: UseStepInteractionsOptions<T>): 
     }),
     [
       options.containerRef,
+      options.cameraRef,
       options.setCursorTarget,
       options.setShowRipple,
       options.setDragging,

@@ -3,12 +3,22 @@ import type { InteractionContext } from "../context.js";
 
 const DEFAULT_VIEWPORT_ZOOM = 1.5;
 
+/**
+ * Compute the transform that centers `target` at `scale`, measuring against
+ * `reference` — the camera's content element when available. Because the
+ * reference carries every accumulated scale (DemoViewport's CSS zoom *and*
+ * the current camera transform), the rect-over-offset ratio converts screen
+ * rects back to canonical coordinates at any camera state, so a second
+ * camera move computed while the camera is already zoomed still lands
+ * correctly. Measuring against the un-transformed container is only exact
+ * at camera identity.
+ */
 function computeViewportTransformForTarget(
   target: string,
   scale: number,
-  container: HTMLElement,
+  reference: HTMLElement,
 ): ViewportTransform | null {
-  const el = container.querySelector(cursorTargetSelector(target));
+  const el = reference.querySelector(cursorTargetSelector(target));
   if (!el) {
     if (process.env.NODE_ENV === "development") {
       console.warn(
@@ -18,17 +28,17 @@ function computeViewportTransformForTarget(
     return null;
   }
 
-  const cRect = container.getBoundingClientRect();
+  const cRect = reference.getBoundingClientRect();
   const eRect = el.getBoundingClientRect();
-  const zoom = cRect.width / container.offsetWidth || 1;
+  const zoom = cRect.width / reference.offsetWidth || 1;
 
   const ex = (eRect.left - cRect.left + eRect.width / 2) / zoom;
   const ey = (eRect.top - cRect.top + eRect.height / 2) / zoom;
 
   return {
     scale,
-    x: container.offsetWidth / 2 - ex * scale,
-    y: container.offsetHeight / 2 - ey * scale,
+    x: reference.offsetWidth / 2 - ex * scale,
+    y: reference.offsetHeight / 2 - ey * scale,
   };
 }
 
@@ -57,10 +67,10 @@ export function applyViewportTransition(action: StepAction, ctx: InteractionCont
     return;
   }
 
-  const container = ctx.containerRef.current;
-  if (!container) return;
+  const reference = ctx.cameraRef?.current ?? ctx.containerRef.current;
+  if (!reference) return;
 
   const scale = action.viewportZoom ?? DEFAULT_VIEWPORT_ZOOM;
-  const transform = computeViewportTransformForTarget(action.target, scale, container);
+  const transform = computeViewportTransformForTarget(action.target, scale, reference);
   if (transform) ctx.setViewportTransform(transform);
 }

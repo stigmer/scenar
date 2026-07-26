@@ -11,9 +11,9 @@
  * Milliseconds after a cursor target is set before the cursor is
  * considered "arrived" and the click ripple appears.
  *
- * Derived from the Cursor spring parameters (stiffness 170,
- * damping 22, mass 0.6) — the spring visually settles within
- * this window for typical travel distances in the viewport.
+ * The Cursor's distance-adaptive travel clamps its longest move to
+ * settle inside this window (see `travelTransition` in
+ * `@scenar/react`'s Cursor) — the ripple must never fire mid-flight.
  */
 export const CLICK_DELAY_MS = 450;
 
@@ -48,12 +48,19 @@ export const HOVER_HOLD_MS = 1500;
 export const DRAG_SETTLE_MS = 200;
 
 /**
- * Expected milliseconds for the viewport transition spring to settle
- * after a zoom or pan change.
+ * Duration (ms) of a camera move — a `viewport_transition` zoom or pan.
  *
- * The ViewportTransformLayer uses a softer spring (stiffness 100,
- * damping 20, mass 0.8) than the cursor spring, so it takes longer
- * to settle. Used for dev-mode warnings when a subsequent cursor
- * action is scheduled too close to a viewport transition.
+ * This is a fixed tween, not a spring: browser playback eases toward the
+ * target with `cameraEase` over exactly this duration, and video export
+ * computes the same curve per frame via `interpolateViewportTransform`,
+ * so both paths agree at every instant.
  */
-export const VIEWPORT_SETTLE_MS = 500;
+export const CAMERA_TRANSITION_MS = 600;
+
+/**
+ * Milliseconds after a `viewport_transition` fires before the camera is
+ * at rest. Equal to {@link CAMERA_TRANSITION_MS} (the move is a fixed
+ * tween). Used for dev-mode warnings when a subsequent cursor action is
+ * scheduled too close to a viewport transition.
+ */
+export const VIEWPORT_SETTLE_MS = CAMERA_TRANSITION_MS;
