@@ -6,7 +6,7 @@ import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
 import { useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
-import { PlaybackBurst, ScenarioAudioNotice, ScenarioPoster } from "./ScenarioPoster.js";
+import { PlaybackBurst, ScenarioAudioNotice } from "./ScenarioPoster.js";
 import { ScenarioControls } from "./ScenarioControls.js";
 import type { TimeDisplayMode } from "./format-playback-time.js";
 import { useScenarEmbedBridge } from "../embed/useScenarEmbedBridge.js";
@@ -46,16 +46,15 @@ interface ScenarioPlayerProps<T> {
 /**
  * Video-style playback engine for timed scenario animations.
  *
- * Renders a poster overlay with a centered play button on initial load.
- * The user clicks to start playback. When playing, a YouTube-style
- * progress bar with chapter markers, a time readout, and transport
- * controls overlays the content's bottom edge and auto-hides after 3
- * seconds. Clicking the content toggles play/pause with a transient
- * center burst; while paused nothing covers the frame — the control bar
- * (always visible when paused) carries the state. The player's box is
- * always exactly the content box — overlays never add height — so
- * embeds report one stable size across idle/playing/paused. Only one
- * ScenarioPlayer plays at a time on a page.
+ * No overlay ever covers the frame — no poster, no pause disc. The
+ * YouTube-style control bar (progress bar with chapter markers, time
+ * readout, transport) pins to the content's bottom edge in every state;
+ * it is the affordance that says "this plays" at idle, shows the state
+ * while paused, and auto-hides after 3 seconds only during playback.
+ * Clicking anywhere on the content toggles play/pause with a transient
+ * center burst. The player's box is always exactly the content box —
+ * overlays never add height — so embeds report one stable size across
+ * idle/playing/paused. Only one ScenarioPlayer plays at a time on a page.
  *
  * Renders content via a children render prop — the engine knows nothing
  * about what is being displayed. Respects `prefers-reduced-motion`.
@@ -105,7 +104,7 @@ export function ScenarioPlayer<T>({
   });
 
   const {
-    stepIndex, playbackState, playing, play, pause, togglePlay,
+    stepIndex, playbackState, playing, play, pause,
     seekToTime, seekOffsetRef, seekGeneration, handleClipEnded,
   } = progression;
 
@@ -224,14 +223,13 @@ export function ScenarioPlayer<T>({
   }, []);
   const clearBurst = useCallback(() => setBurst(null), []);
 
-  // Click-anywhere play/pause. While paused nothing covers the frame (no
-  // persistent overlay — the content stays clean; the control bar's play
-  // button and the transient burst carry the state), so this handler owns
-  // both directions. Resume goes through `handlePlay` so narration restarts
-  // inside the click gesture (the iOS Safari unlock path). The poster's
-  // initial play stays burst-free: the poster's exit is the feedback there.
+  // Click-anywhere play/pause, including the very first play — there is no
+  // poster: nothing ever covers the frame, and the always-present control
+  // bar is what marks the content as playable (its play button shows the
+  // state, exactly as it does while paused). Starting and resuming go
+  // through `handlePlay` so narration starts inside the click gesture (the
+  // iOS Safari unlock path); the transient burst confirms every toggle.
   const handleContentClick = useCallback(() => {
-    if (playbackState === "idle") return;
     if (playing) {
       fireBurst("pause");
       pause();
@@ -239,7 +237,16 @@ export function ScenarioPlayer<T>({
       fireBurst("play");
       handlePlay();
     }
-  }, [playbackState, playing, pause, handlePlay, fireBurst]);
+  }, [playing, pause, handlePlay, fireBurst]);
+
+  // The bar's play/pause button — same semantics as a content click minus
+  // the center burst (the button's own icon flip is its feedback). Must go
+  // through `handlePlay` too: with no poster, this button can be the first
+  // gesture of the session, which is what unlocks narration audio.
+  const handleTogglePlayControl = useCallback(() => {
+    if (playing) pause();
+    else handlePlay();
+  }, [playing, pause, handlePlay]);
 
   // Retry narration inside a fresh gesture after the browser blocked it.
   const handleEnableAudio = useCallback(() => {
@@ -319,8 +326,9 @@ export function ScenarioPlayer<T>({
     },
   });
 
-  const showPoster = playbackState === "idle" && !isVideoExport && !prefersReducedMotion;
-  const showControlBar = playbackState !== "idle" && !hideControls;
+  // The bar renders in every playback state (auto-hide only applies while
+  // playing) — at idle it is the affordance that says "this plays".
+  const showControlBar = !hideControls;
   const showAudioNotice = audioBlocked && !isVideoExport && playbackState !== "idle";
 
   return (
@@ -336,14 +344,11 @@ export function ScenarioPlayer<T>({
       <div
         className="relative"
         onClick={handleContentClick}
-        style={{ cursor: playbackState !== "idle" ? "pointer" : undefined }}
+        style={{ cursor: !isVideoExport ? "pointer" : undefined }}
       >
         {children(steps[stepIndex]!.data, stepIndex)}
 
         <AnimatePresence>
-          {showPoster && (
-            <ScenarioPoster onPlay={handlePlay} hasNarration={!!narrationManifest} />
-          )}
           {showAudioNotice && <ScenarioAudioNotice onEnableAudio={handleEnableAudio} />}
         </AnimatePresence>
 
@@ -370,7 +375,7 @@ export function ScenarioPlayer<T>({
             isFullscreen={isFullscreen}
             progressTrackRef={progressTrackRef}
             playheadRef={playheadRef}
-            onTogglePlay={togglePlay}
+            onTogglePlay={handleTogglePlayControl}
             onToggleMute={toggleMute}
             onSelectSpeed={setPlaybackRate}
             onSeekToTime={handleSeekToTime}

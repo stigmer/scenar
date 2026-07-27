@@ -73,8 +73,12 @@ function activateOnKey(handler: () => void) {
 }
 
 /**
- * Poster overlay with a centered play button over a dimming scrim. Shown
- * before playback starts and dismissed on click.
+ * Poster overlay with a centered play button over a dimming scrim, dismissed
+ * on click.
+ *
+ * No longer rendered by ScenarioPlayer (no overlay ever covers the frame —
+ * the always-present control bar is the play affordance at idle) — kept as
+ * public API for integrators composing their own player chrome.
  *
  * The scrim is what gives the disc contrast on *light* content — without it
  * a white disc over a white app is invisible and only the triangle survives

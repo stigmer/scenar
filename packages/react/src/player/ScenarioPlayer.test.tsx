@@ -39,19 +39,42 @@ function renderPlayer() {
 const burstIn = (container: HTMLElement) =>
   container.querySelector("[data-playback-burst]")?.getAttribute("data-playback-burst") ?? null;
 
-describe("ScenarioPlayer playback burst", () => {
-  it("shows no burst for the poster's initial play (the poster's exit is the feedback)", () => {
+describe("ScenarioPlayer posterless idle", () => {
+  it("covers the frame with nothing at idle — the control bar is the play affordance", () => {
     const { container } = renderPlayer();
-    fireEvent.click(within(container).getByRole("button", { name: "Play demo" }));
+
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.getAttribute("data-demo-state")).toBe("idle");
+    // No poster, no center disc…
+    expect(within(container).queryByRole("button", { name: /play demo/i })).toBeNull();
+    expect(burstIn(container)).toBeNull();
+    // …but the bar is already there, showing Play.
+    expect(within(container).getByRole("button", { name: "Play" })).toBeDefined();
+  });
+
+  it("starts playback from a click anywhere on the content", () => {
+    const { container } = renderPlayer();
+    fireEvent.click(within(container).getByTestId("content"));
+
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.getAttribute("data-demo-state")).toBe("playing");
+    expect(burstIn(container)).toBe("play");
+  });
+
+  it("starts playback from the bar's play button, without a center burst", () => {
+    const { container } = renderPlayer();
+    fireEvent.click(within(container).getByRole("button", { name: "Play" }));
 
     const root = container.firstElementChild as HTMLElement;
     expect(root.getAttribute("data-demo-state")).toBe("playing");
     expect(burstIn(container)).toBeNull();
   });
+});
 
+describe("ScenarioPlayer playback burst", () => {
   it("bursts a pause glyph and leaves the frame clean when a content click pauses", () => {
     const { container } = renderPlayer();
-    fireEvent.click(within(container).getByRole("button", { name: "Play demo" }));
+    fireEvent.click(within(container).getByTestId("content"));
 
     fireEvent.click(within(container).getByTestId("content"));
 
@@ -65,7 +88,7 @@ describe("ScenarioPlayer playback burst", () => {
 
   it("bursts a play glyph when a content click resumes playback", () => {
     const { container } = renderPlayer();
-    fireEvent.click(within(container).getByRole("button", { name: "Play demo" }));
+    fireEvent.click(within(container).getByTestId("content"));
     fireEvent.click(within(container).getByTestId("content"));
 
     fireEvent.click(within(container).getByTestId("content"));
@@ -92,7 +115,6 @@ describe("ScenarioPlayer playback burst", () => {
 describe("ScenarioPlayer transport readout", () => {
   it("wires the readout into the control bar with the elapsed→remaining toggle", () => {
     const { container } = renderPlayer();
-    fireEvent.click(within(container).getByRole("button", { name: "Play demo" }));
 
     const toggle = within(container).getByRole("button", { name: "Show remaining time" });
     fireEvent.click(toggle);

@@ -71,7 +71,7 @@ Override any token in your own CSS to customize the palette.
 
 ### `<ScenarioPlayer>`
 
-Video-style playback engine. Renders a poster overlay, a progress bar with chapter markers (click or drag to seek — seeking preserves the play/pause state), transport controls with a time readout (click it to toggle elapsed ↔ remaining), click-anywhere play/pause with a center feedback burst, and narration audio.
+Video-style playback engine. No overlay ever covers the frame: the control bar — a progress bar with chapter markers (click or drag to seek; seeking preserves the play/pause state), transport with a time readout (click it to toggle elapsed ↔ remaining), volume, speed, and fullscreen — is visible in every state and is the play affordance at idle. Click anywhere on the content to toggle play/pause with a center feedback burst. Narration audio plays per step.
 
 ```tsx
 import { ScenarioPlayer } from "@scenar/react";
