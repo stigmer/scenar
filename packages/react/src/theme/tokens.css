@@ -30,10 +30,29 @@
 
     /*
      * Stage: the backdrop a framed window floats on, plus the window's
-     * elevation and radius. Backdrop is a soft neutral gradient by default;
-     * hosts theme it by overriding the token.
+     * elevation and radius. The backdrop is a macOS-wallpaper-style mesh:
+     * three soft radial glows over a diagonal base. The gradient geometry
+     * is written once — the dark theme swaps only the five color tokens
+     * below, and `--scenar-backdrop` re-resolves because custom properties
+     * substitute at the element where they are used. Hosts can retheme by
+     * overriding the color tokens (keeps the mesh) or the whole
+     * `--scenar-backdrop` shorthand (replaces it).
+     *
+     * The staged-embed pre-paint in @scenar/cli duplicates these colors and
+     * this geometry (the token is not loadable before the entry script); a
+     * drift-lock test in @scenar/cli compares the two — if you retune the
+     * backdrop here, that test tells you where to mirror it.
      */
-    --scenar-backdrop: linear-gradient(135deg, #e7ebf1 0%, #dde3ec 55%, #d3dae6 100%);
+    --scenar-backdrop-glow-1: #b7d4f2;
+    --scenar-backdrop-glow-2: #e3d0ec;
+    --scenar-backdrop-glow-3: #b4c4ea;
+    --scenar-backdrop-base-1: #e4ecf7;
+    --scenar-backdrop-base-2: #e6e1f0;
+    --scenar-backdrop:
+      radial-gradient(120% 100% at 12% 8%, var(--scenar-backdrop-glow-1) 0%, transparent 55%),
+      radial-gradient(110% 95% at 88% 12%, var(--scenar-backdrop-glow-2) 0%, transparent 55%),
+      radial-gradient(130% 110% at 70% 100%, var(--scenar-backdrop-glow-3) 0%, transparent 60%),
+      linear-gradient(135deg, var(--scenar-backdrop-base-1) 0%, var(--scenar-backdrop-base-2) 100%);
     --scenar-shadow-window:
       0 24px 64px -16px rgb(15 23 42 / 0.35),
       0 4px 16px -4px rgb(15 23 42 / 0.2);
@@ -55,7 +74,12 @@
     --scenar-chrome-foreground: #bdc1c6;
     --scenar-cursor-stroke: #ffffff;
 
-    --scenar-backdrop: linear-gradient(135deg, #16202f 0%, #101827 55%, #0b111d 100%);
+    /* Dark wallpaper palette — the mesh geometry above re-resolves with these. */
+    --scenar-backdrop-glow-1: #1c3a63;
+    --scenar-backdrop-glow-2: #372a5e;
+    --scenar-backdrop-glow-3: #142647;
+    --scenar-backdrop-base-1: #101828;
+    --scenar-backdrop-base-2: #14122a;
     --scenar-shadow-window:
       0 24px 64px -16px rgb(0 0 0 / 0.65),
       0 4px 16px -4px rgb(0 0 0 / 0.4);

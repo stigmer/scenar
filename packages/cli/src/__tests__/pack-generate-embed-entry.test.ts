@@ -1,5 +1,9 @@
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { describe, it, expect } from "vitest";
 import {
+  STAGE_BACKDROP_COLORS,
+  STAGE_BACKDROP_MESH,
   generateEmbedEntry,
   generateEmbedHtml,
 } from "../pack/generate-embed-entry.js";
@@ -198,5 +202,72 @@ describe("generateEmbedHtml", () => {
     expect(html).toContain("light-dark(");
     expect(html).toContain('<meta name="color-scheme" content="light dark" />');
     expect(html).not.toContain("colorScheme");
+  });
+
+  it("keys the pre-paint theme split through colors, never whole gradients", () => {
+    // `light-dark()` is a <color>-only function. Wrapping a gradient in it is
+    // invalid CSS that browsers drop silently — the exact defect the current
+    // structure replaced. Every light-dark() in the pre-paint must contain
+    // two hex colors and nothing else.
+    const html = generateEmbedHtml("welcome-tour", "entry.tsx", true);
+    const usages = [...html.matchAll(/light-dark\(([^)]*)\)/g)].map((m) => m[1]!);
+    expect(usages.length).toBeGreaterThan(0);
+    for (const args of usages) {
+      expect(args.trim()).toMatch(/^#[0-9a-f]{6}, #[0-9a-f]{6}$/);
+    }
+  });
+});
+
+describe("stage backdrop drift-lock (pre-paint mirrors @scenar/react tokens)", () => {
+  // The pre-paint duplicates the `--scenar-backdrop-*` tokens because the
+  // token stylesheet is not loadable before the entry script runs. This suite
+  // is the enforcement of the "keep the two in sync" contract: it reads the
+  // actual tokens.css source from the workspace and fails when either the
+  // palette or the mesh geometry drifts.
+  // Locate @scenar/react's token source by walking up to the workspace root —
+  // vitest runs with cwd at either the package dir or the repo root.
+  const findTokensCss = (): string => {
+    let dir = process.cwd();
+    for (;;) {
+      const candidate = join(dir, "packages/react/src/theme/tokens.css");
+      if (existsSync(candidate)) return candidate;
+      const parent = dirname(dir);
+      if (parent === dir) {
+        throw new Error("tokens.css not found — is the monorepo layout intact?");
+      }
+      dir = parent;
+    }
+  };
+  const tokensCss = readFileSync(findTokensCss(), "utf-8");
+
+  const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
+
+  it("mirrors every backdrop color token, light and dark", () => {
+    for (const { token, light, dark } of STAGE_BACKDROP_COLORS) {
+      // Each token is declared exactly twice: `.scenar` (light) first,
+      // `.scenar.dark` second.
+      const declarations = [
+        ...tokensCss.matchAll(new RegExp(`${token}:\\s*(#[0-9a-fA-F]{6})`, "g")),
+      ].map((m) => m[1]!.toLowerCase());
+      expect(declarations, `${token} must be declared in both theme blocks`).toHaveLength(2);
+      expect(declarations[0], `${token} light value drifted`).toBe(light);
+      expect(declarations[1], `${token} dark value drifted`).toBe(dark);
+    }
+  });
+
+  it("mirrors the mesh geometry", () => {
+    const backdrop = tokensCss.match(/--scenar-backdrop:\s*([^;]+);/);
+    expect(backdrop, "tokens.css must define --scenar-backdrop").not.toBeNull();
+    expect(normalize(backdrop![1]!)).toBe(normalize(STAGE_BACKDROP_MESH.join(", ")));
+  });
+
+  it("emits the mirrored palette and geometry into the staged pre-paint", () => {
+    const html = normalize(generateEmbedHtml("welcome-tour", "entry.tsx", true));
+    for (const { token, light, dark } of STAGE_BACKDROP_COLORS) {
+      expect(html).toContain(`${token}: light-dark(${light}, ${dark});`);
+    }
+    for (const layer of STAGE_BACKDROP_MESH) {
+      expect(html).toContain(normalize(layer));
+    }
   });
 });

@@ -23,9 +23,10 @@ interface UseStepProgressionResult {
   togglePlay: () => void;
   goTo: (index: number) => void;
   /**
-   * Seek to an exact time position. Derives the correct step index,
-   * stores the intra-step offset in `seekOffsetRef`, and resumes
-   * playback (YouTube-style continuous seek).
+   * Seek to an exact time position. Derives the correct step index and
+   * stores the intra-step offset in `seekOffsetRef`. Preserves the current
+   * play/pause state (YouTube semantics): seeking while playing keeps
+   * playing; seeking while paused lands paused on the target frame.
    */
   seekToTime: (timeMs: number, stepTimeline: StepTimeline) => void;
   /**
@@ -182,7 +183,11 @@ export function useStepProgression<T>({
       const stepStart = timeline.stepStartTimesMs[target] ?? 0;
       seekOffsetRef.current = clamped - stepStart;
       setStepIndex(target);
-      setPlaybackState("playing");
+      // Preserve the play/pause state across the seek. A seek from "idle"
+      // (only reachable via the embed bridge — the control bar is hidden
+      // while idle) lands paused on the target frame rather than starting
+      // playback the viewer never asked for.
+      setPlaybackState((current) => (current === "playing" ? current : "paused"));
       setSeekGeneration((g) => g + 1);
     },
     [lastIndex],

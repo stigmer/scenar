@@ -72,7 +72,13 @@ function playClip(audio: HTMLAudioElement, src: string, rate = 1): Promise<void>
   return safePlay(audio);
 }
 
-function seekClip(audio: HTMLAudioElement, src: string, offsetSec: number, rate = 1): void {
+function seekClip(
+  audio: HTMLAudioElement,
+  src: string,
+  offsetSec: number,
+  rate = 1,
+  resume = true,
+): void {
   audio.src = src;
   audio.defaultPlaybackRate = rate;
   audio.load();
@@ -80,7 +86,9 @@ function seekClip(audio: HTMLAudioElement, src: string, offsetSec: number, rate 
 
   const applySeek = () => {
     audio.currentTime = offsetSec;
-    void safePlay(audio).catch(() => {});
+    // When the player is paused, only position the clip — the playing
+    // effect resumes it from this position when playback restarts.
+    if (resume) void safePlay(audio).catch(() => {});
   };
 
   if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
@@ -170,7 +178,9 @@ export function useNarrationPlayback({
         return;
       }
 
-      seekClip(audio, src, offsetMs / 1000, playbackRateRef.current);
+      // Seek preserves the player's play/pause state: while paused the clip
+      // is loaded and positioned but not started.
+      seekClip(audio, src, offsetMs / 1000, playbackRateRef.current, playingRef.current);
     },
     [manifest],
   );

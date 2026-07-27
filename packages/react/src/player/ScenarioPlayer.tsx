@@ -6,8 +6,9 @@ import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
 import { useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
-import { ScenarioAudioNotice, ScenarioPauseOverlay, ScenarioPoster } from "./ScenarioPoster.js";
+import { PlaybackBurst, ScenarioAudioNotice, ScenarioPoster } from "./ScenarioPoster.js";
 import { ScenarioControls } from "./ScenarioControls.js";
+import type { TimeDisplayMode } from "./format-playback-time.js";
 import { useScenarEmbedBridge } from "../embed/useScenarEmbedBridge.js";
 
 /** Delay before auto-hiding the control bar during playback. */
@@ -47,9 +48,12 @@ interface ScenarioPlayerProps<T> {
  *
  * Renders a poster overlay with a centered play button on initial load.
  * The user clicks to start playback. When playing, a YouTube-style
- * progress bar with chapter markers and transport controls overlays the
- * content's bottom edge and auto-hides after 3 seconds. The player's box
- * is always exactly the content box — overlays never add height — so
+ * progress bar with chapter markers, a time readout, and transport
+ * controls overlays the content's bottom edge and auto-hides after 3
+ * seconds. Clicking the content toggles play/pause with a transient
+ * center burst; while paused nothing covers the frame — the control bar
+ * (always visible when paused) carries the state. The player's box is
+ * always exactly the content box — overlays never add height — so
  * embeds report one stable size across idle/playing/paused. Only one
  * ScenarioPlayer plays at a time on a page.
  *
@@ -202,17 +206,40 @@ export function ScenarioPlayer<T>({
       seekToStep(targetIndex, Math.max(0, clamped - stepStart));
       seekToTime(clamped, stepTimeline);
 
-      if (coordinatorRef.current) {
+      // Seek preserves the play/pause state, so only claim the "single
+      // active player" slot when this player actually keeps playing —
+      // a paused seek must not pause other players on the page.
+      if (playing && coordinatorRef.current) {
         PlaybackCoordinator.notifyPlaying(coordinatorRef.current.id);
       }
     },
-    [seekToTime, seekToStep, stepTimeline, lastIndex],
+    [seekToTime, seekToStep, stepTimeline, lastIndex, playing],
   );
 
+  // Transient center feedback for play/pause toggles. Keyed so rapid
+  // clicks restart the animation instead of layering glyphs.
+  const [burst, setBurst] = useState<{ kind: "play" | "pause"; key: number } | null>(null);
+  const fireBurst = useCallback((kind: "play" | "pause") => {
+    setBurst((prev) => ({ kind, key: (prev?.key ?? 0) + 1 }));
+  }, []);
+  const clearBurst = useCallback(() => setBurst(null), []);
+
+  // Click-anywhere play/pause. While paused nothing covers the frame (no
+  // persistent overlay — the content stays clean; the control bar's play
+  // button and the transient burst carry the state), so this handler owns
+  // both directions. Resume goes through `handlePlay` so narration restarts
+  // inside the click gesture (the iOS Safari unlock path). The poster's
+  // initial play stays burst-free: the poster's exit is the feedback there.
   const handleContentClick = useCallback(() => {
     if (playbackState === "idle") return;
-    togglePlay();
-  }, [playbackState, togglePlay]);
+    if (playing) {
+      fireBurst("pause");
+      pause();
+    } else {
+      fireBurst("play");
+      handlePlay();
+    }
+  }, [playbackState, playing, pause, handlePlay, fireBurst]);
 
   // Retry narration inside a fresh gesture after the browser blocked it.
   const handleEnableAudio = useCallback(() => {
@@ -247,6 +274,15 @@ export function ScenarioPlayer<T>({
   const progressTrackRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
 
+  // Transport readout (elapsed/total ↔ remaining, toggled by clicking it)
+  // and the scrub flag that hands the progress DOM to the drag preview.
+  const timeLabelRef = useRef<HTMLSpanElement>(null);
+  const scrubbingRef = useRef(false);
+  const [timeDisplayMode, setTimeDisplayMode] = useState<TimeDisplayMode>("elapsed");
+  const handleToggleTimeDisplay = useCallback(() => {
+    setTimeDisplayMode((mode) => (mode === "elapsed" ? "remaining" : "elapsed"));
+  }, []);
+
   usePlaybackProgress(
     playing,
     playbackState,
@@ -258,6 +294,7 @@ export function ScenarioPlayer<T>({
     playheadRef,
     seekOffsetRef,
     seekGeneration,
+    { timeLabelRef, timeDisplayMode, scrubbingRef },
   );
 
   // Cross-origin embed bridge: inert unless `embed` is set and we are framed.
@@ -283,7 +320,6 @@ export function ScenarioPlayer<T>({
   });
 
   const showPoster = playbackState === "idle" && !isVideoExport && !prefersReducedMotion;
-  const showPauseOverlay = playbackState === "paused" && !isVideoExport;
   const showControlBar = playbackState !== "idle" && !hideControls;
   const showAudioNotice = audioBlocked && !isVideoExport && playbackState !== "idle";
 
@@ -308,9 +344,12 @@ export function ScenarioPlayer<T>({
           {showPoster && (
             <ScenarioPoster onPlay={handlePlay} hasNarration={!!narrationManifest} />
           )}
-          {showPauseOverlay && <ScenarioPauseOverlay onResume={handlePlay} />}
           {showAudioNotice && <ScenarioAudioNotice onEnableAudio={handleEnableAudio} />}
         </AnimatePresence>
+
+        {burst && !isVideoExport && (
+          <PlaybackBurst key={burst.key} kind={burst.kind} onComplete={clearBurst} />
+        )}
 
         {/*
          * Controls overlay the content's bottom edge instead of flowing below
@@ -335,6 +374,10 @@ export function ScenarioPlayer<T>({
             onToggleMute={toggleMute}
             onSelectSpeed={setPlaybackRate}
             onSeekToTime={handleSeekToTime}
+            timeLabelRef={timeLabelRef}
+            timeDisplayMode={timeDisplayMode}
+            onToggleTimeDisplay={handleToggleTimeDisplay}
+            scrubbingRef={scrubbingRef}
           />
         )}
       </div>

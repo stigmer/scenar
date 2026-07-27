@@ -27,6 +27,22 @@ function DefaultPlayIcon({ size, className }: { size: number; className?: string
   );
 }
 
+function DefaultPauseIcon({ size, className }: { size: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <rect x="6" y="4" width="4" height="16" />
+      <rect x="14" y="4" width="4" height="16" />
+    </svg>
+  );
+}
+
 function SpeakerIcon({ size, className }: { size: number; className?: string }) {
   return (
     <svg
@@ -102,6 +118,44 @@ export function ScenarioPoster({ onPlay, PlayIcon, hasNarration = false }: Scena
   );
 }
 
+interface PlaybackBurstProps {
+  /** The action the burst confirms — the state playback just entered. */
+  kind: "play" | "pause";
+  /** Fired when the burst animation finishes, so the host can unmount it. */
+  onComplete?: () => void;
+}
+
+/**
+ * Transient center feedback for a play/pause toggle — the YouTube-style
+ * glyph that scales up and fades out where the viewer clicked the content.
+ * Purely decorative: `aria-hidden`, no pointer events, unmounted by the
+ * host via `onComplete`. This is the only visual the player paints for a
+ * pause: the frame itself stays clean, and the control bar (pinned visible
+ * while paused) carries the persistent state.
+ */
+export function PlaybackBurst({ kind, onComplete }: PlaybackBurstProps) {
+  const Icon = kind === "play" ? DefaultPlayIcon : DefaultPauseIcon;
+  return (
+    <div
+      aria-hidden
+      data-playback-burst={kind}
+      // z-[15]: above the content and any overlay (z-10), below the control
+      // bar (z-20) so the fading glyph never obscures the transport.
+      className="pointer-events-none absolute inset-0 z-[15] flex items-center justify-center"
+    >
+      <motion.div
+        className="flex h-16 w-16 items-center justify-center rounded-full bg-black/60 text-white"
+        initial={{ scale: 0.6, opacity: 0.9 }}
+        animate={{ scale: 1.4, opacity: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        onAnimationComplete={onComplete}
+      >
+        <Icon size={28} className={kind === "play" ? "ml-1" : undefined} />
+      </motion.div>
+    </div>
+  );
+}
+
 interface ScenarioPauseOverlayProps {
   onResume: () => void;
   PlayIcon?: React.ComponentType<{ size: number; className?: string }>;
@@ -112,6 +166,10 @@ interface ScenarioPauseOverlayProps {
  * More subtle than the initial poster so the underlying content remains
  * legible while still giving the user a clear click target to resume.
  * Keyboard-operable.
+ *
+ * No longer rendered by ScenarioPlayer (a paused frame stays clean; the
+ * control bar and PlaybackBurst carry the state) — kept as public API for
+ * integrators composing their own player chrome from the headless hooks.
  */
 export function ScenarioPauseOverlay({ onResume, PlayIcon }: ScenarioPauseOverlayProps) {
   const Icon = PlayIcon ?? DefaultPlayIcon;

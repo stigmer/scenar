@@ -35,7 +35,7 @@ export function SpeedMenu({ playbackRate, onSelectSpeed }: SpeedMenuProps) {
         }}
         // Scrim-relative white to match the overlaid control bar (the popover
         // itself stays a themed card — it is opaque, so tokens are readable).
-        className="flex h-6 min-w-[2rem] items-center justify-center rounded px-1 text-[11px] font-medium tabular-nums text-white/75 transition-colors hover:text-white"
+        className="flex h-9 min-w-[2.5rem] items-center justify-center rounded px-1 text-xs font-medium tabular-nums text-white/90 transition-colors hover:text-white"
         aria-label={`Playback speed: ${playbackRate}x`}
         aria-haspopup="true"
         aria-expanded={open}
@@ -63,7 +63,7 @@ export function SpeedMenu({ playbackRate, onSelectSpeed }: SpeedMenuProps) {
                   onSelectSpeed(speed);
                   setOpen(false);
                 }}
-                className={`flex w-full items-center justify-between gap-3 px-3 py-1 text-[11px] tabular-nums transition-colors hover:bg-accent ${
+                className={`flex w-full items-center justify-between gap-3 px-3 py-1 text-xs tabular-nums transition-colors hover:bg-accent ${
                   speed === playbackRate
                     ? "font-semibold text-foreground"
                     : "text-muted-foreground"
