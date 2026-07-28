@@ -31,6 +31,8 @@ export type { StepTimeline } from "./timeline/compute-step-timeline.js";
 export { computeStepTimeline } from "./timeline/compute-step-timeline.js";
 export { deriveStepFromTime } from "./timeline/derive-step.js";
 export { getStepDurationMs } from "./timeline/step-duration.js";
+export type { ScenarioShot } from "./timeline/collect-shots.js";
+export { SHOT_NAME_PATTERN, collectScenarioShots } from "./timeline/collect-shots.js";
 
 // Timing constants
 export {

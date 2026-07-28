@@ -19,6 +19,11 @@ export type { RunNarrateOptions, NarrateResult, NarratedScenario } from "./narra
 export { runRender } from "./render/run-render.js";
 export type { RunRenderOptions, RenderResult } from "./render/run-render.js";
 
+// Shoot (render a bundle's declared shots to stills)
+export { runShoot, STILLS_DIR } from "./shoot/run-shoot.js";
+export type { RunShootOptions, ShootResult } from "./shoot/run-shoot.js";
+export type { ShotBrowser, ShotSession, ShotCaptureInfo, ShotTheme } from "./shoot/types.js";
+
 // Serve
 export { runServe } from "./serve/run-serve.js";
 export type { RunServeOptions, ServeResult } from "./serve/run-serve.js";

@@ -8,6 +8,7 @@ import {
   runPublish,
   runNarrate,
   runRender,
+  runShoot,
   validateScenario,
   loadScenarioYaml,
 } from "@scenar/cli/api";
@@ -44,6 +45,7 @@ export function registerTools(server: McpServer): void {
   registerValidate(server);
   registerNarrate(server);
   registerPack(server);
+  registerShoot(server);
   registerServe(server);
   registerStopServe(server);
   registerPublish(server);
@@ -314,6 +316,52 @@ function registerPublish(server: McpServer): void {
           snippet,
         ];
         return text(lines.join("\n"));
+      }),
+  );
+}
+
+function registerShoot(server: McpServer): void {
+  server.registerTool(
+    "scenar_shoot",
+    {
+      title: "Render a bundle's declared shots to stills",
+      description:
+        "Capture a packed bundle's `shot`-named steps as still images (light + dark) " +
+        "into <bundle>/stills/, walking the timeline deterministically, then rebuild " +
+        "the pack manifest so deploys ship the stills. Requires the Playwright " +
+        "optional peer (npm i -D playwright && npx playwright install chromium).",
+      inputSchema: {
+        bundleDir: z.string().describe("a packed bundle directory (from scenar_pack)"),
+        theme: z
+          .enum(["light", "dark", "both"])
+          .optional()
+          .describe("themes to capture (default both)"),
+        verify: z
+          .boolean()
+          .optional()
+          .describe("capture twice in fresh sessions and fail unless byte-identical"),
+      },
+    },
+    async ({ bundleDir, theme, verify }) =>
+      guard(async () => {
+        const result = await runShoot({
+          bundleDir: resolveInProject(bundleDir),
+          themes: theme === "light" || theme === "dark" ? [theme] : undefined,
+          verify: verify ?? false,
+        });
+        if (result.shots.length === 0) {
+          return text(
+            `No shots declared in ${result.scenarioId} — nothing captured. ` +
+              `Name a capture point by setting shot: "<kebab-name>" on a step.`,
+          );
+        }
+        return text(
+          [
+            `Shot ${result.files.length} stills for ${result.scenarioId}` +
+              `${result.verified ? " (byte-identical across sessions)" : ""}:`,
+            ...result.files.map((file) => `  ${file}`),
+          ].join("\n"),
+        );
       }),
   );
 }

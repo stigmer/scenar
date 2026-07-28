@@ -48,9 +48,10 @@ describe("generateEmbedEntry", () => {
     const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
     expect(src).toContain('import { useCallback, useRef, useState } from "react";');
     // ScenarioPlayer/DemoViewport/SCENAR_CLASS plus Cursor, useStepInteractions,
-    // ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY all come from @scenar/react.
+    // ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY (playback) and
+    // ScenarioCaptureMount (the ?shot capture branch) all come from @scenar/react.
     expect(src).toContain(
-      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, Cursor, useStepInteractions, ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY } from "@scenar/react";',
+      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, Cursor, useStepInteractions, ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY, ScenarioCaptureMount } from "@scenar/react";',
     );
   });
 
@@ -143,7 +144,7 @@ describe("generateEmbedEntry", () => {
     // the manifest from its own relative location, so clip src values resolve
     // against ./narration/ at runtime.
     expect(withNarration).toContain(
-      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, Cursor, useStepInteractions, ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY, useNarrationManifest } from "@scenar/react";',
+      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, Cursor, useStepInteractions, ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY, ScenarioCaptureMount, useNarrationManifest } from "@scenar/react";',
     );
     expect(withNarration).toContain('const _resolveManifestUrl = () => "./narration/manifest.json";');
     expect(withNarration).toContain(
@@ -166,6 +167,70 @@ describe("generateEmbedEntry", () => {
     );
     expect(withProviders).toContain("<_Providers>");
     expect(withProviders).toContain("</_Providers>");
+  });
+});
+
+describe("generateEmbedEntry capture branch (?shot)", () => {
+  it("branches on ?shot at module load and keeps the playback mount as the default", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    // Read once, outside React, exactly like ?theme.
+    expect(src).toContain('new URLSearchParams(window.location.search).get("shot")');
+    // Bare `?shot` (empty string) must still enter capture mode, so the
+    // guard is a null check, not truthiness.
+    expect(src).toContain("if (_shotParam !== null) {");
+    // The production embed path is untouched: no param means the exact
+    // playback mount that shipped before this branch existed.
+    expect(src).toContain("createRoot(_rootEl).render(<_App />);");
+  });
+
+  it("renders ScenarioCaptureMount with the same inputs as the playback tree", () => {
+    const src = generateEmbedEntry({
+      ...BASE,
+      hasNarration: false,
+      providersPath: "/proj/.scenar/providers.tsx",
+      stage: true,
+    });
+    expect(src).toContain("<ScenarioCaptureMount");
+    expect(src).toContain('scenarioId={"welcome-tour"}');
+    expect(src).toContain("steps={_steps}");
+    expect(src).toContain("renderStep={renderStep}");
+    expect(src).toContain("canonicalWidth={896}");
+    expect(src).toContain("shellHeight={480}");
+    expect(src).toContain("stage={true}");
+    expect(src).toContain("providers={_Providers}");
+    // The capture tree carries the theme-derived root class, same as playback.
+    expect(src).toContain('<div className={_rootClass}>');
+  });
+
+  it("omits providers and stage when the scenario has neither", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    expect(src).toContain("stage={false}");
+    expect(src).toContain("providers={undefined}");
+  });
+
+  it("wires the window contract scenar shoot consumes", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    expect(src).toContain("(window as any).__scenarShot = driver;");
+    expect(src).toContain("(window as any).__scenarShotError");
+    // ?shot=<name> deep-links auto-walk to the named shot; a bad name is a
+    // reported error listing what IS declared, not a silent no-op.
+    expect(src).toContain("driver.shots.find((s: any) => s.name === _shotParam)");
+    expect(src).toContain("void driver.walkTo(_target.timeMs);");
+    expect(src).toContain('no shot named');
+  });
+
+  it("fetches the narration manifest before mounting and fails loudly", () => {
+    // Shot times are narration-driven: capturing without the manifest would
+    // silently shoot every frame at the wrong time, so the capture branch
+    // must load it itself (never via useNarrationManifest, whose fetch
+    // failure is silent) and refuse to mount on failure.
+    const withNarration = generateEmbedEntry({ ...BASE, hasNarration: true, providersPath: null });
+    expect(withNarration).toContain('await fetch("./narration/manifest.json")');
+    expect(withNarration).toContain("refusing to capture without it");
+
+    const without = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    expect(without).toContain("const _captureManifest = undefined;");
+    expect(without).not.toContain('await fetch("./narration/manifest.json")');
   });
 });
 

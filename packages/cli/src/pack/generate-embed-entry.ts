@@ -50,6 +50,17 @@ export interface EmbedEntryInput {
  * selector). The default is light, so existing embeds are unaffected; a host can
  * theme-sync simply by framing `…/?theme=dark`.
  *
+ * Capture (`?shot`): with a `shot` query param present, the entry mounts
+ * `ScenarioCaptureMount` instead of the playback tree — the TimeSource-driven
+ * catch-up mount behind `scenar shoot` (DD-02). The driver installs on
+ * `window.__scenarShot`; failures surface on `window.__scenarShotError`.
+ * `?shot=<name>` additionally auto-walks to that shot, so an author can
+ * eyeball any still in a plain browser. When the scenario has narration, the
+ * capture branch fetches the manifest itself and fails LOUDLY on error —
+ * step durations are narration-driven, so a silent fallback would capture
+ * every shot at the wrong time (which is why it must not reuse
+ * `useNarrationManifest`, whose fetch failure is silent by design).
+ *
  * Pure function, no side effects — the caller writes the result to disk.
  */
 export function generateEmbedEntry(input: EmbedEntryInput): string {
@@ -74,6 +85,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
     "useStepInteractions",
     "ViewportTransformLayer",
     "VIEWPORT_TRANSFORM_IDENTITY",
+    "ScenarioCaptureMount",
   ];
   if (input.stage) reactImports.push("ScenarioStage");
   if (input.hasNarration) reactImports.push("useNarrationManifest");
@@ -126,6 +138,16 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`  catch { return null; }`);
   lines.push(`})();`);
   lines.push(`const _rootClass = _theme === "dark" ? SCENAR_CLASS + " dark" : SCENAR_CLASS;`);
+
+  // --- Capture mode: ?shot (bare = driver only; ?shot=<name> = auto-walk) ---
+  // Read the same way as _theme: once, at module load, outside React. A null
+  // value (param absent) means normal playback; "" (bare ?shot) means capture
+  // mode without an auto-walk target.
+  lines.push(``);
+  lines.push(`const _shotParam = (() => {`);
+  lines.push(`  try { return new URLSearchParams(window.location.search).get("shot"); }`);
+  lines.push(`  catch { return null; }`);
+  lines.push(`})();`);
 
   // --- Page canvas: transparent when framed, theme surface when top-level ---
   // The static HTML keeps html/body transparent (see generateEmbedHtml): a
@@ -222,11 +244,71 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`  );`);
   lines.push(`}`);
 
+  // --- Capture mount (?shot) ---
+  // The whole capture tree lives in @scenar/react (ScenarioCaptureMount);
+  // this branch only feeds it the same inputs the playback tree gets and
+  // wires the window contract `scenar shoot` consumes: the driver on
+  // `window.__scenarShot`, failures on `window.__scenarShotError`. The
+  // narration manifest is fetched HERE, before mounting, and errors are
+  // fatal — shot times are narration-driven, so capturing without the
+  // manifest would silently shoot every frame at the wrong moment.
+  lines.push(``);
+  lines.push(`async function _mountCapture(rootEl: HTMLElement) {`);
+  if (input.hasNarration) {
+    lines.push(`  const _manifestResponse = await fetch("./narration/manifest.json");`);
+    lines.push(`  if (!_manifestResponse.ok) {`);
+    lines.push(`    throw new Error(`);
+    lines.push(`      "capture: failed to fetch ./narration/manifest.json (HTTP " +`);
+    lines.push(`        _manifestResponse.status + ") — shot times are narration-driven, refusing to capture without it",`);
+    lines.push(`    );`);
+    lines.push(`  }`);
+    lines.push(`  const _captureManifest = await _manifestResponse.json();`);
+  } else {
+    lines.push(`  const _captureManifest = undefined;`);
+  }
+  lines.push(`  createRoot(rootEl).render(`);
+  lines.push(`    <div className={_rootClass}>`);
+  lines.push(`      <ScenarioCaptureMount`);
+  lines.push(`        scenarioId={${JSON.stringify(input.scenarioId)}}`);
+  lines.push(`        steps={_steps}`);
+  lines.push(`        renderStep={renderStep}`);
+  lines.push(`        canonicalWidth={${input.canonicalWidth}}`);
+  lines.push(`        shellHeight={${input.shellHeight}}`);
+  lines.push(`        narrationManifest={_captureManifest}`);
+  lines.push(`        stage={${input.stage ? "true" : "false"}}`);
+  lines.push(`        providers={${input.providersPath ? "_Providers" : "undefined"}}`);
+  lines.push(`        onReady={(driver: any) => {`);
+  lines.push(`          (window as any).__scenarShot = driver;`);
+  lines.push(`          if (_shotParam) {`);
+  lines.push(`            const _target = driver.shots.find((s: any) => s.name === _shotParam);`);
+  lines.push(`            if (!_target) {`);
+  lines.push(`              (window as any).__scenarShotError =`);
+  lines.push(`                'no shot named "' + _shotParam + '" — declared: ' +`);
+  lines.push(`                (driver.shots.map((s: any) => s.name).join(", ") || "(none)");`);
+  lines.push(`              return;`);
+  lines.push(`            }`);
+  lines.push(`            void driver.walkTo(_target.timeMs);`);
+  lines.push(`          }`);
+  lines.push(`        }}`);
+  lines.push(`        onError={(error: any) => {`);
+  lines.push(`          (window as any).__scenarShotError = error?.message ?? String(error);`);
+  lines.push(`        }}`);
+  lines.push(`      />`);
+  lines.push(`    </div>,`);
+  lines.push(`  );`);
+  lines.push(`}`);
+
   // --- Mount ---
   lines.push(``);
   lines.push(`const _rootEl = document.getElementById("root");`);
   lines.push(`if (!_rootEl) throw new Error("Embed root element #root not found");`);
-  lines.push(`createRoot(_rootEl).render(<_App />);`);
+  lines.push(`if (_shotParam !== null) {`);
+  lines.push(`  _mountCapture(_rootEl).catch((error) => {`);
+  lines.push(`    (window as any).__scenarShotError = error instanceof Error ? error.message : String(error);`);
+  lines.push(`  });`);
+  lines.push(`} else {`);
+  lines.push(`  createRoot(_rootEl).render(<_App />);`);
+  lines.push(`}`);
   lines.push(``);
 
   return lines.join("\n");

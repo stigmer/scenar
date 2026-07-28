@@ -35,6 +35,13 @@ export { TimeSourceProvider, useTimeSource } from "./time/TimeSource.js";
 // Video export
 export { VideoExportProvider, useVideoExport } from "./video/VideoExportContext.js";
 
+// Still capture (the tree behind `scenar shoot` and the packed entry's ?shot mode)
+export { ScenarioCaptureMount, SHOT_FRAME_SELECTOR } from "./capture/ScenarioCaptureMount.js";
+export type {
+  ScenarioCaptureDriver,
+  ScenarioCaptureMountProps,
+} from "./capture/ScenarioCaptureMount.js";
+
 // Playback coordination
 export { register as registerPlayer, notifyPlaying } from "./playback/PlaybackCoordinator.js";
 

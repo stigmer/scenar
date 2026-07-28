@@ -31,4 +31,20 @@ export interface ScenarioStep<T> {
    * share the same atPercent, they fire in array order.
    */
   readonly interactions?: readonly StepAction[];
+  /**
+   * Names this step as a still-capture point for `scenar shoot`.
+   *
+   * The capture happens at the step's settled *end* — after every
+   * interaction (and its tail: click dispatch, per-char typing, camera
+   * tween) has fired — so a shot-bearing step's duration must fit its
+   * interaction tails.
+   *
+   * Shots are addressed by this name, never by step index, so inserting a
+   * beat into a scenario never renumbers existing docs references. Names
+   * must be unique within a scenario and kebab-case
+   * (`^[a-z0-9]+(-[a-z0-9]+)*$`) — each becomes a filename
+   * (`stills/<shot>.<theme>.png`) and a URL segment in the deployed
+   * bundle. Steps without a `shot` are simply walked through.
+   */
+  readonly shot?: string;
 }

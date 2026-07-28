@@ -27,6 +27,7 @@ describe("Scenar MCP server", () => {
         "scenar_publish",
         "scenar_render",
         "scenar_serve",
+        "scenar_shoot",
         "scenar_stop_serve",
         "scenar_validate",
       ].sort(),

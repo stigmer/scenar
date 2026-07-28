@@ -27,6 +27,10 @@ export const steps: ScenarioStep<TourStepData>[] = [
   {
     delayMs: 0,
     data: { url: "app.acme.cloud/login", screen: "login" },
+    // `shot` names this step's settled frame as a still-capture point:
+    // `scenar shoot <bundle>` renders it to stills/login-screen.<theme>.png.
+    // Steps without a shot are simply walked through.
+    shot: "login-screen",
   },
   {
     delayMs: 2400,
@@ -39,5 +43,6 @@ export const steps: ScenarioStep<TourStepData>[] = [
   {
     delayMs: 2600,
     data: { url: "app.acme.cloud/settings", screen: "settings" },
+    shot: "settings-screen",
   },
 ];
