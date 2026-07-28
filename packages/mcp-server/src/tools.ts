@@ -215,6 +215,15 @@ function registerPack(server: McpServer): void {
           `  render: ${result.renderFilePath}`,
           `  providers: ${result.providersPath ?? "none"}`,
           `  narration: ${result.hasNarration ? "yes" : "none"}`,
+          // Recorded in scenario.json; an authoritatively empty list lets
+          // scenar_shoot return without launching a browser.
+          `  shots: ${
+            result.shots === undefined
+              ? "unknown (steps module not loadable under Node)"
+              : result.shots.length === 0
+                ? "none declared"
+                : result.shots.join(", ")
+          }`,
           ``,
           `Next: scenar_serve to preview, or scenar_publish for a public URL.`,
         ];

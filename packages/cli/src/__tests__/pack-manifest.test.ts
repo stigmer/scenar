@@ -47,6 +47,23 @@ describe("writeScenarioJson", () => {
     expect(parsed.generator).toContain("@scenar/cli pack");
     // The baked canonical viewport flows downstream to the embed snippet (DD-004).
     expect(parsed.viewport).toEqual({ width: 1024, height: 576 });
+    // Shots not provided (unknown) — the key must be absent, not null/empty:
+    // absent means "boot a browser to find out", empty means "nothing to shoot".
+    expect("shots" in parsed).toBe(false);
+  });
+
+  it("records the declared shot names when provided — including an empty list", async () => {
+    await writeScenarioJson(dir, "welcome-tour", "0.0.1", DEFAULT_VIEWPORT, [
+      "opening",
+      "detail-open",
+    ]);
+    let parsed = JSON.parse(await readFile(join(dir, "scenario.json"), "utf-8"));
+    expect(parsed.shots).toEqual(["opening", "detail-open"]);
+
+    // Empty is authoritative — it is what lets `scenar shoot` skip the browser.
+    await writeScenarioJson(dir, "welcome-tour", "0.0.1", DEFAULT_VIEWPORT, []);
+    parsed = JSON.parse(await readFile(join(dir, "scenario.json"), "utf-8"));
+    expect(parsed.shots).toEqual([]);
   });
 });
 

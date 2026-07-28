@@ -8,6 +8,7 @@ import {
   writePackManifest,
 } from "../pack/pack-manifest.js";
 import { readBundleViewport } from "../bundle/read-viewport.js";
+import { readBundleShots } from "../bundle/read-shots.js";
 import { startBundleServer } from "../serve/static-server.js";
 import { createPlaywrightShotBrowser } from "./playwright-browser.js";
 import type { ShotBrowser, ShotCaptureInfo, ShotSession, ShotTheme } from "./types.js";
@@ -72,6 +73,12 @@ export interface ShootResult {
  * or renamed shot must never linger in a deployed bundle, and a manifest
  * listing deleted files would fail its own existence check at the next
  * publish.
+ *
+ * When scenario.json records an authoritatively empty shot list (pack ≥
+ * generator 0.0.2), the whole server + browser boot is skipped — both
+ * invariants above still hold on that path. A recorded non-empty list does
+ * NOT bypass the capture page: the running bundle stays the runtime truth
+ * for what gets shot; the record only proves there is something to boot for.
  */
 export async function runShoot(options: RunShootOptions): Promise<ShootResult> {
   const onLog = options.onLog ?? (() => {});
@@ -88,6 +95,18 @@ export async function runShoot(options: RunShootOptions): Promise<ShootResult> {
   onLog(`Themes:    ${themes.join(", ")}`);
 
   await rm(join(bundleDir, STILLS_DIR), { recursive: true, force: true });
+
+  // Short-circuit on pack's authority: a recorded-and-empty shot list means
+  // there is provably nothing to capture, so don't pay for a static server
+  // and a Chromium launch just to learn that. Absent record = unknown — fall
+  // through and let the capture page answer, exactly as before the record
+  // existed.
+  const recordedShots = await readBundleShots(bundleDir);
+  if (recordedShots.recorded && recordedShots.shots.length === 0) {
+    onLog("No steps declare a `shot` — nothing to capture.");
+    await rebuildManifest(bundleDir, scenarioId);
+    return { scenarioId, bundleDir, shots: [], files: [], themes, verified: false };
+  }
 
   const server = await startBundleServer({ rootDir: bundleDir, port: 0 });
   let browser: ShotBrowser | undefined;

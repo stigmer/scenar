@@ -63,9 +63,18 @@ export interface EmbedEntryInput {
  *
  * Pure function, no side effects — the caller writes the result to disk.
  */
+/**
+ * The import specifier the generated entry uses for the scenario's steps
+ * module (extensionless — Vite resolves .ts/.tsx). Exported so pack-time
+ * tooling (`collect-pack-shots`) loads the very same module the bundle bakes
+ * in, rather than re-deriving a path that could drift from it.
+ */
+export function stepsModuleSpecifier(scenarioDir: string): string {
+  return `${toPosix(scenarioDir)}/steps`;
+}
+
 export function generateEmbedEntry(input: EmbedEntryInput): string {
-  const scenarioPath = toPosix(input.scenarioDir);
-  const stepsImport = `${scenarioPath}/steps`;
+  const stepsImport = stepsModuleSpecifier(input.scenarioDir);
   const renderImport = toPosix(input.renderFilePath).replace(/\.[^.]+$/, "");
 
   const lines: string[] = [];

@@ -3,6 +3,7 @@ import { stat, mkdir, writeFile, rm, readdir, copyFile, access } from "node:fs/p
 import { detectRenderExport } from "../render/detect-render-export.js";
 import { resolveProvidersPath } from "../render/resolve-providers.js";
 import { generateEmbedEntry, generateEmbedHtml } from "./generate-embed-entry.js";
+import { collectPackShots, type CollectedPackShots } from "./collect-pack-shots.js";
 import { runViteBuild } from "./build.js";
 import { copyEmbedLoader } from "./embed-loader.js";
 import {
@@ -14,8 +15,11 @@ import {
 } from "./pack-manifest.js";
 import { DEFAULT_VIEWPORT } from "./viewport.js";
 
-/** Generator version stamped into scenario.json (kept in sync with the CLI). */
-const PACK_GENERATOR_VERSION = "0.0.1";
+/**
+ * Generator version stamped into scenario.json (kept in sync with the CLI).
+ * 0.0.2: scenario.json may carry `shots` (declared shot names, in step order).
+ */
+const PACK_GENERATOR_VERSION = "0.0.2";
 
 /** Options for {@link runPack}. Paths may be relative; they are resolved here. */
 export interface RunPackOptions {
@@ -46,6 +50,12 @@ export interface PackResult {
   readonly renderFilePath: string;
   readonly providersPath: string | null;
   readonly hasNarration: boolean;
+  /**
+   * The declared shot names recorded in scenario.json (empty = the scenario
+   * authoritatively declares none), or undefined when the steps module could
+   * not be loaded under Node and the shots are unknown.
+   */
+  readonly shots?: readonly string[];
   readonly manifest: PackManifest;
   readonly totalBytes: number;
 }
@@ -91,7 +101,15 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
     onLog(`Narration: ${hasNarration ? "yes (manifest found)" : "none"}`);
     onLog(`Output:    ${outDir}`);
 
-    // 1. Generate the browser entry + index.html into the temp dir.
+    // 1. Discover the declared shots by SSR-loading the steps module (same
+    //    Vite resolution as the build below). Before the build on purpose:
+    //    authoring errors — bad shot names, no steps array — fail fast here,
+    //    without paying for a bundle. An import failure is tolerated: the
+    //    shots are then unknown and scenario.json omits the key.
+    const collectedShots = await collectPackShots(scenarioDir);
+    onLog(`Shots:     ${describeCollectedShots(collectedShots)}`);
+
+    // 2. Generate the browser entry + index.html into the temp dir.
     const stage = options.stage ?? false;
     const entrySource = generateEmbedEntry({
       scenarioDir,
@@ -109,39 +127,53 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
     await writeFile(join(tempDir, entryFileName), entrySource, "utf-8");
     await writeFile(entryHtmlPath, generateEmbedHtml(scenarioId, entryFileName, stage), "utf-8");
 
-    // 2. Build the static bundle with Vite.
+    // 3. Build the static bundle with Vite.
     onLog("Bundling embed with Vite...");
     await runViteBuild({ root: tempDir, outDir, entryHtmlPath });
 
-    // 3. Copy the narration manifest + audio. The embed fetches
+    // 4. Copy the narration manifest + audio. The embed fetches
     //    ./narration/manifest.json at runtime and resolves each clip's
     //    relative src against it, so both must ship in the bundle.
     if (hasNarration) {
       await copyNarration(scenarioDir, outDir);
     }
 
-    // 4. Write the required scenario.json descriptor, recording the canonical
+    // 5. Write the required scenario.json descriptor, recording the canonical
     //    viewport baked into the bundle so `deploy`/`serve`/`publish` can derive
-    //    a correctly-proportioned embed snippet (DD-004).
-    await writeScenarioJson(outDir, scenarioId, PACK_GENERATOR_VERSION, {
-      width,
-      height: shellHeight,
-    });
+    //    a correctly-proportioned embed snippet (DD-004), and — when known —
+    //    the declared shot names so `shoot` and other tooling never boot a
+    //    browser just to learn a bundle has nothing to capture.
+    await writeScenarioJson(
+      outDir,
+      scenarioId,
+      PACK_GENERATOR_VERSION,
+      { width, height: shellHeight },
+      collectedShots.recorded ? collectedShots.shots : undefined,
+    );
 
-    // 4b. Copy the optional <scenar-embed> loader into the bundle as embed.js
+    // 5b. Copy the optional <scenar-embed> loader into the bundle as embed.js
     //     (sibling of index.html), so the enhanced snippet works on any static
     //     host (GitHub Pages, `serve`, the edge) with no extra setup. It lands
     //     before the manifest pass below so it ships as a first-class bundle file.
     await copyEmbedLoader(outDir);
 
-    // 5. Compute + write the deploy-facing pack manifest (validates the bundle
+    // 6. Compute + write the deploy-facing pack manifest (validates the bundle
     //    against the backend allowlist; throws on any violation).
     const manifest = await buildPackManifest(outDir, scenarioId);
     await verifyManifestFilesExist(outDir, manifest);
     await writePackManifest(outDir, manifest);
 
     const totalBytes = manifest.files.reduce((sum, f) => sum + f.sizeBytes, 0);
-    return { scenarioId, outDir, renderFilePath, providersPath, hasNarration, manifest, totalBytes };
+    return {
+      scenarioId,
+      outDir,
+      renderFilePath,
+      providersPath,
+      hasNarration,
+      shots: collectedShots.recorded ? collectedShots.shots : undefined,
+      manifest,
+      totalBytes,
+    };
   } finally {
     if (!options.keepTemp) {
       await rm(tempDir, { recursive: true, force: true }).catch(() => {});
@@ -166,6 +198,15 @@ async function copyNarration(scenarioDir: string, outDir: string): Promise<void>
       await copyFile(join(srcDir, entry.name), join(destDir, entry.name));
     }
   }
+}
+
+/** One log-friendly line for the shot discovery outcome. */
+function describeCollectedShots(collected: CollectedPackShots): string {
+  if (!collected.recorded) {
+    // Vite errors can run many lines; the first carries the message.
+    return `unknown — steps module not loadable under Node (${collected.reason.split("\n")[0]})`;
+  }
+  return collected.shots.length === 0 ? "none declared" : collected.shots.join(", ");
 }
 
 async function fileExists(path: string): Promise<boolean> {

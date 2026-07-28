@@ -1,10 +1,76 @@
 /**
- * Vite build invocation for `scenar pack`.
+ * Vite loading + build invocation for `scenar pack`.
  *
  * Vite is loaded dynamically (like the Remotion bundler in `render`) so the CLI
  * stays lean for users who only validate/narrate. The build runs in "app mode"
  * from a generated index.html, producing a self-contained static bundle.
+ *
+ * The load and the resolution config are exported separately because pack has
+ * a second Vite consumer: `collect-pack-shots` SSR-loads the scenario's steps
+ * module to record its shot names in scenario.json. Both consumers must
+ * resolve the scenario's imports identically — what pack records may never
+ * disagree with what the bundle contains — so they share one config source.
  */
+
+/** The subset of Vite's module surface pack uses (typed loosely — Vite is an optional peer). */
+interface ViteModule {
+  build: (config: Record<string, unknown>) => Promise<unknown>;
+  createServer: (config: Record<string, unknown>) => Promise<ViteDevServer>;
+}
+
+/** The subset of Vite's dev-server surface `collect-pack-shots` uses. */
+export interface ViteDevServer {
+  ssrLoadModule: (specifier: string) => Promise<Record<string, unknown>>;
+  close: () => Promise<void>;
+}
+
+/** Vite + the React plugin factory, dynamically loaded as a pair. */
+export interface ViteToolkit {
+  readonly vite: ViteModule;
+  readonly react: (...args: unknown[]) => unknown;
+}
+
+/**
+ * Dynamically import Vite and @vitejs/plugin-react, with an actionable
+ * install hint when either is missing (they are optional peers).
+ */
+export async function loadViteToolkit(): Promise<ViteToolkit> {
+  const vite = await import("vite").catch((error: unknown) => {
+    throw new Error(
+      "Could not load vite.\n" +
+        "scenar pack bundles the embed with Vite. Install it:\n" +
+        "  pnpm add -D vite @vitejs/plugin-react\n" +
+        `(import failed with: ${error instanceof Error ? error.message : String(error)})`,
+    );
+  });
+
+  const reactPluginMod = await import("@vitejs/plugin-react").catch((error: unknown) => {
+    throw new Error(
+      "Could not load @vitejs/plugin-react.\n" +
+        "Install it: pnpm add -D vite @vitejs/plugin-react\n" +
+        `(import failed with: ${error instanceof Error ? error.message : String(error)})`,
+    );
+  });
+  const react = (reactPluginMod.default ?? reactPluginMod) as (
+    ...args: unknown[]
+  ) => unknown;
+
+  return { vite: vite as unknown as ViteModule, react };
+}
+
+/**
+ * The resolution config shared by the pack build and the pack-time steps
+ * load — the parts that decide WHICH files an import specifier reaches.
+ */
+export function sharedViteConfig(toolkit: ViteToolkit): Record<string, unknown> {
+  return {
+    configFile: false, // never pick up a vite.config.* from the consumer project.
+    logLevel: "warn",
+    plugins: [toolkit.react()],
+    // A single React copy — the scenario, @scenar/react, and react-dom must agree.
+    resolve: { dedupe: ["react", "react-dom"] },
+  };
+}
 
 export interface ViteBuildInput {
   /** Build root — the temp dir holding index.html + the generated entry. */
@@ -16,32 +82,12 @@ export interface ViteBuildInput {
 }
 
 export async function runViteBuild(input: ViteBuildInput): Promise<void> {
-  const vite = await import("vite").catch(() => {
-    throw new Error(
-      "Could not load vite.\n" +
-        "scenar pack bundles the embed with Vite. Install it:\n" +
-        "  pnpm add -D vite @vitejs/plugin-react",
-    );
-  });
+  const toolkit = await loadViteToolkit();
 
-  const reactPluginMod = await import("@vitejs/plugin-react").catch(() => {
-    throw new Error(
-      "Could not load @vitejs/plugin-react.\n" +
-        "Install it: pnpm add -D vite @vitejs/plugin-react",
-    );
-  });
-  const react = (reactPluginMod.default ?? reactPluginMod) as (
-    ...args: unknown[]
-  ) => unknown;
-
-  await (vite.build as (config: Record<string, unknown>) => Promise<unknown>)({
+  await toolkit.vite.build({
+    ...sharedViteConfig(toolkit),
     root: input.root,
     base: "./", // relative asset URLs: the bundle is served from a per-deploy origin root.
-    configFile: false, // never pick up a vite.config.* from the consumer project.
-    logLevel: "warn",
-    plugins: [react()],
-    // A single React copy — the scenario, @scenar/react, and react-dom must agree.
-    resolve: { dedupe: ["react", "react-dom"] },
     build: {
       outDir: input.outDir,
       emptyOutDir: true,

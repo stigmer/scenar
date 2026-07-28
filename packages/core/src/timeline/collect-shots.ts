@@ -33,24 +33,21 @@ export interface ScenarioShot {
 export const SHOT_NAME_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 /**
- * Resolve every `shot`-bearing step to its named capture point, in
- * timeline order.
+ * Walk the steps and validate every declared `shot`, returning name +
+ * declaring index in step order — the single validation pass behind both
+ * {@link collectShotNames} and {@link collectScenarioShots}, so a name
+ * that passes one can never fail the other.
  *
  * Throws on the two authoring mistakes that must never reach a deployed
  * bundle: a name that cannot be a clean filename/URL segment, and a
  * duplicate name (shots are addressed by name, never by index — a
  * collision would silently overwrite a still). Error messages name the
  * offending step index so the fix is local.
- *
- * The `timeline` must be computed from the same steps (and the same
- * narration manifest) the capture will walk — shot times are meaningless
- * against any other timeline.
  */
-export function collectScenarioShots(
+function collectDeclaredShots(
   steps: readonly StepWithShot[],
-  timeline: StepTimeline,
-): ScenarioShot[] {
-  const shots: ScenarioShot[] = [];
+): Array<{ name: string; stepIndex: number }> {
+  const declared: Array<{ name: string; stepIndex: number }> = [];
   const seen = new Map<string, number>();
 
   for (let i = 0; i < steps.length; i++) {
@@ -71,14 +68,47 @@ export function collectScenarioShots(
       );
     }
     seen.set(name, i);
-
-    const nextStartMs = timeline.stepStartTimesMs[i + 1];
-    shots.push({
-      name,
-      timeMs: (nextStartMs ?? timeline.totalDurationMs) - 1,
-      stepIndex: i,
-    });
+    declared.push({ name, stepIndex: i });
   }
 
-  return shots;
+  return declared;
+}
+
+/**
+ * The validated shot names declared by a scenario, in step order —
+ * everything about a scenario's shots that is knowable without a
+ * timeline. `scenar pack` records this list in the bundle's
+ * scenario.json so tooling can learn a bundle's shots (or that it has
+ * none) without booting a browser.
+ *
+ * Throws on the same authoring mistakes as {@link collectScenarioShots};
+ * see {@link collectDeclaredShots}.
+ */
+export function collectShotNames(steps: readonly StepWithShot[]): string[] {
+  return collectDeclaredShots(steps).map((shot) => shot.name);
+}
+
+/**
+ * Resolve every `shot`-bearing step to its named capture point, in
+ * timeline order.
+ *
+ * Validation (and the errors it throws) is shared with
+ * {@link collectShotNames}; see {@link collectDeclaredShots}.
+ *
+ * The `timeline` must be computed from the same steps (and the same
+ * narration manifest) the capture will walk — shot times are meaningless
+ * against any other timeline.
+ */
+export function collectScenarioShots(
+  steps: readonly StepWithShot[],
+  timeline: StepTimeline,
+): ScenarioShot[] {
+  return collectDeclaredShots(steps).map(({ name, stepIndex }) => {
+    const nextStartMs = timeline.stepStartTimesMs[stepIndex + 1];
+    return {
+      name,
+      timeMs: (nextStartMs ?? timeline.totalDurationMs) - 1,
+      stepIndex,
+    };
+  });
 }

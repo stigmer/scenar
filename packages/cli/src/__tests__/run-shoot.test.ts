@@ -13,8 +13,13 @@ const SHOTS: ScenarioShot[] = [
   { name: "detail-open", timeMs: 6999, stepIndex: 2 },
 ];
 
-/** Write the minimal three files that make a directory a shootable bundle. */
-async function makeBundle(): Promise<string> {
+/**
+ * Write the minimal three files that make a directory a shootable bundle.
+ * By default scenario.json carries no `shots` key (a pre-0.0.2 bundle:
+ * shots unknown, so runShoot must boot the capture page); pass
+ * `recordedShots` to emulate a bundle whose pack recorded the list.
+ */
+async function makeBundle(recordedShots?: readonly string[]): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "scenar-shoot-"));
   await writeFile(join(dir, "index.html"), "<!doctype html><div id='root'></div>", "utf-8");
   await writeFile(
@@ -24,6 +29,7 @@ async function makeBundle(): Promise<string> {
       id: "lab-tour",
       generator: "@scenar/cli pack 0.0.1",
       viewport: { width: 896, height: 480 },
+      ...(recordedShots !== undefined ? { shots: recordedShots } : {}),
     }),
     "utf-8",
   );
@@ -180,6 +186,49 @@ describe("runShoot", () => {
     expect(await stat(join(bundleDir, STILLS_DIR)).catch(() => null)).toBeNull();
     const manifest = await readManifest(bundleDir);
     expect(manifest.files.some((f) => f.path.startsWith("stills/"))).toBe(false);
+  });
+
+  it("skips the browser entirely when scenario.json records an empty shot list", async () => {
+    const bundleDir = await makeBundle([]);
+    await mkdir(join(bundleDir, STILLS_DIR), { recursive: true });
+    await writeFile(join(bundleDir, STILLS_DIR, "removed-shot.light.png"), "stale");
+    let browserRequested = false;
+
+    const result = await runShoot({
+      bundleDir,
+      browserFactory: async () => {
+        browserRequested = true;
+        throw new Error("the short-circuit must return before the browser factory");
+      },
+    });
+
+    // Pack's record is authoritative: no session, no browser, same outcome.
+    expect(browserRequested).toBe(false);
+    expect(result).toEqual({
+      scenarioId: "lab-tour",
+      bundleDir,
+      shots: [],
+      files: [],
+      themes: ["light", "dark"],
+      verified: false,
+    });
+    // Both invariants hold on the short-circuit path too: stale stills are
+    // cleared, and the manifest is rebuilt so it never lists deleted files.
+    expect(await stat(join(bundleDir, STILLS_DIR)).catch(() => null)).toBeNull();
+    const manifest = await readManifest(bundleDir);
+    expect(manifest.files.some((f) => f.path.startsWith("stills/"))).toBe(false);
+  });
+
+  it("still boots the capture page when scenario.json records a non-empty list", async () => {
+    // The record proves there is something to shoot; the running bundle
+    // remains the runtime truth for what actually gets captured.
+    const bundleDir = await makeBundle(SHOTS.map((s) => s.name));
+    const fake = makeFakeBrowser();
+
+    const result = await runShoot({ bundleDir, browserFactory: async () => fake.browser });
+
+    expect(fake.sessions.length).toBeGreaterThan(0);
+    expect(result.shots).toEqual(SHOTS);
   });
 
   it("captures a single theme when asked", async () => {

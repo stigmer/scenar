@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computeStepTimeline } from "./compute-step-timeline.js";
-import { SHOT_NAME_PATTERN, collectScenarioShots } from "./collect-shots.js";
+import { SHOT_NAME_PATTERN, collectScenarioShots, collectShotNames } from "./collect-shots.js";
 
 describe("collectScenarioShots", () => {
   it("resolves each shot to the settled end of its step", () => {
@@ -74,5 +74,43 @@ describe("collectScenarioShots", () => {
     expect(() =>
       collectScenarioShots(steps, computeStepTimeline(steps, null)),
     ).toThrowError(/steps 0 and 2 both declare shot "opening"/);
+  });
+});
+
+describe("collectShotNames", () => {
+  it("returns the declared names in step order, without needing a timeline", () => {
+    const steps = [
+      { delayMs: 0, shot: "opening" },
+      { delayMs: 1000 },
+      { delayMs: 2000, shot: "detail-open" },
+    ];
+    expect(collectShotNames(steps)).toEqual(["opening", "detail-open"]);
+  });
+
+  it("returns an empty list when no step declares a shot", () => {
+    expect(collectShotNames([{ delayMs: 0 }, { delayMs: 1000 }])).toEqual([]);
+  });
+
+  it("throws the same validation errors as collectScenarioShots", () => {
+    expect(() => collectShotNames([{ delayMs: 0, shot: "Not_Kebab" }])).toThrowError(
+      /not kebab-case/,
+    );
+    expect(() =>
+      collectShotNames([
+        { delayMs: 0, shot: "opening" },
+        { delayMs: 100, shot: "opening" },
+      ]),
+    ).toThrowError(/steps 0 and 1 both declare shot "opening"/);
+  });
+
+  it("agrees with collectScenarioShots on every valid scenario (shared walk)", () => {
+    const steps = [
+      { delayMs: 0, shot: "opening" },
+      { delayMs: 500 },
+      { delayMs: 700, shot: "midway" },
+      { delayMs: 300, shot: "finale" },
+    ];
+    const resolved = collectScenarioShots(steps, computeStepTimeline(steps, null));
+    expect(collectShotNames(steps)).toEqual(resolved.map((shot) => shot.name));
   });
 });

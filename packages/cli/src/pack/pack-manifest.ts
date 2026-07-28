@@ -41,14 +41,24 @@ export const SCENARIO_JSON_FILE = "scenario.json";
  * `viewport` baked into the bundle: the player reads its steps from the bundled
  * JS, so the full serialized spec is still a follow-up, but `deploy` needs the
  * viewport to derive a correctly-proportioned embed snippet (DD-004). The
- * viewport mirrors `ViewportConfig { width, height }`. Validated against the
- * backend rules before writing (which accept the extra `viewport` key).
+ * viewport mirrors `ViewportConfig { width, height }`.
+ *
+ * `shots` records the scenario's declared shot names (in step order) when
+ * pack could discover them, so tooling — `scenar shoot` first of all — can
+ * learn a bundle's shots without booting a browser. The key is written only
+ * when the list is known: absent means "unknown", present (even empty) is
+ * authoritative. Names only, never times — shot times depend on narration
+ * and are derived at the point of use (DD-004's derive-don't-store rule).
+ *
+ * Validated against the backend rules before writing (which accept the
+ * extra `viewport`/`shots` keys).
  */
 export async function writeScenarioJson(
   outDir: string,
   scenarioId: string,
   generatorVersion: string,
   viewport: Viewport,
+  shots?: readonly string[],
 ): Promise<void> {
   const content = JSON.stringify(
     {
@@ -56,6 +66,7 @@ export async function writeScenarioJson(
       id: scenarioId,
       generator: `@scenar/cli pack ${generatorVersion}`,
       viewport: { width: viewport.width, height: viewport.height },
+      ...(shots !== undefined ? { shots } : {}),
     },
     null,
     2,

@@ -47,6 +47,7 @@ export const steps: ScenarioStep<StepData>[] = [
 | `data` | yes | the snapshot passed to `renderStep` |
 | `narration` | no | sentence(s) for TTS; not rendered visually |
 | `interactions` | no | timed actions during the step |
+| `shot` | no | names this step's settled frame as a still-capture point for `scenar shoot` (kebab-case, unique per scenario) |
 
 ## index.tsx — the render function
 
@@ -161,7 +162,10 @@ YAML at runtime with `loadScenarioFromProto()` from `@scenar/sdk`.
 - **No SVG files** — inline SVG as a React component or `data:` URI.
 - Import raster assets normally (`import logo from "./logo.png"`); Vite emits a
   hashed file at pack time.
-- Pack writes `scenario.json` (canonical viewport → embed aspect ratio) and
+- Pack writes `scenario.json` (canonical viewport → embed aspect ratio, plus
+  the declared `shot` names so tooling — `scenar shoot` first of all — knows a
+  bundle's shots without booting a browser; the key is omitted when the steps
+  module can't be loaded under Node, meaning "unknown") and
   `pack-manifest.json` (files + sha256 + content types). Don't hand-edit them.
 
 ## Authoring for quality
