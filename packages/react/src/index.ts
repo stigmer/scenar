@@ -55,7 +55,7 @@ export { ScenarioStage } from "./stage/ScenarioStage.js";
 
 // Player
 export { ScenarioPlayer } from "./player/ScenarioPlayer.js";
-export { ScenarioPoster, ScenarioPauseOverlay, ScenarioAudioNotice } from "./player/ScenarioPoster.js";
+export { PlaybackBurst, ScenarioAudioNotice } from "./player/PlaybackFeedback.js";
 export { ScenarioControls } from "./player/ScenarioControls.js";
 export { SpeedMenu } from "./player/SpeedMenu.js";
 export { useStepProgression } from "./player/useStepProgression.js";

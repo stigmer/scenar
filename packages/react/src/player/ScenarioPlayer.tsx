@@ -6,7 +6,7 @@ import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
 import { useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
-import { PlaybackBurst, ScenarioAudioNotice } from "./ScenarioPoster.js";
+import { PlaybackBurst, ScenarioAudioNotice } from "./PlaybackFeedback.js";
 import { ScenarioControls } from "./ScenarioControls.js";
 import type { TimeDisplayMode } from "./format-playback-time.js";
 import { useScenarEmbedBridge } from "../embed/useScenarEmbedBridge.js";
