@@ -1,6 +1,8 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "@testing-library/react";
 import { DemoViewport } from "./DemoViewport.js";
+import { useViewportChromeTarget } from "./ViewportChrome.js";
+import { VideoExportProvider } from "../video/VideoExportContext.js";
 
 // jsdom ships no ResizeObserver; the component observes its wrapper to
 // compute zoom. An inert stub is enough — zoom math is a layout concern
@@ -78,5 +80,49 @@ describe("DemoViewport", () => {
     );
     const inner = container.firstElementChild!.firstElementChild as HTMLElement;
     expect(inner.style.getPropertyValue("--scenar-shell-height")).toBe("800px");
+  });
+});
+
+describe("DemoViewport chrome layer", () => {
+  /** Renders the context value into the DOM so tests can assert identity. */
+  function ChromeProbe() {
+    const target = useViewportChromeTarget();
+    return <p data-testid="probe">{target ? "target" : "null"}</p>;
+  }
+
+  it("provides children an unscaled overlay OUTSIDE the zoomed canvas", () => {
+    let captured: HTMLElement | null = null;
+    function Capture() {
+      captured = useViewportChromeTarget();
+      return null;
+    }
+    const { container } = render(
+      <DemoViewport canonicalWidth={1280}>
+        <Capture />
+      </DemoViewport>,
+    );
+
+    const outer = container.firstElementChild as HTMLElement;
+    const canvas = outer.firstElementChild as HTMLElement;
+    expect(captured).not.toBeNull();
+    // Chrome must escape the zoom: the layer is a wrapper child, never a
+    // canvas descendant — otherwise portaled controls would scale after all.
+    expect(outer.contains(captured)).toBe(true);
+    expect(canvas.contains(captured)).toBe(false);
+    // Covers the visual content box without intercepting content clicks.
+    expect(captured!.className).toContain("absolute");
+    expect(captured!.className).toContain("inset-0");
+    expect(captured!.className).toContain("pointer-events-none");
+  });
+
+  it("provides no chrome target in the video-export passthrough", () => {
+    const { getByTestId } = render(
+      <VideoExportProvider>
+        <DemoViewport canonicalWidth={1280}>
+          <ChromeProbe />
+        </DemoViewport>
+      </VideoExportProvider>,
+    );
+    expect(getByTestId("probe").textContent).toBe("null");
   });
 });

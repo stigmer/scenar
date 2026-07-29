@@ -23,6 +23,22 @@ export interface PlaybackProgressDisplay {
    * refs) is the single writer during the gesture.
    */
   scrubbingRef?: RefObject<boolean>;
+  /**
+   * Written with the current playback position in ms whenever the loop (or
+   * a paused/idle reposition) writes the progress DOM. A ref, not state, for
+   * the same reason the bar itself is: per-frame writes must not re-render.
+   * This is what relative seeks (the transport's ±10s skips) read as "now".
+   */
+  currentTimeMsRef?: RefObject<number>;
+  /**
+   * Bump when the display's DOM nodes are replaced without a playback state
+   * change — e.g. the control bar re-portals into a viewport chrome layer
+   * that arrives a commit after mount. The refs then point at fresh, blank
+   * elements the hook has already "written", so it rewrites the progress
+   * DOM at the current position. Without this, an idle player shows an
+   * empty readout until the first play/seek.
+   */
+  domEpoch?: number;
 }
 
 /**
@@ -67,6 +83,7 @@ export function usePlaybackProgress(
 
   const timeLabelRef = display?.timeLabelRef;
   const scrubbingRef = display?.scrubbingRef;
+  const currentTimeMsRef = display?.currentTimeMsRef;
   const timeDisplayMode = display?.timeDisplayMode ?? "elapsed";
   const timeDisplayModeRef = useRef(timeDisplayMode);
   timeDisplayModeRef.current = timeDisplayMode;
@@ -85,6 +102,9 @@ export function usePlaybackProgress(
       if (scrubbingRef?.current) return;
       const clamped = Math.max(0, Math.min(fraction, 1));
       lastFractionRef.current = clamped;
+      if (currentTimeMsRef) {
+        currentTimeMsRef.current = clamped * stepTimelineRef.current.totalDurationMs;
+      }
       const pct = `${clamped * 100}%`;
       if (progressTrackRef.current) progressTrackRef.current.style.width = pct;
       if (playheadRef.current) playheadRef.current.style.left = pct;
@@ -101,7 +121,7 @@ export function usePlaybackProgress(
         }
       }
     },
-    [progressTrackRef, playheadRef, timeLabelRef, scrubbingRef],
+    [progressTrackRef, playheadRef, timeLabelRef, scrubbingRef, currentTimeMsRef],
   );
 
   const tickFnRef = useRef<() => void>(undefined);
@@ -140,13 +160,15 @@ export function usePlaybackProgress(
   }, [stepIndex, seekGeneration, seekOffsetRef]);
 
   // Re-render the label at the current position when the display mode
-  // toggles (elapsed ↔ remaining). Clearing the change-detection cache
-  // forces the write even though the fraction is unchanged. Also runs on
-  // mount, giving the label its initial content before the first frame.
+  // toggles (elapsed ↔ remaining) or the display DOM is remounted
+  // (`domEpoch`). Clearing the change-detection cache forces the write even
+  // though the fraction is unchanged. Also runs on mount, giving the label
+  // its initial content before the first frame.
+  const domEpoch = display?.domEpoch ?? 0;
   useEffect(() => {
     lastLabelRef.current = "";
     setProgressDOM(lastFractionRef.current);
-  }, [timeDisplayMode, setProgressDOM]);
+  }, [timeDisplayMode, domEpoch, setProgressDOM]);
 
   // `stepTimeline` is a dependency (not read through the ref-mirror alone):
   // muting toggles narration in and out of the timeline, changing both the

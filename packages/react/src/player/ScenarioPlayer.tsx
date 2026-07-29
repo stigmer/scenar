@@ -1,7 +1,9 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, useReducedMotion } from "framer-motion";
 import { type NarrationManifest, type ScenarioBundle, type ScenarioStep, computeStepTimeline, deriveStepFromTime } from "@scenar/core";
 import { useVideoExport } from "../video/VideoExportContext.js";
+import { useViewportChromeTarget } from "../viewport/ViewportChrome.js";
 import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
 import { useStepProgression } from "./useStepProgression.js";
@@ -48,9 +50,12 @@ interface ScenarioPlayerProps<T> {
  *
  * No overlay ever covers the frame — no poster, no pause disc. The
  * YouTube-style control bar (progress bar with chapter markers, time
- * readout, transport) pins to the content's bottom edge in every state;
- * it is the affordance that says "this plays" at idle, shows the state
- * while paused, and auto-hides after 3 seconds only during playback.
+ * readout, transport with ±10s skips) pins to the content's bottom edge in
+ * every state; it is the affordance that says "this plays" at idle, shows
+ * the state while paused, and auto-hides after 3 seconds only during
+ * playback. Under a `DemoViewport` the bar renders in the viewport's
+ * chrome layer (ViewportChrome.tsx) — native pixel size at every zoom,
+ * unmoved by camera transforms — and inline everywhere else.
  * Clicking anywhere on the content toggles play/pause with a transient
  * center burst. The player's box is always exactly the content box —
  * overlays never add height — so embeds report one stable size across
@@ -80,6 +85,11 @@ export function ScenarioPlayer<T>({
 
   const prefersReducedMotion = useReducedMotion();
   const { isVideoExport, hideControls, initialMuted: videoExportMuted } = useVideoExport();
+  // Chrome layer (ViewportChrome.tsx): when a DemoViewport provides an
+  // unscaled overlay, the control bar portals there so it renders at native
+  // pixel size regardless of viewport zoom and camera transforms. `null`
+  // (standalone players, exports, captures) keeps the bar inline.
+  const chromeTarget = useViewportChromeTarget();
   const lastIndex = steps.length - 1;
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -215,6 +225,22 @@ export function ScenarioPlayer<T>({
     [seekToTime, seekToStep, stepTimeline, lastIndex, playing],
   );
 
+  // Current position for relative seeks, written per frame (and on every
+  // paused/idle reposition) by usePlaybackProgress. A ref, not state: the
+  // value only matters at the instant a skip button is clicked.
+  const currentTimeMsRef = useRef(0);
+
+  // The ±10s transport skips. Each click is one deliberate, absolute seek
+  // (clamped by handleSeekToTime), matching every mainstream player — the
+  // scrubber's commit-on-release debounce exists for continuous gestures,
+  // not discrete clicks.
+  const handleSkip = useCallback(
+    (deltaMs: number) => {
+      handleSeekToTime(currentTimeMsRef.current + deltaMs);
+    },
+    [handleSeekToTime],
+  );
+
   // Transient center feedback for play/pause toggles. Keyed so rapid
   // clicks restart the animation instead of layering glyphs.
   const [burst, setBurst] = useState<{ kind: "play" | "pause"; key: number } | null>(null);
@@ -301,7 +327,15 @@ export function ScenarioPlayer<T>({
     playheadRef,
     seekOffsetRef,
     seekGeneration,
-    { timeLabelRef, timeDisplayMode, scrubbingRef },
+    {
+      timeLabelRef,
+      timeDisplayMode,
+      scrubbingRef,
+      currentTimeMsRef,
+      // The chrome layer arrives a commit after mount, re-portaling the bar
+      // onto fresh DOM nodes; the epoch flip makes the hook rewrite them.
+      domEpoch: chromeTarget ? 1 : 0,
+    },
   );
 
   // Cross-origin embed bridge: inert unless `embed` is set and we are framed.
@@ -330,6 +364,31 @@ export function ScenarioPlayer<T>({
   // playing) — at idle it is the affordance that says "this plays".
   const showControlBar = !hideControls;
   const showAudioNotice = audioBlocked && !isVideoExport && playbackState !== "idle";
+
+  const controlBar = showControlBar && (
+    <ScenarioControls
+      visible={controlsVisible}
+      playing={playing}
+      muted={muted}
+      playbackRate={playbackRate}
+      stepTimeline={stepTimeline}
+      showSpeedControl={showSpeedControl}
+      hasNarration={!!narrationManifest}
+      onToggleFullscreen={fullscreenAvailable ? handleToggleFullscreen : undefined}
+      isFullscreen={isFullscreen}
+      progressTrackRef={progressTrackRef}
+      playheadRef={playheadRef}
+      onTogglePlay={handleTogglePlayControl}
+      onToggleMute={toggleMute}
+      onSelectSpeed={setPlaybackRate}
+      onSeekToTime={handleSeekToTime}
+      onSkip={handleSkip}
+      timeLabelRef={timeLabelRef}
+      timeDisplayMode={timeDisplayMode}
+      onToggleTimeDisplay={handleToggleTimeDisplay}
+      scrubbingRef={scrubbingRef}
+    />
+  );
 
   return (
     <div
@@ -361,30 +420,13 @@ export function ScenarioPlayer<T>({
          * it. Invariant: the player's box IS the content box in every playback
          * state — nothing outside it ever appears or disappears — so the embed
          * bridge reports one stable size and host pages never reflow on Play.
+         * With a chrome layer the bar portals to the viewport's unscaled
+         * overlay (same visual box, native pixel size); portals bubble events
+         * through the React tree, so the bar's stopPropagation still shields
+         * this div's click-to-toggle, and mousemove on the bar still reaches
+         * the container's reveal handler.
          */}
-        {showControlBar && (
-          <ScenarioControls
-            visible={controlsVisible}
-            playing={playing}
-            muted={muted}
-            playbackRate={playbackRate}
-            stepTimeline={stepTimeline}
-            showSpeedControl={showSpeedControl}
-            hasNarration={!!narrationManifest}
-            onToggleFullscreen={fullscreenAvailable ? handleToggleFullscreen : undefined}
-            isFullscreen={isFullscreen}
-            progressTrackRef={progressTrackRef}
-            playheadRef={playheadRef}
-            onTogglePlay={handleTogglePlayControl}
-            onToggleMute={toggleMute}
-            onSelectSpeed={setPlaybackRate}
-            onSeekToTime={handleSeekToTime}
-            timeLabelRef={timeLabelRef}
-            timeDisplayMode={timeDisplayMode}
-            onToggleTimeDisplay={handleToggleTimeDisplay}
-            scrubbingRef={scrubbingRef}
-          />
-        )}
+        {chromeTarget ? createPortal(controlBar, chromeTarget) : controlBar}
       </div>
 
       {narrationManifest && <audio ref={audioRef} preload="none" hidden />}

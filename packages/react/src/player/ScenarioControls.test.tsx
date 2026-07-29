@@ -124,6 +124,59 @@ describe("ScenarioControls transport buttons", () => {
   });
 });
 
+describe("ScenarioControls skip buttons", () => {
+  it("renders the ±10s skips only when a skip handler is provided", () => {
+    const { container } = renderControls();
+    expect(within(container).queryByRole("button", { name: "Back 10 seconds" })).toBeNull();
+    expect(within(container).queryByRole("button", { name: "Forward 10 seconds" })).toBeNull();
+
+    const { container: withSkips } = renderControls({ onSkip: vi.fn() });
+    expect(within(withSkips).getByRole("button", { name: "Back 10 seconds" })).toBeDefined();
+    expect(within(withSkips).getByRole("button", { name: "Forward 10 seconds" })).toBeDefined();
+  });
+
+  it("skips by a signed 10-second delta", () => {
+    const onSkip = vi.fn();
+    const { container } = renderControls({ onSkip });
+
+    fireEvent.click(within(container).getByRole("button", { name: "Back 10 seconds" }));
+    expect(onSkip).toHaveBeenCalledWith(-10_000);
+
+    fireEvent.click(within(container).getByRole("button", { name: "Forward 10 seconds" }));
+    expect(onSkip).toHaveBeenCalledWith(10_000);
+    expect(onSkip).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops skip clicks from reaching the content's play/pause toggle", () => {
+    const contentClick = vi.fn();
+    const onSkip = vi.fn();
+    const { container } = render(
+      <div onClick={contentClick}>
+        <ScenarioControls
+          visible
+          playing
+          muted={false}
+          playbackRate={1}
+          stepTimeline={TIMELINE}
+          showSpeedControl={false}
+          hasNarration={false}
+          progressTrackRef={createRef<HTMLDivElement>()}
+          playheadRef={createRef<HTMLDivElement>()}
+          onTogglePlay={vi.fn()}
+          onToggleMute={vi.fn()}
+          onSelectSpeed={vi.fn()}
+          onSeekToTime={vi.fn()}
+          onSkip={onSkip}
+        />
+      </div>,
+    );
+
+    fireEvent.click(within(container).getByRole("button", { name: "Forward 10 seconds" }));
+    expect(onSkip).toHaveBeenCalledTimes(1);
+    expect(contentClick).not.toHaveBeenCalled();
+  });
+});
+
 describe("ScenarioControls time readout", () => {
   it("renders the readout only when a label ref is provided", () => {
     const { container } = renderControls();

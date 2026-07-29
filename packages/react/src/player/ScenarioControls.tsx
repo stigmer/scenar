@@ -4,6 +4,12 @@ import type { StepTimeline } from "@scenar/core";
 import { SpeedMenu } from "./SpeedMenu.js";
 import { formatTimeLabel, type TimeDisplayMode } from "./format-playback-time.js";
 
+/**
+ * Transport skip amount (the ±10s buttons) — the convention every major
+ * video player shares, so viewers arrive knowing what the buttons do.
+ */
+const SKIP_MS = 10_000;
+
 interface ScenarioControlsProps {
   visible: boolean;
   playing: boolean;
@@ -22,6 +28,11 @@ interface ScenarioControlsProps {
   onToggleMute: () => void;
   onSelectSpeed: (speed: number) => void;
   onSeekToTime: (timeMs: number) => void;
+  /**
+   * Relative seek by a signed delta in ms. Renders the ±10s skip buttons
+   * when provided; omit to hide them (surfaces with no seekable transport).
+   */
+  onSkip?: (deltaMs: number) => void;
   /**
    * Element for the transport readout, written by `usePlaybackProgress`
    * via `textContent` (and by the drag preview during a scrub). Rendered
@@ -43,16 +54,21 @@ interface ScenarioControlsProps {
 
 /**
  * Video-style transport controls: progress bar (click or drag to seek),
- * play/pause, volume (disabled when the tour has no narration), time
- * readout, and optional speed selector and fullscreen toggle — laid out
- * YouTube-style (transport + readout on the left, settings on the right).
+ * play/pause, ±10s skips, volume (disabled when the tour has no narration),
+ * time readout, and optional speed selector and fullscreen toggle — laid
+ * out YouTube-style (transport + readout on the left, settings on the
+ * right).
  *
  * Rendered as an overlay pinned to the content's bottom edge (z-20, above
  * every content overlay so transport stays clickable while paused). Keeping
  * the controls *inside* the content box — rather than in flow below it —
  * makes the player's box identical to the content box in every playback
  * state, which is what keeps embed iframes from resizing (and host pages
- * from reflowing) when playback starts.
+ * from reflowing) when playback starts. Under a `DemoViewport`,
+ * `ScenarioPlayer` portals this bar into the viewport's chrome layer (see
+ * `ViewportChrome.tsx`), so it renders at native pixel size at every zoom
+ * and stays pinned during camera moves; the sizes below are therefore true
+ * CSS pixels, not canonical-viewport pixels.
  *
  * Styling is scrim-relative (white over a bottom gradient), not theme-token
  * based: the controls sit on top of arbitrary tour content, so they follow the
@@ -81,6 +97,7 @@ export function ScenarioControls({
   onToggleMute,
   onSelectSpeed,
   onSeekToTime,
+  onSkip,
   timeLabelRef,
   timeDisplayMode = "elapsed",
   onToggleTimeDisplay,
@@ -156,7 +173,7 @@ export function ScenarioControls({
 
   return (
     <motion.div
-      className="absolute inset-x-0 bottom-0 z-20 rounded-b-lg bg-gradient-to-t from-black/70 via-black/30 to-transparent px-3 pb-2 pt-10"
+      className="absolute inset-x-0 bottom-0 z-20 rounded-b-lg bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-2.5 pt-12"
       initial={false}
       animate={{ opacity: visible ? 1 : 0 }}
       transition={{ duration: 0.2 }}
@@ -199,18 +216,43 @@ export function ScenarioControls({
         ))}
       </div>
 
-      {/* Transport buttons: play/mute/time on the left, settings on the right. */}
-      <div className="flex items-center gap-2">
+      {/* Transport buttons: play/skips/mute/time on the left, settings right. */}
+      <div className="flex items-center gap-1.5">
         <button
           onClick={(e) => {
             e.stopPropagation();
             onTogglePlay();
           }}
-          className="flex h-9 w-9 items-center justify-center rounded text-white/90 transition-colors hover:text-white"
+          className="flex h-9 w-9 items-center justify-center rounded text-white/95 transition-colors hover:text-white"
           aria-label={playing ? "Pause" : "Play"}
         >
           {playing ? <PauseIcon /> : <PlayIcon />}
         </button>
+
+        {onSkip && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSkip(-SKIP_MS);
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded text-white/90 transition-colors hover:text-white"
+              aria-label="Back 10 seconds"
+            >
+              <SkipBackIcon />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSkip(SKIP_MS);
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded text-white/90 transition-colors hover:text-white"
+              aria-label="Forward 10 seconds"
+            >
+              <SkipForwardIcon />
+            </button>
+          </>
+        )}
 
         {/*
          * The volume control is always present so the bar reads the same on
@@ -279,7 +321,7 @@ export function ScenarioControls({
 
 function PlayIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M8 5v14l11-7z" />
     </svg>
   );
@@ -287,9 +329,40 @@ function PlayIcon() {
 
 function PauseIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <rect x="6" y="4" width="4" height="16" />
       <rect x="14" y="4" width="4" height="16" />
+    </svg>
+  );
+}
+
+/*
+ * The skip glyphs are the material-design "replay 10" convention: a
+ * circular arrow with the amount inside. The number is SVG text (no
+ * stroke, inherits currentColor) so the glyph stays one color like its
+ * siblings.
+ */
+
+function SkipBackIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <text x="12" y="16" textAnchor="middle" fontSize="8.5" fontWeight="600" fill="currentColor" stroke="none" fontFamily="inherit">
+        10
+      </text>
+    </svg>
+  );
+}
+
+function SkipForwardIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+      <text x="12" y="16" textAnchor="middle" fontSize="8.5" fontWeight="600" fill="currentColor" stroke="none" fontFamily="inherit">
+        10
+      </text>
     </svg>
   );
 }
