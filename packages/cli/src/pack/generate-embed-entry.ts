@@ -242,7 +242,10 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
     : `{(data: any, stepIndex: number) => renderStep(data, stepIndex)}`;
   lines.push(`      <DemoViewport containerRef={_containerRef} canonicalWidth={${input.canonicalWidth}} shellHeight={${input.shellHeight}}>`);
   lines.push(`        <ViewportTransformLayer transform={_viewport} contentRef={_cameraRef}>`);
-  lines.push(`          <ScenarioPlayer bundle={_bundle} embed onStepChange={_handleStepChange}>`);
+  // embedViewport mirrors DemoViewport's numbers on purpose: the bundle
+  // announces the exact canonical size it lays out at, so a host can adopt
+  // iframe-as-screen scaling (see @scenar/embed's mount).
+  lines.push(`          <ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: ${input.canonicalWidth}, heightPx: ${input.shellHeight} }} onStepChange={_handleStepChange}>`);
   lines.push(`            ${stepRender}`);
   lines.push(`          </ScenarioPlayer>`);
   lines.push(`          <Cursor target={_cursorTarget} containerRef={_cameraRef} showRipple={_showRipple} isDragging={_dragging} />`);

@@ -13,7 +13,7 @@ import {
   verifyManifestFilesExist,
   type PackManifest,
 } from "./pack-manifest.js";
-import { DEFAULT_VIEWPORT } from "./viewport.js";
+import { DEFAULT_VIEWPORT, resolvePackViewport } from "./viewport.js";
 
 /**
  * Generator version stamped into scenario.json (kept in sync with the CLI).
@@ -27,9 +27,14 @@ export interface RunPackOptions {
   readonly scenarioDir: string;
   /** Output directory for the bundle (default: ./<scenario-id>-bundle). */
   readonly outDir?: string;
-  /** Canonical viewport width in px (default: {@link DEFAULT_VIEWPORT}.width). */
+  /**
+   * Canonical viewport width in px. Omitted -> the scenario's own authored
+   * viewport (`createScenario({ viewport })` or an exported `viewport`
+   * constant) applies; a scenario that authors none falls back to
+   * {@link DEFAULT_VIEWPORT}. Explicit flags always win over both.
+   */
   readonly width?: number;
-  /** Shell/container height in px (default: {@link DEFAULT_VIEWPORT}.height). */
+  /** Shell/container height in px. Same resolution chain as `width`. */
   readonly shellHeight?: number;
   /**
    * Float the scenario on a backdrop with a window shadow (screen-recording
@@ -83,8 +88,6 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
 
   const scenarioId = basename(scenarioDir);
   const outDir = options.outDir ? resolve(options.outDir) : resolve(`./${scenarioId}-bundle`);
-  const width = options.width ?? DEFAULT_VIEWPORT.width;
-  const shellHeight = options.shellHeight ?? DEFAULT_VIEWPORT.height;
 
   // The entry must live inside the scenario directory so the bundler's
   // node_modules resolution walks up into the consumer project.
@@ -101,13 +104,31 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
     onLog(`Narration: ${hasNarration ? "yes (manifest found)" : "none"}`);
     onLog(`Output:    ${outDir}`);
 
-    // 1. Discover the declared shots by SSR-loading the steps module (same
-    //    Vite resolution as the build below). Before the build on purpose:
-    //    authoring errors — bad shot names, no steps array — fail fast here,
-    //    without paying for a bundle. An import failure is tolerated: the
-    //    shots are then unknown and scenario.json omits the key.
+    // 1. Discover the declared shots — and the authored viewport — by
+    //    SSR-loading the steps module (same Vite resolution as the build
+    //    below). Before the build on purpose: authoring errors — bad shot
+    //    names, no steps array — fail fast here, without paying for a
+    //    bundle. An import failure is tolerated: the shots are then unknown
+    //    and scenario.json omits the key.
     const collectedShots = await collectPackShots(scenarioDir);
     onLog(`Shots:     ${describeCollectedShots(collectedShots)}`);
+
+    // Canonical viewport: explicit options > the scenario's authored
+    // viewport > the packer default. Authored viewports used to be silently
+    // ignored (the authoring docs demonstrated `createScenario({ viewport })`
+    // while pack only ever read its own options); the source is logged so a
+    // surprising size is one log line from its explanation.
+    const resolvedViewport = resolvePackViewport(
+      options,
+      collectedShots.recorded ? collectedShots.authoredViewport : null,
+    );
+    const { width, height: shellHeight } = resolvedViewport;
+    const viewportSourceLabel = {
+      explicit: "explicit",
+      authored: "authored by the scenario",
+      default: "packer default",
+    }[resolvedViewport.source];
+    onLog(`Viewport:  ${width}x${shellHeight} (${viewportSourceLabel})`);
 
     // 2. Generate the browser entry + index.html into the temp dir.
     const stage = options.stage ?? false;

@@ -32,6 +32,13 @@ export interface ScenarEmbedHostController {
   seek(timeMs: number): void;
   setMuted(muted: boolean): void;
   setVolume(volume: number): void;
+  /**
+   * Report the scale factor the host is rendering the iframe at (1 = native),
+   * so the player's chrome layer can counter-scale its transport controls
+   * back to native pixel size. Sent by hosts running the iframe-as-screen
+   * mode; players without the capability ignore it.
+   */
+  setHostScale(scale: number): void;
   prefetch(): void;
   /**
    * Tell the embed to stop (best effort) and detach the host message listener.
@@ -86,6 +93,7 @@ export function createEmbedHostController(
     seek: (timeMs) => send({ type: "seek", timeMs }),
     setMuted: (muted) => send({ type: "setMuted", muted }),
     setVolume: (volume) => send({ type: "setVolume", volume }),
+    setHostScale: (scale) => send({ type: "setHostScale", scale }),
     prefetch: () => send({ type: "prefetch" }),
     destroy: () => {
       send({ type: "destroy" });

@@ -178,6 +178,106 @@ describe("createEmbedMount — ignores messages that do not match the contract",
   });
 });
 
+/** Build a framed ready message (protocol v1), optionally carrying a viewport. */
+function readyMessage(viewport?: { widthPx: number; heightPx: number }) {
+  return {
+    source: "scenar-embed",
+    v: 1,
+    type: "ready",
+    totalSteps: 3,
+    hasNarration: false,
+    ...(viewport ? { viewport } : {}),
+  };
+}
+
+/**
+ * Give an iframe a positioned wrapper of a fixed layout size (the adapter
+ * contract the mount scales against). jsdom computes no layout, so the
+ * wrapper's rect is stubbed.
+ */
+function wrapInSizedWrapper(
+  iframe: HTMLIFrameElement,
+  width: number,
+  height: number,
+): HTMLDivElement {
+  const wrapper = document.createElement("div");
+  wrapper.style.position = "relative";
+  vi.spyOn(wrapper, "getBoundingClientRect").mockReturnValue({
+    width,
+    height,
+    top: 0,
+    left: 0,
+    right: width,
+    bottom: height,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  } as DOMRect);
+  wrapper.appendChild(iframe);
+  document.body.appendChild(wrapper);
+  return wrapper;
+}
+
+describe("createEmbedMount — iframe-as-screen (ready carries a viewport)", () => {
+  it("lays the iframe out at the canonical size, scaled to fit the wrapper", () => {
+    const { iframe, frame } = makeIframe();
+    const send = vi.fn();
+    (frame as { postMessage: unknown }).postMessage = send;
+    // 896-wide wrapper for a 1440x900 canonical viewport: scale 896/1440.
+    wrapInSizedWrapper(iframe, 896, 560);
+    track(createEmbedMount(iframe, { src: SRC }));
+
+    post(readyMessage({ widthPx: 1440, heightPx: 900 }), { source: frame });
+
+    const scale = 896 / 1440;
+    expect(iframe.style.width).toBe("1440px");
+    expect(iframe.style.height).toBe("900px");
+    expect(iframe.style.transformOrigin).toBe("0 0");
+    expect(iframe.style.transform).toBe(`translate(0px, 0px) scale(${scale})`);
+  });
+
+  it("reports the applied scale back to the embed over setHostScale", () => {
+    const { iframe, frame } = makeIframe();
+    const send = vi.fn();
+    (frame as { postMessage: unknown }).postMessage = send;
+    wrapInSizedWrapper(iframe, 720, 450);
+    track(createEmbedMount(iframe, { src: SRC }));
+
+    post(readyMessage({ widthPx: 1440, heightPx: 900 }), { source: frame });
+
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "setHostScale", scale: 0.5 }),
+      ORIGIN,
+    );
+  });
+
+  it("caps the scale at 1 and centers the frame in a wider-than-canonical wrapper", () => {
+    const { iframe, frame } = makeIframe();
+    (frame as { postMessage: unknown }).postMessage = vi.fn();
+    wrapInSizedWrapper(iframe, 2000, 1100);
+    track(createEmbedMount(iframe, { src: SRC }));
+
+    post(readyMessage({ widthPx: 1440, heightPx: 900 }), { source: frame });
+
+    // scale 1; centered: x = (2000 - 1440) / 2 = 280, y = (1100 - 900) / 2 = 100.
+    expect(iframe.style.transform).toBe("translate(280px, 100px) scale(1)");
+  });
+
+  it("leaves the iframe's fill layout untouched for pre-viewport bundles", () => {
+    const { iframe, frame } = makeIframe();
+    (frame as { postMessage: unknown }).postMessage = vi.fn();
+    wrapInSizedWrapper(iframe, 896, 560);
+    track(createEmbedMount(iframe, { src: SRC }));
+
+    post(readyMessage(), { source: frame });
+
+    // The version-skew contract: an old bundle (no viewport on ready) keeps
+    // exactly the fit-inside-the-iframe behavior — no size, no transform.
+    expect(iframe.style.width).toBe("");
+    expect(iframe.style.transform).toBe("");
+  });
+});
+
 describe("createEmbedMount — teardown", () => {
   it("stops reacting to resizes after destroy", () => {
     const ratios: EmbedAspectRatio[] = [];

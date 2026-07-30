@@ -31,6 +31,7 @@ function makeControls(): ScenarEmbedControls {
     seekToTime: vi.fn(),
     setMuted: vi.fn(),
     setVolume: vi.fn(),
+    setHostScale: vi.fn(),
     prefetch: vi.fn(),
   };
 }
@@ -41,6 +42,7 @@ function BridgeHarness(props: {
   playbackState?: "idle" | "playing" | "paused";
   stepIndex?: number;
   audioBlocked?: boolean;
+  viewport?: { widthPx: number; heightPx: number };
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useScenarEmbedBridge({
@@ -52,6 +54,7 @@ function BridgeHarness(props: {
     stepTimeline: TIMELINE,
     hasNarration: true,
     audioBlocked: props.audioBlocked ?? false,
+    viewport: props.viewport,
     controls: props.controls,
   });
   return <div ref={ref} />;
@@ -111,6 +114,47 @@ describe("useScenarEmbedBridge", () => {
     const ready = postedEvents().find((e) => e.type === "ready");
     expect(ready).toMatchObject({ type: "ready", totalSteps: 3, hasNarration: true });
     expect(ready).toMatchObject({ source: SCENAR_EMBED_SOURCE, v: SCENAR_EMBED_PROTOCOL_VERSION });
+    // No viewport option -> the field must be genuinely absent from the wire
+    // message; hosts branch on it to decide iframe-as-screen adoption.
+    expect(ready && "viewport" in ready).toBe(false);
+  });
+
+  it("carries the canonical viewport on ready when provided", () => {
+    makeFramed();
+    render(
+      <BridgeHarness
+        enabled
+        controls={makeControls()}
+        viewport={{ widthPx: 1440, heightPx: 900 }}
+      />,
+    );
+
+    const ready = postedEvents().find((e) => e.type === "ready");
+    expect(ready).toMatchObject({
+      type: "ready",
+      viewport: { widthPx: 1440, heightPx: 900 },
+    });
+  });
+
+  it("dispatches setHostScale to the optional control", () => {
+    makeFramed();
+    const controls = makeControls();
+    render(<BridgeHarness enabled controls={controls} />);
+
+    dispatchFromParent(frameEmbedCommand({ type: "setHostScale", scale: 0.7 }));
+    expect(controls.setHostScale).toHaveBeenCalledWith(0.7);
+  });
+
+  it("tolerates setHostScale when the player wires no counter-scale", () => {
+    makeFramed();
+    const controls = makeControls();
+    delete (controls as { setHostScale?: unknown }).setHostScale;
+    render(<BridgeHarness enabled controls={controls} />);
+
+    // Must not throw: the control is optional (standalone players and
+    // exports have no viewport chrome layer to counter-scale).
+    dispatchFromParent(frameEmbedCommand({ type: "setHostScale", scale: 0.7 }));
+    expect(controls.play).not.toHaveBeenCalled();
   });
 
   it("dispatches a valid command from the framing window", () => {

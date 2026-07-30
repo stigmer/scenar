@@ -1,9 +1,9 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, useReducedMotion } from "framer-motion";
-import { type NarrationManifest, type ScenarioBundle, type ScenarioStep, computeStepTimeline, deriveStepFromTime } from "@scenar/core";
+import { type NarrationManifest, type ScenarEmbedViewport, type ScenarioBundle, type ScenarioStep, computeStepTimeline, deriveStepFromTime } from "@scenar/core";
 import { useVideoExport } from "../video/VideoExportContext.js";
-import { useViewportChromeTarget } from "../viewport/ViewportChrome.js";
+import { useViewportChromeTarget, useViewportHostScaleSetter } from "../viewport/ViewportChrome.js";
 import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
 import { useStepProgression } from "./useStepProgression.js";
@@ -43,6 +43,13 @@ interface ScenarioPlayerProps<T> {
    * bridge stays inert unless the player is also running inside a frame.
    */
   embed?: boolean;
+  /**
+   * The canonical viewport the surrounding bundle was packed at, forwarded to
+   * the host on the bridge's `ready` event so it can adopt iframe-as-screen
+   * scaling. Only meaningful with `embed`; the packed entry supplies it from
+   * the same numbers it passes to `DemoViewport`.
+   */
+  embedViewport?: ScenarEmbedViewport;
 }
 
 /**
@@ -73,6 +80,7 @@ export function ScenarioPlayer<T>({
   narrationManifest: manifestProp,
   showSpeedControl = true,
   embed = false,
+  embedViewport,
 }: ScenarioPlayerProps<T>) {
   const steps = stepsProp ?? bundle?.steps;
   const narrationManifest = manifestProp ?? bundle?.narrationManifest;
@@ -90,6 +98,11 @@ export function ScenarioPlayer<T>({
   // pixel size regardless of viewport zoom and camera transforms. `null`
   // (standalone players, exports, captures) keeps the bar inline.
   const chromeTarget = useViewportChromeTarget();
+  // Host-scale reverse channel (ViewportChrome.tsx): the bridge receives the
+  // iframe-as-screen scale factor from the host and hands it up to the
+  // DemoViewport, whose chrome overlay counter-zooms. `null` when no
+  // viewport provides an overlay — nothing to counter-scale.
+  const setViewportHostScale = useViewportHostScaleSetter();
   const lastIndex = steps.length - 1;
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -348,6 +361,7 @@ export function ScenarioPlayer<T>({
     stepTimeline,
     hasNarration: !!narrationManifest,
     audioBlocked,
+    viewport: embedViewport,
     controls: {
       play: handlePlay,
       pause,
@@ -356,6 +370,7 @@ export function ScenarioPlayer<T>({
         if (muted !== next) toggleMute();
       },
       setVolume,
+      setHostScale: setViewportHostScale ?? undefined,
       prefetch,
     },
   });

@@ -55,6 +55,21 @@ describe("parseEmbedCommand", () => {
     });
   });
 
+  it("accepts setHostScale with a positive finite scale", () => {
+    expect(parseEmbedCommand(wrap({ type: "setHostScale", scale: 0.7 }))).toEqual({
+      type: "setHostScale",
+      scale: 0.7,
+    });
+  });
+
+  it("rejects setHostScale with a missing, non-finite, or non-positive scale", () => {
+    expect(parseEmbedCommand(wrap({ type: "setHostScale" }))).toBeNull();
+    expect(parseEmbedCommand(wrap({ type: "setHostScale", scale: "big" }))).toBeNull();
+    expect(parseEmbedCommand(wrap({ type: "setHostScale", scale: Number.NaN }))).toBeNull();
+    expect(parseEmbedCommand(wrap({ type: "setHostScale", scale: 0 }))).toBeNull();
+    expect(parseEmbedCommand(wrap({ type: "setHostScale", scale: -1 }))).toBeNull();
+  });
+
   it("rejects a foreign source", () => {
     expect(parseEmbedCommand({ source: "other-widget", v: 1, type: "play" })).toBeNull();
   });
@@ -101,6 +116,44 @@ describe("parseEmbedEvent", () => {
       hasNarration: true,
     });
     expect(parseEmbedEvent(wrap({ type: "ready", totalSteps: 3 }))).toBeNull();
+  });
+
+  it("accepts a ready payload carrying a well-formed canonical viewport", () => {
+    expect(
+      parseEmbedEvent(
+        wrap({
+          type: "ready",
+          totalSteps: 3,
+          hasNarration: false,
+          viewport: { widthPx: 1440, heightPx: 900 },
+        }),
+      ),
+    ).toEqual({
+      type: "ready",
+      totalSteps: 3,
+      hasNarration: false,
+      viewport: { widthPx: 1440, heightPx: 900 },
+    });
+  });
+
+  it("still accepts a ready payload without a viewport (pre-viewport bundles)", () => {
+    const parsed = parseEmbedEvent(wrap({ type: "ready", totalSteps: 3, hasNarration: false }));
+    expect(parsed).toEqual({ type: "ready", totalSteps: 3, hasNarration: false });
+    // The field must be genuinely absent, not present-and-undefined — hosts
+    // branch on `event.viewport` to decide iframe-as-screen adoption.
+    expect(parsed && "viewport" in parsed).toBe(false);
+  });
+
+  it("rejects a ready payload whose viewport is malformed", () => {
+    const base = { type: "ready", totalSteps: 3, hasNarration: false };
+    expect(parseEmbedEvent(wrap({ ...base, viewport: "1440x900" }))).toBeNull();
+    expect(parseEmbedEvent(wrap({ ...base, viewport: { widthPx: 1440 } }))).toBeNull();
+    expect(
+      parseEmbedEvent(wrap({ ...base, viewport: { widthPx: 0, heightPx: 900 } })),
+    ).toBeNull();
+    expect(
+      parseEmbedEvent(wrap({ ...base, viewport: { widthPx: "1440", heightPx: 900 } })),
+    ).toBeNull();
   });
 
   it("rejects foreign source and unknown event types", () => {

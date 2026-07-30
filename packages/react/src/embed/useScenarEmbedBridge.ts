@@ -2,6 +2,7 @@ import { type RefObject, useCallback, useEffect, useRef } from "react";
 import {
   type ScenarEmbedCommand,
   type ScenarEmbedEvent,
+  type ScenarEmbedViewport,
   type StepTimeline,
   frameEmbedEvent,
   parseEmbedCommand,
@@ -16,6 +17,13 @@ export interface ScenarEmbedControls {
   seekToTime: (timeMs: number) => void;
   setMuted: (muted: boolean) => void;
   setVolume: (volume: number) => void;
+  /**
+   * Receive the scale factor the host renders this frame at (iframe-as-screen
+   * mode), so the chrome layer can counter-scale controls to native pixel
+   * size. Optional: a player mounted without a viewport chrome layer has
+   * nothing to counter-scale and simply omits it.
+   */
+  setHostScale?: (scale: number) => void;
   prefetch: () => void;
 }
 
@@ -36,6 +44,13 @@ export interface UseScenarEmbedBridgeOptions {
   stepTimeline: StepTimeline;
   hasNarration: boolean;
   audioBlocked: boolean;
+  /**
+   * The canonical viewport this scenario was packed at, forwarded on the
+   * `ready` event so the host can adopt iframe-as-screen scaling. Omitted for
+   * players that render outside a packed bundle (previews, in-app mounts) —
+   * the host then keeps its fit-inside-the-iframe behavior.
+   */
+  viewport?: ScenarEmbedViewport;
   controls: ScenarEmbedControls;
 }
 
@@ -92,6 +107,9 @@ export function useScenarEmbedBridge(options: UseScenarEmbedBridgeOptions): void
       case "setVolume":
         controls.setVolume(command.volume);
         break;
+      case "setHostScale":
+        controls.setHostScale?.(command.scale);
+        break;
       case "prefetch":
         controls.prefetch();
         break;
@@ -130,8 +148,13 @@ export function useScenarEmbedBridge(options: UseScenarEmbedBridgeOptions): void
   useEffect(() => {
     if (!active || readySentRef.current) return;
     readySentRef.current = true;
-    post({ type: "ready", totalSteps: options.totalSteps, hasNarration: options.hasNarration });
-  }, [active, post, options.totalSteps, options.hasNarration]);
+    post({
+      type: "ready",
+      totalSteps: options.totalSteps,
+      hasNarration: options.hasNarration,
+      ...(options.viewport ? { viewport: options.viewport } : {}),
+    });
+  }, [active, post, options.totalSteps, options.hasNarration, options.viewport]);
 
   // started / paused / completed.
   const lastIndex = options.totalSteps - 1;

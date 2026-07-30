@@ -35,6 +35,68 @@ export function findStepsArray(exports: Record<string, unknown>): ImportedStep[]
   return null;
 }
 
+/** A scenario-authored canonical viewport, in CSS pixels. */
+export interface AuthoredViewport {
+  width: number;
+  height: number;
+}
+
+function isViewportShape(value: unknown): value is AuthoredViewport {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record["width"] === "number" &&
+    Number.isFinite(record["width"]) &&
+    record["width"] > 0 &&
+    typeof record["height"] === "number" &&
+    Number.isFinite(record["height"]) &&
+    record["height"] > 0
+  );
+}
+
+function isStepsShape(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    typeof value[0] === "object" &&
+    value[0] !== null &&
+    "delayMs" in value[0]
+  );
+}
+
+/**
+ * Find the scenario's authored canonical viewport in a loaded module's
+ * exports, or null when the module authors none (the common case — the
+ * packer then falls back to CLI flags or its default).
+ *
+ * Two authored forms are honored, mirroring the two authoring surfaces:
+ *
+ * 1. A scenario-shaped export — an object carrying both a `viewport` and a
+ *    delayMs-bearing `steps` array, i.e. what `createScenario()` returns.
+ *    The viewport rides the scenario, so only a real scenario export
+ *    qualifies; a stray `viewport` field on an unrelated object does not.
+ * 2. An export *named* `viewport` with `{ width, height }` — the
+ *    directory-form counterpart, for authors of a raw steps array.
+ *
+ * Precedence between the two follows specificity: a scenario-shaped export
+ * wins, because its viewport is inseparable from the steps it sizes.
+ */
+export function findAuthoredViewport(exports: Record<string, unknown>): AuthoredViewport | null {
+  for (const value of Object.values(exports)) {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) continue;
+    const record = value as Record<string, unknown>;
+    if (isViewportShape(record["viewport"]) && isStepsShape(record["steps"])) {
+      const viewport = record["viewport"] as AuthoredViewport;
+      return { width: viewport.width, height: viewport.height };
+    }
+  }
+  const named = exports["viewport"];
+  if (isViewportShape(named)) {
+    return { width: named.width, height: named.height };
+  }
+  return null;
+}
+
 /**
  * Dynamically import a TypeScript steps file and extract the
  * steps array by duck-typing ({@link findStepsArray}).

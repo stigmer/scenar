@@ -36,11 +36,17 @@ export function registerPackCommand(program: Command): void {
     )
     .argument("<dir>", "path to a scenario directory (must contain steps.ts)")
     .option("--out <path>", "output directory for the bundle")
-    .option("--width <number>", `canonical viewport width in px (default: ${DEFAULT_WIDTH})`, String(DEFAULT_WIDTH))
+    // No commander defaults on the viewport flags: an absent flag must stay
+    // absent so the scenario's own authored viewport can apply (resolution
+    // in runPack: flags > authored > default). A baked-in default here made
+    // `createScenario({ viewport })` silently unreachable.
+    .option(
+      "--width <number>",
+      `canonical viewport width in px (default: the scenario's authored viewport, else ${DEFAULT_WIDTH})`,
+    )
     .option(
       "--shell-height <number>",
-      `shell height in px (default: ${DEFAULT_SHELL_HEIGHT})`,
-      String(DEFAULT_SHELL_HEIGHT),
+      `shell height in px (default: the scenario's authored viewport, else ${DEFAULT_SHELL_HEIGHT})`,
     )
     .option(
       "--stage",
@@ -53,8 +59,8 @@ export function registerPackCommand(program: Command): void {
         const result = await runPack({
           scenarioDir: dir,
           outDir: options.out,
-          width: Number(options.width) || DEFAULT_WIDTH,
-          shellHeight: Number(options.shellHeight) || DEFAULT_SHELL_HEIGHT,
+          width: parseViewportFlag("--width", options.width),
+          shellHeight: parseViewportFlag("--shell-height", options.shellHeight),
           stage: options.stage ?? false,
           keepTemp: options.keepTemp,
           onLog: (message) => process.stderr.write(`${message}\n`),
@@ -71,6 +77,21 @@ export function registerPackCommand(program: Command): void {
         process.exitCode = 1;
       }
     });
+}
+
+/**
+ * Parse a viewport flag into a positive number, or `undefined` when the flag
+ * was not given. A malformed value errors instead of silently falling back —
+ * the previous `Number(x) || DEFAULT` coercion turned `--width 128O` (typo)
+ * into a default-size bundle with no warning.
+ */
+function parseViewportFlag(flag: string, value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`${flag} must be a positive number, got "${value}".`);
+  }
+  return parsed;
 }
 
 function formatBytes(bytes: number): string {

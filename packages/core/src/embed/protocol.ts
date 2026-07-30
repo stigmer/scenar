@@ -22,10 +22,30 @@ export const SCENAR_EMBED_SOURCE = "scenar-embed";
 export const SCENAR_EMBED_PROTOCOL_VERSION = 1;
 
 /**
+ * The canonical viewport a packed scenario was authored and bundled at, in CSS
+ * pixels — the same numbers `scenar pack` bakes into the bundle and records in
+ * `scenario.json`.
+ *
+ * Carried on `ready` so a host can lay the iframe out at this exact size and
+ * scale it as one unit (the iframe-as-screen mode in `@scenar/embed`): the
+ * embedded document's media queries then resolve against the canonical width,
+ * so responsive components render the same variant they would in a real
+ * browser window of that size — instead of the narrow variant the host
+ * column's width would select.
+ */
+export interface ScenarEmbedViewport {
+  readonly widthPx: number;
+  readonly heightPx: number;
+}
+
+/**
  * Events the embedded player emits to the host (embed -> host).
  *
  * - `ready` — the player has mounted; carries scenario shape the host can use
- *   to size or label the frame.
+ *   to size or label the frame. `viewport` (when the bundle knows it) is the
+ *   canonical size the scenario was packed at — see {@link ScenarEmbedViewport}.
+ *   Optional for compatibility: bundles packed before the field existed omit
+ *   it, and hosts must treat its absence as "fit content inside the iframe".
  * - `resize` — the rendered content height changed (dynamic-height hosts).
  * - `started` / `paused` / `completed` — transport state transitions.
  * - `stepchange` — the active step changed.
@@ -35,7 +55,12 @@ export const SCENAR_EMBED_PROTOCOL_VERSION = 1;
  * - `error` — an unrecoverable runtime error, with a human-readable message.
  */
 export type ScenarEmbedEvent =
-  | { readonly type: "ready"; readonly totalSteps: number; readonly hasNarration: boolean }
+  | {
+      readonly type: "ready";
+      readonly totalSteps: number;
+      readonly hasNarration: boolean;
+      readonly viewport?: ScenarEmbedViewport;
+    }
   | { readonly type: "resize"; readonly widthPx: number; readonly heightPx: number }
   | { readonly type: "started" }
   | { readonly type: "paused" }
@@ -53,8 +78,17 @@ export type ScenarEmbedEvent =
 /**
  * Commands the host may send to the embedded player (host -> embed).
  *
- * State-setting commands (`setMuted`, `setVolume`) are idempotent by design so
- * a host never has to track the player's internal state to stay in sync.
+ * State-setting commands (`setMuted`, `setVolume`, `setHostScale`) are
+ * idempotent by design so a host never has to track the player's internal
+ * state to stay in sync.
+ *
+ * `setHostScale` accompanies the iframe-as-screen mode: when the host lays
+ * the iframe out at the canonical viewport and scales it as one unit, every
+ * pixel inside — including the player's transport controls — shrinks by that
+ * factor. The player's chrome layer counter-scales by `1 / scale` so controls
+ * keep rendering at native pixel size (the ViewportChrome contract), which
+ * only the host can enable because a cross-origin document cannot observe the
+ * transform applied to its own frame.
  */
 export type ScenarEmbedCommand =
   | { readonly type: "play" }
@@ -62,6 +96,7 @@ export type ScenarEmbedCommand =
   | { readonly type: "seek"; readonly timeMs: number }
   | { readonly type: "setMuted"; readonly muted: boolean }
   | { readonly type: "setVolume"; readonly volume: number }
+  | { readonly type: "setHostScale"; readonly scale: number }
   | { readonly type: "prefetch" }
   | { readonly type: "destroy" };
 
@@ -122,9 +157,33 @@ export function parseEmbedCommand(data: unknown): ScenarEmbedCommand | null {
       return typeof data["muted"] === "boolean" ? { type, muted: data["muted"] } : null;
     case "setVolume":
       return isFiniteNumber(data["volume"]) ? { type, volume: data["volume"] } : null;
+    case "setHostScale":
+      return isFiniteNumber(data["scale"]) && data["scale"] > 0
+        ? { type, scale: data["scale"] }
+        : null;
     default:
       return null;
   }
+}
+
+/**
+ * Parse the optional `viewport` field of a `ready` payload. Absent -> the
+ * event simply has no viewport (a pre-viewport bundle). Present but malformed
+ * -> the whole event is rejected, exactly like a mistyped required field: a
+ * half-valid message is a protocol violation, not a degraded mode.
+ */
+function parseReadyViewport(
+  value: unknown,
+): { viewport?: ScenarEmbedViewport } | null {
+  if (value === undefined) return {};
+  if (typeof value !== "object" || value === null) return null;
+  const record = value as Record<string, unknown>;
+  return isFiniteNumber(record["widthPx"]) &&
+    record["widthPx"] > 0 &&
+    isFiniteNumber(record["heightPx"]) &&
+    record["heightPx"] > 0
+    ? { viewport: { widthPx: record["widthPx"], heightPx: record["heightPx"] } }
+    : null;
 }
 
 /**
@@ -142,10 +201,19 @@ export function parseEmbedEvent(data: unknown): ScenarEmbedEvent | null {
     case "completed":
     case "audioBlocked":
       return { type };
-    case "ready":
-      return isFiniteNumber(data["totalSteps"]) && typeof data["hasNarration"] === "boolean"
-        ? { type, totalSteps: data["totalSteps"], hasNarration: data["hasNarration"] }
-        : null;
+    case "ready": {
+      if (!isFiniteNumber(data["totalSteps"]) || typeof data["hasNarration"] !== "boolean") {
+        return null;
+      }
+      const parsedViewport = parseReadyViewport(data["viewport"]);
+      if (parsedViewport === null) return null;
+      return {
+        type,
+        totalSteps: data["totalSteps"],
+        hasNarration: data["hasNarration"],
+        ...parsedViewport,
+      };
+    }
     case "resize":
       return isFiniteNumber(data["widthPx"]) && isFiniteNumber(data["heightPx"])
         ? { type, widthPx: data["widthPx"], heightPx: data["heightPx"] }

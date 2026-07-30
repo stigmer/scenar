@@ -62,6 +62,12 @@ describe("createEmbedHostController — commands", () => {
       EMBED_ORIGIN,
     );
 
+    controller.setHostScale(0.7);
+    expect(post).toHaveBeenLastCalledWith(
+      expect.objectContaining({ type: "setHostScale", scale: 0.7 }),
+      EMBED_ORIGIN,
+    );
+
     controller.destroy();
   });
 });

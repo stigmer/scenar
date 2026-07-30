@@ -41,6 +41,35 @@ export function parseViewport(value: unknown): Viewport | null {
   return { width, height };
 }
 
+/** A resolved pack viewport plus where each number came from (for the log). */
+export interface ResolvedPackViewport extends Viewport {
+  readonly source: "explicit" | "authored" | "default";
+}
+
+/**
+ * Resolve the canonical viewport a bundle is packed at: explicit options
+ * (CLI flags / MCP params) > the scenario's own authored viewport > the
+ * packer default. Width and height resolve as a pair — an explicit *partial*
+ * override (only `--width`) still counts as explicit, filling the other axis
+ * from the authored viewport when present, else the default — and the
+ * source names the strongest contributor so the pack log can explain a
+ * surprising size in one line.
+ */
+export function resolvePackViewport(
+  options: { readonly width?: number; readonly shellHeight?: number },
+  authored: Viewport | null,
+): ResolvedPackViewport {
+  const width = options.width ?? authored?.width ?? DEFAULT_VIEWPORT.width;
+  const height = options.shellHeight ?? authored?.height ?? DEFAULT_VIEWPORT.height;
+  const source =
+    options.width !== undefined || options.shellHeight !== undefined
+      ? "explicit"
+      : authored
+        ? "authored"
+        : "default";
+  return { width, height, source };
+}
+
 function isPositiveInt(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
 }

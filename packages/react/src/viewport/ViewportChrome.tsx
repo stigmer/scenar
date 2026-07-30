@@ -30,3 +30,29 @@ export const ViewportChromeProvider = ViewportChromeContext.Provider;
 export function useViewportChromeTarget(): HTMLElement | null {
   return useContext(ViewportChromeContext);
 }
+
+/**
+ * Reverse channel for the host's iframe scale factor (iframe-as-screen mode).
+ *
+ * When an embed host lays the iframe out at the canonical viewport and scales
+ * it as one unit, the chrome layer's "sibling of the zoomed div" trick no
+ * longer suffices: the scale is applied to the whole document from outside,
+ * so the overlay shrinks with everything else. Only the host knows that
+ * factor (a cross-origin document cannot observe its own frame's transform),
+ * and it arrives over the embed bridge — which lives in `ScenarioPlayer`,
+ * *below* the `DemoViewport` that owns the overlay. This context carries the
+ * setter down so the value can flow back up: `DemoViewport` provides it, the
+ * player's bridge calls it, and the overlay counter-zooms by `1 / scale` to
+ * keep controls at native pixel size.
+ *
+ * `null` (no providing viewport — standalone players, exports, captures)
+ * means there is no overlay to counter-scale; callers simply skip wiring.
+ */
+const ViewportHostScaleContext = createContext<((scale: number) => void) | null>(null);
+
+export const ViewportHostScaleProvider = ViewportHostScaleContext.Provider;
+
+/** The viewport's host-scale setter, or `null` when no viewport provides one. */
+export function useViewportHostScaleSetter(): ((scale: number) => void) | null {
+  return useContext(ViewportHostScaleContext);
+}

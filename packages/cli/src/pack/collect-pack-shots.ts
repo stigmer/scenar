@@ -1,5 +1,5 @@
 import { collectShotNames } from "@scenar/core";
-import { findStepsArray } from "../util/load-ts.js";
+import { type AuthoredViewport, findAuthoredViewport, findStepsArray } from "../util/load-ts.js";
 import { loadViteToolkit, sharedViteConfig } from "./build.js";
 import { stepsModuleSpecifier } from "./generate-embed-entry.js";
 
@@ -8,17 +8,26 @@ import { stepsModuleSpecifier } from "./generate-embed-entry.js";
  *
  * `recorded: true` is authoritative — `shots` is exactly what the packed
  * capture page will report (possibly empty, which lets `scenar shoot` skip
- * the browser entirely). `recorded: false` means the steps module could not
- * be loaded under Node, so the shots are unknown and scenario.json must omit
- * the key: absent = "boot a browser to find out".
+ * the browser entirely), and `authoredViewport` is the canonical viewport
+ * the scenario authors for itself (null = it authors none). `recorded:
+ * false` means the steps module could not be loaded under Node, so the
+ * shots are unknown and scenario.json must omit the key: absent = "boot a
+ * browser to find out".
  */
 export type CollectedPackShots =
-  | { readonly recorded: true; readonly shots: readonly string[] }
+  | {
+      readonly recorded: true;
+      readonly shots: readonly string[];
+      readonly authoredViewport: AuthoredViewport | null;
+    }
   | { readonly recorded: false; readonly reason: string };
 
 /**
- * Discover a scenario's declared shot names at pack time, so they can be
- * recorded in the bundle's scenario.json.
+ * Discover a scenario's declared shot names — and its authored canonical
+ * viewport, if it declares one — at pack time, so the names can be recorded
+ * in the bundle's scenario.json and the viewport can participate in the
+ * packer's resolution (CLI flags > authored > default). One SSR load serves
+ * both discoveries; the viewport costs nothing extra.
  *
  * The steps module is loaded through Vite's SSR pipeline using the exact
  * specifier the generated browser entry imports ({@link stepsModuleSpecifier})
@@ -72,5 +81,9 @@ export async function collectPackShots(scenarioDir: string): Promise<CollectedPa
     );
   }
 
-  return { recorded: true, shots: collectShotNames(steps) };
+  return {
+    recorded: true,
+    shots: collectShotNames(steps),
+    authoredViewport: findAuthoredViewport(stepsModule),
+  };
 }

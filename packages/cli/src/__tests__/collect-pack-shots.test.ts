@@ -42,6 +42,7 @@ describe("collectPackShots", () => {
     expect(await collectPackShots(scenarioDir)).toEqual({
       recorded: true,
       shots: ["opening", "detail-open"],
+      authoredViewport: null,
     });
   });
 
@@ -53,12 +54,29 @@ describe("collectPackShots", () => {
     expect(await collectPackShots(scenarioDir)).toEqual({
       recorded: true,
       shots: ["detail-open"],
+      authoredViewport: null,
     });
   });
 
   it("records an authoritatively empty list for a shot-less scenario", async () => {
     await writeSteps(`export const steps = [{ delayMs: 0 }, { delayMs: 900 }];`);
-    expect(await collectPackShots(scenarioDir)).toEqual({ recorded: true, shots: [] });
+    expect(await collectPackShots(scenarioDir)).toEqual({
+      recorded: true,
+      shots: [],
+      authoredViewport: null,
+    });
+  });
+
+  it("discovers the authored viewport alongside the shots (one SSR load)", async () => {
+    await writeSteps(
+      `export const viewport = { width: 1440, height: 900 };
+      export const steps = [{ delayMs: 0, shot: "opening" }];`,
+    );
+    expect(await collectPackShots(scenarioDir)).toEqual({
+      recorded: true,
+      shots: ["opening"],
+      authoredViewport: { width: 1440, height: 900 },
+    });
   });
 
   it("degrades to recorded:false with the reason when the module cannot be imported", async () => {

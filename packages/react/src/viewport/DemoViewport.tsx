@@ -1,6 +1,6 @@
 import { type ReactNode, type RefObject, useLayoutEffect, useRef, useState } from "react";
 import { useVideoExport } from "../video/VideoExportContext.js";
-import { ViewportChromeProvider } from "./ViewportChrome.js";
+import { ViewportChromeProvider, ViewportHostScaleProvider } from "./ViewportChrome.js";
 
 /** Default canonical width for the virtual viewport (pixels). */
 const DEFAULT_CANONICAL_WIDTH = 896;
@@ -84,6 +84,11 @@ export function DemoViewport({
   // Set during commit, so the portal lands before first paint — the bar
   // never flashes at content scale.
   const [chromeTarget, setChromeTarget] = useState<HTMLDivElement | null>(null);
+  // The scale an iframe-as-screen host renders this document at (1 = none).
+  // Reported over the embed bridge (see ViewportHostScaleProvider) — it is
+  // unobservable from inside a cross-origin frame. The chrome layer
+  // counter-zooms by its inverse so controls hold native pixel size.
+  const [hostScale, setHostScale] = useState(1);
 
   const innerRef = containerRef ?? internalRef;
 
@@ -138,7 +143,9 @@ export function DemoViewport({
   return (
     <div ref={outerRef} className={classes} style={outerStyle}>
       <div ref={innerRef} className="relative" style={style}>
-        <ViewportChromeProvider value={chromeTarget}>{children}</ViewportChromeProvider>
+        <ViewportChromeProvider value={chromeTarget}>
+          <ViewportHostScaleProvider value={setHostScale}>{children}</ViewportHostScaleProvider>
+        </ViewportChromeProvider>
       </div>
       {/*
        * The chrome layer: a sibling of the zoomed div, so nothing inside it
@@ -148,8 +155,18 @@ export function DemoViewport({
        * the content's visual bottom edge at native pixel size. Rendered
        * after the content so it paints above without z-index games;
        * pointer-events are re-enabled per control (see ViewportChrome.tsx).
+       *
+       * An iframe-as-screen host scales the whole document from outside —
+       * a factor the sibling trick cannot escape — so the overlay
+       * counter-zooms by the inverse of the reported host scale. Zoom (not
+       * transform) so inset-0 keeps filling the wrapper visually while the
+       * overlay's contents render at native size.
        */}
-      <div ref={setChromeTarget} className="pointer-events-none absolute inset-0" />
+      <div
+        ref={setChromeTarget}
+        className="pointer-events-none absolute inset-0"
+        style={hostScale !== 1 ? { zoom: 1 / hostScale } : undefined}
+      />
     </div>
   );
 }

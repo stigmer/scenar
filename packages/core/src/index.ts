@@ -79,6 +79,7 @@ export type {
   ScenarEmbedCommand,
   ScenarEmbedEventMessage,
   ScenarEmbedCommandMessage,
+  ScenarEmbedViewport,
 } from "./embed/protocol.js";
 
 // Embed host controller — framework-free driver for an embedded player

@@ -21,7 +21,11 @@ describe("generateEmbedEntry", () => {
     const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
     expect(src).toContain('import { createRoot } from "react-dom/client";');
     expect(src).toContain('import { renderStep } from "/proj/scenarios/welcome-tour/index";');
-    expect(src).toContain("<ScenarioPlayer bundle={_bundle} embed onStepChange={_handleStepChange}>");
+    // embedViewport mirrors the DemoViewport numbers so the ready handshake
+    // announces the exact canonical size the bundle lays out at.
+    expect(src).toContain(
+      "<ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: 896, heightPx: 480 }} onStepChange={_handleStepChange}>",
+    );
     expect(src).toContain("renderStep(data, stepIndex)");
     expect(src).toContain('getElementById("root")');
   });
