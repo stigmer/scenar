@@ -72,18 +72,28 @@ describe("ScenarioPlayer title cards", () => {
     expect(card.querySelector("img")!.getAttribute("src")).toBe("./logo.png");
   });
 
-  it("does not fire onStepChange for a card step", () => {
+  it("announces a card step through onCardStepChange, not onStepChange", () => {
     const onStepChange = vi.fn();
+    const onCardStepChange = vi.fn();
 
     render(
-      <ScenarioPlayer steps={[...FRAMED.steps]} onStepChange={onStepChange}>
+      <ScenarioPlayer
+        steps={[...FRAMED.steps]}
+        onStepChange={onStepChange}
+        onCardStepChange={onCardStepChange}
+      >
         {() => null}
       </ScenarioPlayer>,
     );
 
-    // The intro card is the mounted step; the callback must stay silent —
-    // its `data` is an engine placeholder, not the integrator's `T`.
+    // The intro card is the mounted step: onStepChange stays silent (its
+    // `data` is an engine placeholder, not the integrator's `T`) and the
+    // card-step sibling delivers the card with its index.
     expect(onStepChange).not.toHaveBeenCalled();
+    expect(onCardStepChange).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "intro", title: "Acme Deploy" }),
+      0,
+    );
   });
 
   it("fires onStepChange for an authored first step, unchanged", () => {

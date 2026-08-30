@@ -45,6 +45,7 @@ export function validateScenario(scenario: unknown): ValidationResult {
   validateViewport(obj["viewport"], errors);
   validateSteps(obj["steps"], errors);
   validateSoundtrack(obj["soundtrack"], errors);
+  validateTitleCards(obj["titleCards"], errors);
 
   return { valid: errors.length === 0, errors };
 }
@@ -108,6 +109,56 @@ function validateVolume(
   if (value === undefined) return;
   if (typeof value !== "number" || value < 0 || value > 1) {
     errors.push({ path, reason: "must be a number between 0.0 and 1.0." });
+  }
+}
+
+function validateTitleCards(
+  titleCards: unknown,
+  errors: ValidationError[],
+): void {
+  if (titleCards === undefined || titleCards === null) return;
+
+  if (typeof titleCards !== "object" || Array.isArray(titleCards)) {
+    errors.push({ path: "titleCards", reason: "titleCards must be an object." });
+    return;
+  }
+
+  const cards = titleCards as Record<string, unknown>;
+  for (const side of ["intro", "outro"] as const) {
+    if (cards[side] !== undefined) {
+      validateTitleCard(cards[side], `titleCards.${side}`, errors);
+    }
+  }
+}
+
+function validateTitleCard(
+  card: unknown,
+  path: string,
+  errors: ValidationError[],
+): void {
+  if (card === null || typeof card !== "object" || Array.isArray(card)) {
+    errors.push({ path, reason: "card must be an object." });
+    return;
+  }
+
+  const c = card as Record<string, unknown>;
+
+  if (typeof c["title"] !== "string" || c["title"].length === 0) {
+    errors.push({ path: `${path}.title`, reason: "title is required and must be a non-empty string." });
+  }
+
+  for (const field of ["subtitle", "logoSrc", "ctaText"] as const) {
+    if (c[field] !== undefined) {
+      if (typeof c[field] !== "string" || (c[field] as string).length === 0) {
+        errors.push({ path: `${path}.${field}`, reason: `${field} must be a non-empty string when present.` });
+      }
+    }
+  }
+
+  if (c["durationMs"] !== undefined) {
+    if (typeof c["durationMs"] !== "number" || c["durationMs"] <= 0) {
+      errors.push({ path: `${path}.durationMs`, reason: "durationMs must be a positive integer." });
+    }
   }
 }
 

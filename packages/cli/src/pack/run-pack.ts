@@ -2,12 +2,13 @@ import { resolve, join, basename, dirname } from "node:path";
 import { stat, mkdir, writeFile, rm, readdir, copyFile, access } from "node:fs/promises";
 import { detectRenderExport } from "../render/detect-render-export.js";
 import { resolveProvidersPath } from "../render/resolve-providers.js";
-import type { AuthoredSoundtrack } from "../util/load-ts.js";
+import type { AuthoredSoundtrack, AuthoredTitleCards } from "../util/load-ts.js";
 import {
   SFX_DEST_PATHS,
   resolveMusicAsset,
   resolveSfxAssetPaths,
 } from "../util/soundtrack-assets.js";
+import { resolveLogoAsset } from "../util/scenario-assets.js";
 import { generateEmbedEntry, generateEmbedHtml } from "./generate-embed-entry.js";
 import { collectPackShots, type CollectedPackShots } from "./collect-pack-shots.js";
 import { runViteBuild } from "./build.js";
@@ -180,10 +181,21 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
         );
         if (copied > 0) onLog(`Soundtrack: ${copied} audio file(s) copied into the bundle`);
       }
+      // 4c. Copy title-card logos at their scenario-relative paths (the
+      //     card component references them by that same path). Discovery
+      //     rides the same SSR load as the shots and the soundtrack.
+      if (collectedShots.authoredTitleCards) {
+        const copied = await copyTitleCardLogos(
+          scenarioDir,
+          outDir,
+          collectedShots.authoredTitleCards,
+        );
+        if (copied > 0) onLog(`Cards: ${copied} logo file(s) copied into the bundle`);
+      }
     } else {
       onLog(
         "Warning: steps module not loadable under Node — if this scenario authors a " +
-          "soundtrack, its audio files were NOT copied into the bundle.",
+          "soundtrack or title cards, their asset files were NOT copied into the bundle.",
       );
     }
 
@@ -281,6 +293,34 @@ async function copySoundtrack(
       await copyFile(sfxPaths[sound], dest);
       copied += 1;
     }
+  }
+
+  return copied;
+}
+
+/**
+ * Copy title-card logos into the bundle at their scenario-relative paths.
+ * A logo shared by intro and outro copies once; remote URLs copy nothing.
+ * Returns the number of files copied.
+ */
+async function copyTitleCardLogos(
+  scenarioDir: string,
+  outDir: string,
+  titleCards: AuthoredTitleCards,
+): Promise<number> {
+  let copied = 0;
+  const copiedPaths = new Set<string>();
+
+  for (const side of ["intro", "outro"] as const) {
+    const logoSrc = titleCards[side]?.logoSrc;
+    if (!logoSrc) continue;
+    const logo = await resolveLogoAsset(scenarioDir, logoSrc, `titleCards.${side}.logoSrc`);
+    if (!logo || copiedPaths.has(logo.destRelPath)) continue;
+    const dest = join(outDir, logo.destRelPath);
+    await mkdir(dirname(dest), { recursive: true });
+    await copyFile(logo.sourcePath, dest);
+    copiedPaths.add(logo.destRelPath);
+    copied += 1;
   }
 
   return copied;

@@ -6,7 +6,7 @@ import { resolveSfxAssetPaths } from "../util/soundtrack-assets.js";
 import { generateRemotionEntry } from "./generate-entry.js";
 import { resolveProvidersPath } from "./resolve-providers.js";
 import { detectRenderExport } from "./detect-render-export.js";
-import { stageRenderAudio } from "./stage-audio.js";
+import { stageRenderAssets } from "./stage-assets.js";
 
 /** Options for {@link runRender}. Paths may be relative; resolved here. */
 export interface RunRenderOptions {
@@ -108,30 +108,38 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
       ].filter(Boolean);
       onLog(`Soundtrack: ${parts.length > 0 ? parts.join(" + ") : "configured (silent)"}`);
     }
+    if (bundle.titleCards?.intro || bundle.titleCards?.outro) {
+      const parts = [
+        bundle.titleCards.intro ? "intro" : null,
+        bundle.titleCards.outro ? "outro" : null,
+      ].filter(Boolean);
+      onLog(`Cards:    ${parts.join(" + ")}`);
+    }
     if (captions) {
       onLog(`Captions: burned in (from step narration text)`);
     }
 
-    // Stage every audio file into a Remotion public dir so staticFile()
-    // resolution finds real bytes — narration clips, the music asset, and
-    // the built-in SFX set. Only for the auto-generated entry: a custom
-    // --entry project owns its own public dir convention.
+    // Stage every local asset into a Remotion public dir so staticFile()
+    // resolution finds real bytes — narration clips, the music asset, the
+    // built-in SFX set, and title-card logos. Only for the auto-generated
+    // entry: a custom --entry project owns its own public dir convention.
     let publicDir: string | undefined;
     if (generated) {
       const candidatePublicDir = join(generated.tempDir, "public");
       const sfxPaths = bundle.soundtrack?.sfx
         ? resolveSfxAssetPaths(scenarioDir)
         : undefined;
-      const stagedCount = await stageRenderAudio({
+      const stagedCount = await stageRenderAssets({
         scenarioDir,
         publicDir: candidatePublicDir,
         hasNarration: !!bundle.narrationManifest,
         soundtrack: bundle.soundtrack,
         sfxPaths,
+        titleCards: bundle.titleCards,
       });
       if (stagedCount > 0) {
         publicDir = candidatePublicDir;
-        onLog(`Staged:   ${stagedCount} audio file(s) for the render`);
+        onLog(`Staged:   ${stagedCount} asset file(s) for the render`);
       }
     }
     onLog(`Entry:    ${generated ? "(auto-generated)" : entryPoint}`);

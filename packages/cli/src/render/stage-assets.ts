@@ -1,13 +1,14 @@
 import { copyFile, mkdir, readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { AuthoredSoundtrack } from "../util/load-ts.js";
+import type { AuthoredSoundtrack, AuthoredTitleCards } from "../util/load-ts.js";
 import {
   SFX_DEST_PATHS,
   type SfxAssetPaths,
   resolveMusicAsset,
 } from "../util/soundtrack-assets.js";
+import { resolveLogoAsset } from "../util/scenario-assets.js";
 
-export interface StageRenderAudioInput {
+export interface StageRenderAssetsInput {
   /** Absolute path to the scenario directory. */
   readonly scenarioDir: string;
   /** Absolute path of the Remotion public dir to stage into (created). */
@@ -22,10 +23,12 @@ export interface StageRenderAudioInput {
    * `@scenar/react` via `resolveSfxAssetPaths`).
    */
   readonly sfxPaths?: SfxAssetPaths;
+  /** The scenario's authored title cards, if any (logo assets to stage). */
+  readonly titleCards?: AuthoredTitleCards;
 }
 
 /**
- * Stage every audio file a render needs into a Remotion public dir, so
+ * Stage every local asset a render needs into a Remotion public dir, so
  * `staticFile()` resolution inside `ScenarioComposition` finds real files.
  *
  * The layout mirrors how each src is written:
@@ -35,11 +38,14 @@ export interface StageRenderAudioInput {
  *   the file stages at that same relative path. Remote URLs stage nothing.
  * - Built-in SFX: staged at {@link SFX_DEST_PATHS}, the composition's
  *   default `sfxSrcs`.
+ * - Title-card logos: `logoSrc` is scenario-relative like music, staged
+ *   at its relative path (intro and outro may share one file — it stages
+ *   once). Remote URLs stage nothing.
  *
- * Returns the number of files staged. Zero means the render has no local
- * audio and the caller can skip the public dir entirely.
+ * Returns the number of files staged. Zero means the render needs no
+ * local assets and the caller can skip the public dir entirely.
  */
-export async function stageRenderAudio(input: StageRenderAudioInput): Promise<number> {
+export async function stageRenderAssets(input: StageRenderAssetsInput): Promise<number> {
   let staged = 0;
 
   if (input.hasNarration) {
@@ -64,6 +70,23 @@ export async function stageRenderAudio(input: StageRenderAudioInput): Promise<nu
       await copyFile(input.sfxPaths[sound], dest);
       staged += 1;
     }
+  }
+
+  const stagedLogos = new Set<string>();
+  for (const side of ["intro", "outro"] as const) {
+    const logoSrc = input.titleCards?.[side]?.logoSrc;
+    if (!logoSrc) continue;
+    const logo = await resolveLogoAsset(
+      input.scenarioDir,
+      logoSrc,
+      `titleCards.${side}.logoSrc`,
+    );
+    if (!logo || stagedLogos.has(logo.destRelPath)) continue;
+    const dest = join(input.publicDir, logo.destRelPath);
+    await mkdir(dirname(dest), { recursive: true });
+    await copyFile(logo.sourcePath, dest);
+    stagedLogos.add(logo.destRelPath);
+    staged += 1;
   }
 
   return staged;

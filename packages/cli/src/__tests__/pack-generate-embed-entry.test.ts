@@ -24,7 +24,7 @@ describe("generateEmbedEntry", () => {
     // embedViewport mirrors the DemoViewport numbers so the ready handshake
     // announces the exact canonical size the bundle lays out at.
     expect(src).toContain(
-      "<ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: 896, heightPx: 480 }} captions={_captions} soundtrackSources={_soundtrackSources} onStepChange={_handleStepChange}>",
+      "<ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: 896, heightPx: 480 }} captions={_captions} soundtrackSources={_soundtrackSources} onStepChange={_handleStepChange} onCardStepChange={_handleStepChange}>",
     );
     expect(src).toContain("renderStep(data, stepIndex)");
     expect(src).toContain('getElementById("root")');
@@ -50,12 +50,13 @@ describe("generateEmbedEntry", () => {
 
   it("imports the interaction primitives + React hooks the embed wiring needs", () => {
     const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
-    expect(src).toContain('import { useCallback, useRef, useState } from "react";');
+    expect(src).toContain('import { useCallback, useMemo, useRef, useState } from "react";');
     // ScenarioPlayer/DemoViewport/SCENAR_CLASS plus Cursor, useStepInteractions,
-    // ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY (playback) and
-    // ScenarioCaptureMount (the ?shot capture branch) all come from @scenar/react.
+    // ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY (playback),
+    // ScenarioCaptureMount (the ?shot capture branch), and applyTitleCards
+    // (card synthesis at bundle assembly) all come from @scenar/react.
     expect(src).toContain(
-      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, Cursor, useStepInteractions, ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY, ScenarioCaptureMount } from "@scenar/react";',
+      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, Cursor, useStepInteractions, ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY, ScenarioCaptureMount, applyTitleCards } from "@scenar/react";',
     );
   });
 
@@ -64,13 +65,17 @@ describe("generateEmbedEntry", () => {
     // A shared container ref flows to DemoViewport, useStepInteractions, and Cursor.
     expect(src).toContain("const _containerRef = useRef<HTMLDivElement>(null);");
     expect(src).toContain("<DemoViewport containerRef={_containerRef}");
-    // Step index is tracked from the player and fed to the interaction scheduler.
+    // Step index is tracked from the player and fed to the interaction
+    // scheduler — from BOTH step-change callbacks, so card-step
+    // interactions (the outro's housekeeping) reach it too.
     expect(src).toContain("onStepChange={_handleStepChange}");
+    expect(src).toContain("onCardStepChange={_handleStepChange}");
     expect(src).toContain("useStepInteractions({");
     expect(src).toContain("setCursorTarget: _setCursorTarget,");
     expect(src).toContain("setViewportTransform: _setViewport,");
     expect(src).toContain("cameraRef: _cameraRef,");
-    expect(src).toContain("steps: _steps,");
+    // The scheduler sees the card-expanded step list, not the authored one.
+    expect(src).toContain("steps: _applied.steps,");
     // The cursor lives INSIDE the camera layer with the camera's contentRef as
     // its container, so it scales and pans with the content during viewport
     // transitions — the documented contract on ViewportTransformLayer.
@@ -110,14 +115,34 @@ describe("generateEmbedEntry", () => {
 
   it("feeds the narration manifest into the interaction scheduler when present", () => {
     const without = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
-    // No narration: interactions are timed by step delays only.
-    expect(without).toContain("narrationManifest: undefined,");
+    // No narration: card synthesis pads nothing and interactions are
+    // timed by step delays only.
+    expect(without).toContain("applyTitleCards(_steps as any, undefined, _titleCards)");
 
     const withNarration = generateEmbedEntry({ ...BASE, hasNarration: true, providersPath: null });
-    // With narration: both the bundle and useStepInteractions receive _manifest,
-    // so interaction timing tracks the spoken-clip durations.
-    expect(withNarration).toContain("narrationManifest: _manifest,");
-    expect(withNarration).not.toContain("narrationManifest: undefined,");
+    // With narration: _manifest flows through card synthesis (which pads
+    // it in lockstep with any injected card steps) into both the bundle
+    // and useStepInteractions, so interaction timing tracks the
+    // spoken-clip durations.
+    expect(withNarration).toContain("applyTitleCards(_steps as any, _manifest, _titleCards)");
+    expect(withNarration).toContain("narrationManifest: _applied.narrationManifest,");
+  });
+
+  it("discovers title cards at runtime and synthesizes card steps inside _App", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: true, providersPath: null });
+    // Runtime mirror of the CLI's findAuthoredTitleCards, same as soundtrack.
+    expect(src).toContain("function _findTitleCards(");
+    expect(src).toContain(
+      "const _titleCards: any = _findTitleCards(_stepsModule as unknown as Record<string, unknown>);",
+    );
+    // Applied inside _App (the manifest arrives asynchronously), memoized so
+    // the steps identity stays stable and the scheduler is not re-armed.
+    expect(src).toContain("const _applied = useMemo(");
+    expect(src).toContain("applyTitleCards(_steps as any, _manifest, _titleCards)");
+    expect(src).toContain("steps: _applied.steps as any,");
+    // Capture mode (?shot) deliberately stays on the AUTHORED steps: shots
+    // live on authored steps and cards declare none.
+    expect(src).toContain("steps={_steps}");
   });
 
   it("imports the @scenar/react theme + styles so the bundle is self-contained", () => {
@@ -159,7 +184,7 @@ describe("generateEmbedEntry", () => {
 
   it("fetches the narration manifest at runtime only when present", () => {
     const without = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
-    expect(without).toContain("narrationManifest: undefined,");
+    expect(without).toContain("applyTitleCards(_steps as any, undefined, _titleCards)");
     expect(without).not.toContain("useNarrationManifest");
     expect(without).not.toContain("import _manifest");
 
@@ -170,13 +195,16 @@ describe("generateEmbedEntry", () => {
     // the manifest from its own relative location, so clip src values resolve
     // against ./narration/ at runtime.
     expect(withNarration).toContain(
-      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, Cursor, useStepInteractions, ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY, ScenarioCaptureMount, useNarrationManifest } from "@scenar/react";',
+      'import { ScenarioPlayer, DemoViewport, SCENAR_CLASS, Cursor, useStepInteractions, ViewportTransformLayer, VIEWPORT_TRANSFORM_IDENTITY, ScenarioCaptureMount, applyTitleCards, useNarrationManifest } from "@scenar/react";',
     );
     expect(withNarration).toContain('const _resolveManifestUrl = () => "./narration/manifest.json";');
     expect(withNarration).toContain(
       'const _manifest = useNarrationManifest("welcome-tour", _resolveManifestUrl);',
     );
-    expect(withNarration).toContain("narrationManifest: _manifest,");
+    // The fetched manifest flows through card synthesis (which pads it in
+    // lockstep with any injected card steps) into the bundle.
+    expect(withNarration).toContain("applyTitleCards(_steps as any, _manifest, _titleCards)");
+    expect(withNarration).toContain("narrationManifest: _applied.narrationManifest,");
   });
 
   it("wraps in PreviewProviders only when a providers file exists", () => {

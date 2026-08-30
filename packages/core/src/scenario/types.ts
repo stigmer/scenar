@@ -59,9 +59,10 @@ export interface ScenarioStep<T> {
    *
    * The player renders card steps with its built-in card component and
    * never calls the scenario's render function for them, so a card
-   * step's `data` is a placeholder that is never read (and
-   * `onStepChange` does not fire for card steps — the engine cannot
-   * fabricate a real `T`).
+   * step's `data` is a placeholder that is never read. Card steps
+   * announce activation through the player's `onCardStepChange`
+   * callback instead of `onStepChange` — the engine cannot fabricate a
+   * real `T` for the latter.
    */
   readonly card?: StepCard;
 }

@@ -1,8 +1,10 @@
 import { collectShotNames } from "@scenar/core";
 import {
   type AuthoredSoundtrack,
+  type AuthoredTitleCards,
   type AuthoredViewport,
   findAuthoredSoundtrack,
+  findAuthoredTitleCards,
   findAuthoredViewport,
   findStepsArray,
 } from "../util/load-ts.js";
@@ -27,6 +29,8 @@ export type CollectedPackShots =
       readonly authoredViewport: AuthoredViewport | null;
       /** The scenario's authored soundtrack (null = it authors none). */
       readonly authoredSoundtrack: AuthoredSoundtrack | null;
+      /** The scenario's authored title cards (null = it authors none). */
+      readonly authoredTitleCards: AuthoredTitleCards | null;
     }
   | { readonly recorded: false; readonly reason: string };
 
@@ -94,5 +98,6 @@ export async function collectPackShots(scenarioDir: string): Promise<CollectedPa
     shots: collectShotNames(steps),
     authoredViewport: findAuthoredViewport(stepsModule),
     authoredSoundtrack: findAuthoredSoundtrack(stepsModule),
+    authoredTitleCards: findAuthoredTitleCards(stepsModule),
   };
 }

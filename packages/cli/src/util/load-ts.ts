@@ -154,6 +154,89 @@ export function findAuthoredSoundtrack(
 }
 
 /**
+ * A scenario-authored title card, mirroring the proto `TitleCard`
+ * in camelCase (the same shape as `@scenar/core`'s `TitleCard`).
+ */
+export interface AuthoredTitleCard {
+  title?: string;
+  subtitle?: string;
+  logoSrc?: string;
+  ctaText?: string;
+  durationMs?: number;
+}
+
+/**
+ * A scenario-authored title-cards config, mirroring the proto
+ * `TitleCardsConfig` in camelCase.
+ */
+export interface AuthoredTitleCards {
+  intro?: AuthoredTitleCard;
+  outro?: AuthoredTitleCard;
+}
+
+/** The card's known field names — used to pick a clean copy. */
+const TITLE_CARD_FIELDS = [
+  "title",
+  "subtitle",
+  "logoSrc",
+  "ctaText",
+  "durationMs",
+] as const;
+
+function pickTitleCard(value: unknown): AuthoredTitleCard | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const card: Record<string, unknown> = {};
+  for (const field of TITLE_CARD_FIELDS) {
+    if (record[field] !== undefined) card[field] = record[field];
+  }
+  return card as AuthoredTitleCard;
+}
+
+function pickTitleCards(value: unknown): AuthoredTitleCards | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const cards: AuthoredTitleCards = {};
+  const intro = pickTitleCard(record["intro"]);
+  const outro = pickTitleCard(record["outro"]);
+  if (intro) cards.intro = intro;
+  if (outro) cards.outro = outro;
+  return cards;
+}
+
+/**
+ * Find the scenario's authored title cards in a loaded module's exports,
+ * or null when the module authors none.
+ *
+ * Mirrors {@link findAuthoredSoundtrack}'s two authored forms and
+ * precedence exactly:
+ *
+ * 1. A scenario-shaped export — an object carrying both a `titleCards`
+ *    and a delayMs-bearing `steps` array (what `createScenario()`
+ *    returns when the author passes title cards).
+ * 2. An export *named* `titleCards` — the directory-form counterpart,
+ *    for authors of a raw steps array.
+ *
+ * Field validity (non-empty title, positive duration) is the validator's
+ * concern, not discovery's — this only locates the authored object.
+ */
+export function findAuthoredTitleCards(
+  exports: Record<string, unknown>,
+): AuthoredTitleCards | null {
+  for (const value of Object.values(exports)) {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) continue;
+    const record = value as Record<string, unknown>;
+    if (record["titleCards"] !== undefined && isStepsShape(record["steps"])) {
+      return pickTitleCards(record["titleCards"]);
+    }
+  }
+  if (exports["titleCards"] !== undefined) {
+    return pickTitleCards(exports["titleCards"]);
+  }
+  return null;
+}
+
+/**
  * Dynamically import a TypeScript steps file and extract the
  * steps array by duck-typing ({@link findStepsArray}).
  *
@@ -181,4 +264,17 @@ export async function loadSoundtrackFromTs(
 ): Promise<AuthoredSoundtrack | null> {
   const mod = await import(pathToFileURL(filePath).href);
   return findAuthoredSoundtrack(mod.default ?? mod);
+}
+
+/**
+ * Dynamically import a TypeScript steps file and extract the authored
+ * title cards ({@link findAuthoredTitleCards}), or null when the module
+ * authors none. Node caches the module, so calling this alongside
+ * {@link loadStepsFromTs} costs one import.
+ */
+export async function loadTitleCardsFromTs(
+  filePath: string,
+): Promise<AuthoredTitleCards | null> {
+  const mod = await import(pathToFileURL(filePath).href);
+  return findAuthoredTitleCards(mod.default ?? mod);
 }

@@ -54,7 +54,7 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   lines.push(`import { registerRoot } from "remotion";`);
   lines.push(`import { Composition, AbsoluteFill } from "remotion";`);
   lines.push(
-    `import { ScenarioComposition, calculateScenarioTimeline } from "@scenar/remotion";`,
+    `import { ScenarioComposition, applyTitleCards, calculateScenarioTimeline } from "@scenar/remotion";`,
   );
   lines.push(`import { renderStep } from ${JSON.stringify(renderImport)};`);
   lines.push(`import * as _stepsModule from ${JSON.stringify(stepsImport)};`);
@@ -113,13 +113,38 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   lines.push(``);
   lines.push(`const _soundtrack: any = _findSoundtrack(_stepsModule as unknown as Record<string, unknown>);`);
 
-  // --- Bundle + timeline ---
+  // --- Title cards resolution (mirror of the CLI's findAuthoredTitleCards) ---
+  // Same discovery contract as _findSoundtrack. The config is discovered
+  // here and applied immediately below — bundle assembly is THE one
+  // card-synthesis point (applyTitleCards from @scenar/core, re-exported
+  // by @scenar/remotion so no extra dependency is needed).
 
   lines.push(``);
+  lines.push(`function _findTitleCards(mod: Record<string, unknown>): any {`);
+  lines.push(`  for (const val of Object.values(mod)) {`);
+  lines.push(`    if (`);
+  lines.push(`      typeof val === "object" && val !== null && !Array.isArray(val) &&`);
+  lines.push(`      "titleCards" in val &&`);
+  lines.push(`      Array.isArray((val as any).steps) && (val as any).steps.length > 0 &&`);
+  lines.push(`      typeof (val as any).steps[0] === "object" && (val as any).steps[0] !== null &&`);
+  lines.push(`      "delayMs" in (val as any).steps[0]`);
+  lines.push(`    ) return (val as any).titleCards;`);
+  lines.push(`  }`);
+  lines.push(`  return (mod as any)["titleCards"];`);
+  lines.push(`}`);
+  lines.push(``);
+  lines.push(`const _titleCards: any = _findTitleCards(_stepsModule as unknown as Record<string, unknown>);`);
+
+  // --- Bundle + timeline ---
+  // Card synthesis runs before the timeline calculation so an intro or
+  // outro card lengthens durationInFrames exactly like an authored step.
+
+  lines.push(``);
+  lines.push(`const _applied = applyTitleCards(_steps, _manifest, _titleCards);`);
   lines.push(`const _bundle = {`);
   lines.push(`  id: ${JSON.stringify(input.scenarioId)},`);
-  lines.push(`  steps: _steps,`);
-  lines.push(`  narrationManifest: _manifest,`);
+  lines.push(`  steps: _applied.steps as any,`);
+  lines.push(`  narrationManifest: _applied.narrationManifest,`);
   lines.push(`  soundtrack: _soundtrack,`);
   lines.push(`};`);
   lines.push(``);

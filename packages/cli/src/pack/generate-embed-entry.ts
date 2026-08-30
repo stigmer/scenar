@@ -89,7 +89,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   // in-app player wires): step tracking, cursor target, ripple/drag flags, and
   // the viewport transform. Without these, the embed would render content but
   // silently drop every cursor move and mid-step interaction.
-  lines.push(`import { useCallback, useRef, useState } from "react";`);
+  lines.push(`import { useCallback, useMemo, useRef, useState } from "react";`);
   lines.push(`import { createRoot } from "react-dom/client";`);
   const reactImports = [
     "ScenarioPlayer",
@@ -100,6 +100,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
     "ViewportTransformLayer",
     "VIEWPORT_TRANSFORM_IDENTITY",
     "ScenarioCaptureMount",
+    "applyTitleCards",
   ];
   if (input.stage) reactImports.push("ScenarioStage");
   if (input.hasNarration) reactImports.push("useNarrationManifest");
@@ -157,6 +158,29 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`const _soundtrackSources = {`);
   lines.push(`  sfx: { click: "./soundtrack/sfx/click.mp3", keystroke: "./soundtrack/sfx/keystroke.mp3" },`);
   lines.push(`};`);
+
+  // --- Title cards resolution (mirror of the CLI's findAuthoredTitleCards) ---
+  // Same runtime-discovery contract as _findSoundtrack. Applied inside
+  // _App (the manifest arrives asynchronously and padding must track it);
+  // pack copies the referenced logo into the bundle, so the authored
+  // relative src resolves against the embed page. Capture mode (?shot)
+  // deliberately stays on the AUTHORED steps: shots live on authored
+  // steps and cards declare none.
+  lines.push(``);
+  lines.push(`function _findTitleCards(mod: Record<string, unknown>): any {`);
+  lines.push(`  for (const val of Object.values(mod)) {`);
+  lines.push(`    if (`);
+  lines.push(`      typeof val === "object" && val !== null && !Array.isArray(val) &&`);
+  lines.push(`      "titleCards" in val &&`);
+  lines.push(`      Array.isArray((val as any).steps) && (val as any).steps.length > 0 &&`);
+  lines.push(`      typeof (val as any).steps[0] === "object" && (val as any).steps[0] !== null &&`);
+  lines.push(`      "delayMs" in (val as any).steps[0]`);
+  lines.push(`    ) return (val as any).titleCards;`);
+  lines.push(`  }`);
+  lines.push(`  return (mod as any)["titleCards"];`);
+  lines.push(`}`);
+  lines.push(``);
+  lines.push(`const _titleCards: any = _findTitleCards(_stepsModule as unknown as Record<string, unknown>);`);
 
   // --- Narration manifest URL resolver (stable module-level reference) ---
   // The manifest is fetched at runtime from its own relative location so that
@@ -251,27 +275,39 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(``);
   // Reset the cursor when the step changes so a prior step's target never
   // lingers; the new step's interactions re-set it at their scheduled time.
-  lines.push(`  const _handleStepChange = useCallback((_data: any, index: number) => {`);
+  // One handler feeds both step-change callbacks: authored steps deliver
+  // data, card steps deliver the card — the wiring needs only the index,
+  // and it must track BOTH so card-step interactions (the outro's
+  // cursor-clear and viewport-reset housekeeping) reach the scheduler.
+  lines.push(`  const _handleStepChange = useCallback((_dataOrCard: any, index: number) => {`);
   lines.push(`    _setStepIndex(index);`);
   lines.push(`    _setCursorTarget(undefined);`);
   lines.push(`  }, []);`);
   lines.push(``);
+  // Card synthesis: bundle assembly is THE one expansion point. Memoized
+  // on the manifest (the only async input) so the steps identity stays
+  // stable across renders and the interaction scheduler is not re-armed.
+  lines.push(`  const _applied = useMemo(`);
+  lines.push(`    () => applyTitleCards(_steps as any, ${manifestExpr}, _titleCards),`);
+  lines.push(`    [${manifestExpr}],`);
+  lines.push(`  );`);
+  lines.push(``);
   lines.push(`  useStepInteractions({`);
   lines.push(`    stepIndex: _stepIndex,`);
-  lines.push(`    narrationManifest: ${manifestExpr},`);
+  lines.push(`    narrationManifest: _applied.narrationManifest,`);
   lines.push(`    containerRef: _containerRef,`);
   lines.push(`    cameraRef: _cameraRef,`);
   lines.push(`    setCursorTarget: _setCursorTarget,`);
   lines.push(`    setShowRipple: _setShowRipple,`);
   lines.push(`    setDragging: _setDragging,`);
   lines.push(`    setViewportTransform: _setViewport,`);
-  lines.push(`    steps: _steps,`);
+  lines.push(`    steps: _applied.steps,`);
   lines.push(`  });`);
   lines.push(``);
   lines.push(`  const _bundle = {`);
   lines.push(`    id: ${JSON.stringify(input.scenarioId)},`);
-  lines.push(`    steps: _steps,`);
-  lines.push(`    narrationManifest: ${manifestExpr},`);
+  lines.push(`    steps: _applied.steps as any,`);
+  lines.push(`    narrationManifest: _applied.narrationManifest,`);
   lines.push(`    soundtrack: _soundtrack,`);
   lines.push(`  };`);
   const open = input.providersPath ? `<_Providers>` : ``;
@@ -290,7 +326,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   // embedViewport mirrors DemoViewport's numbers on purpose: the bundle
   // announces the exact canonical size it lays out at, so a host can adopt
   // iframe-as-screen scaling (see @scenar/embed's mount).
-  lines.push(`          <ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: ${input.canonicalWidth}, heightPx: ${input.shellHeight} }} captions={_captions} soundtrackSources={_soundtrackSources} onStepChange={_handleStepChange}>`);
+  lines.push(`          <ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: ${input.canonicalWidth}, heightPx: ${input.shellHeight} }} captions={_captions} soundtrackSources={_soundtrackSources} onStepChange={_handleStepChange} onCardStepChange={_handleStepChange}>`);
   lines.push(`            ${stepRender}`);
   lines.push(`          </ScenarioPlayer>`);
   lines.push(`          <Cursor target={_cursorTarget} containerRef={_cameraRef} showRipple={_showRipple} isDragging={_dragging} />`);

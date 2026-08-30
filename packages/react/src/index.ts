@@ -11,6 +11,10 @@ export type {
   NarrationEntry,
   NarrationManifest,
   Soundtrack,
+  TitleCard,
+  TitleCards,
+  StepCard,
+  AppliedTitleCards,
   SfxEvent,
   SfxSound,
   ViewportTransform,
@@ -19,6 +23,10 @@ export type {
 } from "@scenar/core";
 export {
   VIEWPORT_TRANSFORM_IDENTITY,
+  // Card synthesis is re-exported so bundle assemblers that already
+  // depend on this package (the generated pack entry, direct
+  // integrators) never need @scenar/core as a direct dependency.
+  applyTitleCards,
   computeStepTimeline,
   deriveStepFromTime,
   getStepDurationMs,
