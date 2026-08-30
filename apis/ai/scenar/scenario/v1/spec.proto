@@ -56,6 +56,15 @@ message ScenarioSpec {
   // after its delay_ms elapses (or after the previous step's
   // narration audio completes, whichever is longer).
   repeated Step steps = 2 [(buf.validate.field).repeated.min_items = 1];
+
+  // Audio treatment for the scenario: background music with narration
+  // ducking, and interaction sound effects. When omitted, the scenario
+  // plays and renders exactly as before — silent apart from narration.
+  //
+  // The soundtrack plays in both outputs: the interactive embed (muteable
+  // through the player's audio control, off until the viewer unmutes) and
+  // the exported video. Same source, same result.
+  SoundtrackConfig soundtrack = 3;
 }
 
 // ViewportConfig defines the canonical pixel dimensions at which the scenario
@@ -79,6 +88,80 @@ message ViewportConfig {
   // Typical values: 540 for video (16:9 at 960x540), 380 for
   // interactive docs embeds.
   int32 height = 2 [(buf.validate.field).int32.gt = 0];
+}
+
+// SoundtrackConfig defines the scenario's audio treatment beyond narration:
+// an optional background music track and optional interaction sound effects.
+// Music and sound effects are independent — a scenario may use either
+// without the other.
+//
+// Music plays under the whole scenario at music_volume, automatically
+// ducking to ducking_volume while a narration clip plays so the voice
+// stays intelligible. If the music asset is shorter than the scenario it
+// loops seamlessly; either way it fades in at scenario start and fades
+// out over the closing dwell, so the video never ends on a hard cut.
+//
+// Sound effects are derived, not authored: when sfx is true, the engine
+// plays its built-in click and keystroke sounds at the exact moments the
+// step interactions dispatch (a click sound when a click fires, one
+// keystroke sound per typed character, click sounds at drag press and
+// release). There is nothing to place on the timeline — the existing
+// interactions drive everything.
+//
+// All fields are optional so presence is detectable: an explicit 0.0
+// volume is honored, an unset volume uses the engine default.
+//
+// Example YAML (spec block):
+//   spec:
+//     soundtrack:
+//       music_src: "./soundtrack/music.mp3"
+//       music_volume: 0.25
+//       ducking_volume: 0.08
+//       sfx: true
+//     steps:
+//       - view: new-session
+//         ...
+message SoundtrackConfig {
+  // Background music asset reference. Like narration clip srcs, a
+  // relative path resolves against the scenario's own location (e.g.
+  // "./soundtrack/music.mp3" next to steps.ts); an absolute URL passes
+  // through unchanged. MP3 is the supported format — the same format
+  // narration uses, and the only audio type the packed-embed deploy
+  // contract serves.
+  //
+  // The music asset is provided by the scenario author; licensing stays
+  // with them, exactly like their view components. When unset, the
+  // scenario has no music (sound effects may still be enabled).
+  optional string music_src = 1 [(buf.validate.field).string.min_len = 1];
+
+  // Base music level while no narration is playing, from 0.0 (silent)
+  // to 1.0 (full volume). When unset, the engine uses its built-in
+  // default (0.25 — clearly audible under silence without competing
+  // with interface sound effects).
+  optional float music_volume = 2 [(buf.validate.field).float = {
+    gte: 0.0
+    lte: 1.0
+  }];
+
+  // Absolute music level while a narration clip plays, from 0.0 to 1.0.
+  // This is the level the music ducks to — not a multiplier of
+  // music_volume — so what you write is what you hear. When unset, the
+  // engine uses its built-in default (0.08 — present but firmly under
+  // the voice).
+  //
+  // The engine ramps between music_volume and ducking_volume over a
+  // short window at each narration boundary so the duck is felt, not
+  // heard as a cut.
+  optional float ducking_volume = 3 [(buf.validate.field).float = {
+    gte: 0.0
+    lte: 1.0
+  }];
+
+  // Enables the engine's built-in interaction sound effects (click and
+  // keystroke). Requires an explicit true — adding music alone never
+  // introduces sound effects. When unset or false, interactions stay
+  // silent.
+  optional bool sfx = 4;
 }
 
 // Step represents a single point in the scenario timeline — a visual state

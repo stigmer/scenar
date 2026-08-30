@@ -73,7 +73,15 @@ type ScenarioSpec struct {
 	// Step 0 is the initial state. Each subsequent step transitions
 	// after its delay_ms elapses (or after the previous step's
 	// narration audio completes, whichever is longer).
-	Steps         []*Step `protobuf:"bytes,2,rep,name=steps,proto3" json:"steps,omitempty"`
+	Steps []*Step `protobuf:"bytes,2,rep,name=steps,proto3" json:"steps,omitempty"`
+	// Audio treatment for the scenario: background music with narration
+	// ducking, and interaction sound effects. When omitted, the scenario
+	// plays and renders exactly as before — silent apart from narration.
+	//
+	// The soundtrack plays in both outputs: the interactive embed (muteable
+	// through the player's audio control, off until the viewer unmutes) and
+	// the exported video. Same source, same result.
+	Soundtrack    *SoundtrackConfig `protobuf:"bytes,3,opt,name=soundtrack,proto3" json:"soundtrack,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -118,6 +126,13 @@ func (x *ScenarioSpec) GetViewport() *ViewportConfig {
 func (x *ScenarioSpec) GetSteps() []*Step {
 	if x != nil {
 		return x.Steps
+	}
+	return nil
+}
+
+func (x *ScenarioSpec) GetSoundtrack() *SoundtrackConfig {
+	if x != nil {
+		return x.Soundtrack
 	}
 	return nil
 }
@@ -191,6 +206,133 @@ func (x *ViewportConfig) GetHeight() int32 {
 	return 0
 }
 
+// SoundtrackConfig defines the scenario's audio treatment beyond narration:
+// an optional background music track and optional interaction sound effects.
+// Music and sound effects are independent — a scenario may use either
+// without the other.
+//
+// Music plays under the whole scenario at music_volume, automatically
+// ducking to ducking_volume while a narration clip plays so the voice
+// stays intelligible. If the music asset is shorter than the scenario it
+// loops seamlessly; either way it fades in at scenario start and fades
+// out over the closing dwell, so the video never ends on a hard cut.
+//
+// Sound effects are derived, not authored: when sfx is true, the engine
+// plays its built-in click and keystroke sounds at the exact moments the
+// step interactions dispatch (a click sound when a click fires, one
+// keystroke sound per typed character, click sounds at drag press and
+// release). There is nothing to place on the timeline — the existing
+// interactions drive everything.
+//
+// All fields are optional so presence is detectable: an explicit 0.0
+// volume is honored, an unset volume uses the engine default.
+//
+// Example YAML (spec block):
+//
+//	spec:
+//	  soundtrack:
+//	    music_src: "./soundtrack/music.mp3"
+//	    music_volume: 0.25
+//	    ducking_volume: 0.08
+//	    sfx: true
+//	  steps:
+//	    - view: new-session
+//	      ...
+type SoundtrackConfig struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Background music asset reference. Like narration clip srcs, a
+	// relative path resolves against the scenario's own location (e.g.
+	// "./soundtrack/music.mp3" next to steps.ts); an absolute URL passes
+	// through unchanged. MP3 is the supported format — the same format
+	// narration uses, and the only audio type the packed-embed deploy
+	// contract serves.
+	//
+	// The music asset is provided by the scenario author; licensing stays
+	// with them, exactly like their view components. When unset, the
+	// scenario has no music (sound effects may still be enabled).
+	MusicSrc *string `protobuf:"bytes,1,opt,name=music_src,json=musicSrc,proto3,oneof" json:"music_src,omitempty"`
+	// Base music level while no narration is playing, from 0.0 (silent)
+	// to 1.0 (full volume). When unset, the engine uses its built-in
+	// default (0.25 — clearly audible under silence without competing
+	// with interface sound effects).
+	MusicVolume *float32 `protobuf:"fixed32,2,opt,name=music_volume,json=musicVolume,proto3,oneof" json:"music_volume,omitempty"`
+	// Absolute music level while a narration clip plays, from 0.0 to 1.0.
+	// This is the level the music ducks to — not a multiplier of
+	// music_volume — so what you write is what you hear. When unset, the
+	// engine uses its built-in default (0.08 — present but firmly under
+	// the voice).
+	//
+	// The engine ramps between music_volume and ducking_volume over a
+	// short window at each narration boundary so the duck is felt, not
+	// heard as a cut.
+	DuckingVolume *float32 `protobuf:"fixed32,3,opt,name=ducking_volume,json=duckingVolume,proto3,oneof" json:"ducking_volume,omitempty"`
+	// Enables the engine's built-in interaction sound effects (click and
+	// keystroke). Requires an explicit true — adding music alone never
+	// introduces sound effects. When unset or false, interactions stay
+	// silent.
+	Sfx           *bool `protobuf:"varint,4,opt,name=sfx,proto3,oneof" json:"sfx,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SoundtrackConfig) Reset() {
+	*x = SoundtrackConfig{}
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SoundtrackConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SoundtrackConfig) ProtoMessage() {}
+
+func (x *SoundtrackConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SoundtrackConfig.ProtoReflect.Descriptor instead.
+func (*SoundtrackConfig) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *SoundtrackConfig) GetMusicSrc() string {
+	if x != nil && x.MusicSrc != nil {
+		return *x.MusicSrc
+	}
+	return ""
+}
+
+func (x *SoundtrackConfig) GetMusicVolume() float32 {
+	if x != nil && x.MusicVolume != nil {
+		return *x.MusicVolume
+	}
+	return 0
+}
+
+func (x *SoundtrackConfig) GetDuckingVolume() float32 {
+	if x != nil && x.DuckingVolume != nil {
+		return *x.DuckingVolume
+	}
+	return 0
+}
+
+func (x *SoundtrackConfig) GetSfx() bool {
+	if x != nil && x.Sfx != nil {
+		return *x.Sfx
+	}
+	return false
+}
+
 // Step represents a single point in the scenario timeline — a visual state
 // (which component renders) plus optional timed interactions (cursor actions,
 // typing, hovering, etc.) that occur while this step is active.
@@ -251,7 +393,7 @@ type Step struct {
 
 func (x *Step) Reset() {
 	*x = Step{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[2]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -263,7 +405,7 @@ func (x *Step) String() string {
 func (*Step) ProtoMessage() {}
 
 func (x *Step) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[2]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -276,7 +418,7 @@ func (x *Step) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Step.ProtoReflect.Descriptor instead.
 func (*Step) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{2}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Step) GetView() string {
@@ -372,7 +514,7 @@ type StepAction struct {
 
 func (x *StepAction) Reset() {
 	*x = StepAction{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[3]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -384,7 +526,7 @@ func (x *StepAction) String() string {
 func (*StepAction) ProtoMessage() {}
 
 func (x *StepAction) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[3]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -397,7 +539,7 @@ func (x *StepAction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StepAction.ProtoReflect.Descriptor instead.
 func (*StepAction) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{3}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *StepAction) GetAtPercent() float32 {
@@ -545,7 +687,7 @@ type ClickConfig struct {
 
 func (x *ClickConfig) Reset() {
 	*x = ClickConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[4]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -557,7 +699,7 @@ func (x *ClickConfig) String() string {
 func (*ClickConfig) ProtoMessage() {}
 
 func (x *ClickConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[4]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -570,7 +712,7 @@ func (x *ClickConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClickConfig.ProtoReflect.Descriptor instead.
 func (*ClickConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{4}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{5}
 }
 
 // TypeConfig holds configuration for type (text input) actions.
@@ -593,7 +735,7 @@ type TypeConfig struct {
 
 func (x *TypeConfig) Reset() {
 	*x = TypeConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[5]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -605,7 +747,7 @@ func (x *TypeConfig) String() string {
 func (*TypeConfig) ProtoMessage() {}
 
 func (x *TypeConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[5]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -618,7 +760,7 @@ func (x *TypeConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TypeConfig.ProtoReflect.Descriptor instead.
 func (*TypeConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{5}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *TypeConfig) GetText() string {
@@ -653,7 +795,7 @@ type HoverConfig struct {
 
 func (x *HoverConfig) Reset() {
 	*x = HoverConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[6]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -665,7 +807,7 @@ func (x *HoverConfig) String() string {
 func (*HoverConfig) ProtoMessage() {}
 
 func (x *HoverConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[6]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -678,7 +820,7 @@ func (x *HoverConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HoverConfig.ProtoReflect.Descriptor instead.
 func (*HoverConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{6}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *HoverConfig) GetHoverDurationMs() int32 {
@@ -705,7 +847,7 @@ type DragConfig struct {
 
 func (x *DragConfig) Reset() {
 	*x = DragConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[7]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -717,7 +859,7 @@ func (x *DragConfig) String() string {
 func (*DragConfig) ProtoMessage() {}
 
 func (x *DragConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[7]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -730,7 +872,7 @@ func (x *DragConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DragConfig.ProtoReflect.Descriptor instead.
 func (*DragConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{7}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DragConfig) GetDragTarget() string {
@@ -754,7 +896,7 @@ type ScrollToConfig struct {
 
 func (x *ScrollToConfig) Reset() {
 	*x = ScrollToConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[8]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -766,7 +908,7 @@ func (x *ScrollToConfig) String() string {
 func (*ScrollToConfig) ProtoMessage() {}
 
 func (x *ScrollToConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[8]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -779,7 +921,7 @@ func (x *ScrollToConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScrollToConfig.ProtoReflect.Descriptor instead.
 func (*ScrollToConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{8}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{9}
 }
 
 // ViewportTransitionConfig holds configuration for viewport zoom/pan
@@ -806,7 +948,7 @@ type ViewportTransitionConfig struct {
 
 func (x *ViewportTransitionConfig) Reset() {
 	*x = ViewportTransitionConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[9]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -818,7 +960,7 @@ func (x *ViewportTransitionConfig) String() string {
 func (*ViewportTransitionConfig) ProtoMessage() {}
 
 func (x *ViewportTransitionConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[9]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -831,7 +973,7 @@ func (x *ViewportTransitionConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ViewportTransitionConfig.ProtoReflect.Descriptor instead.
 func (*ViewportTransitionConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{9}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ViewportTransitionConfig) GetViewportZoom() float32 {
@@ -852,13 +994,30 @@ var File_ai_scenar_scenario_v1_spec_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_scenario_v1_spec_proto_rawDesc = "" +
 	"\n" +
-	" ai/scenar/scenario/v1/spec.proto\x12\x15ai.scenar.scenario.v1\x1a ai/scenar/scenario/v1/enum.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/protobuf/struct.proto\"\x8e\x01\n" +
+	" ai/scenar/scenario/v1/spec.proto\x12\x15ai.scenar.scenario.v1\x1a ai/scenar/scenario/v1/enum.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xd7\x01\n" +
 	"\fScenarioSpec\x12A\n" +
 	"\bviewport\x18\x01 \x01(\v2%.ai.scenar.scenario.v1.ViewportConfigR\bviewport\x12;\n" +
-	"\x05steps\x18\x02 \x03(\v2\x1b.ai.scenar.scenario.v1.StepB\b\xbaH\x05\x92\x01\x02\b\x01R\x05steps\"P\n" +
+	"\x05steps\x18\x02 \x03(\v2\x1b.ai.scenar.scenario.v1.StepB\b\xbaH\x05\x92\x01\x02\b\x01R\x05steps\x12G\n" +
+	"\n" +
+	"soundtrack\x18\x03 \x01(\v2'.ai.scenar.scenario.v1.SoundtrackConfigR\n" +
+	"soundtrack\"P\n" +
 	"\x0eViewportConfig\x12\x1d\n" +
 	"\x05width\x18\x01 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00R\x05width\x12\x1f\n" +
-	"\x06height\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00R\x06height\"\xf3\x01\n" +
+	"\x06height\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00R\x06height\"\x84\x02\n" +
+	"\x10SoundtrackConfig\x12)\n" +
+	"\tmusic_src\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01H\x00R\bmusicSrc\x88\x01\x01\x127\n" +
+	"\fmusic_volume\x18\x02 \x01(\x02B\x0f\xbaH\f\n" +
+	"\n" +
+	"\x1d\x00\x00\x80?-\x00\x00\x00\x00H\x01R\vmusicVolume\x88\x01\x01\x12;\n" +
+	"\x0educking_volume\x18\x03 \x01(\x02B\x0f\xbaH\f\n" +
+	"\n" +
+	"\x1d\x00\x00\x80?-\x00\x00\x00\x00H\x02R\rduckingVolume\x88\x01\x01\x12\x15\n" +
+	"\x03sfx\x18\x04 \x01(\bH\x03R\x03sfx\x88\x01\x01B\f\n" +
+	"\n" +
+	"_music_srcB\x0f\n" +
+	"\r_music_volumeB\x11\n" +
+	"\x0f_ducking_volumeB\x06\n" +
+	"\x04_sfx\"\xf3\x01\n" +
 	"\x04Step\x12\x1b\n" +
 	"\x04view\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04view\x12\"\n" +
 	"\bdelay_ms\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\adelayMs\x12%\n" +
@@ -912,38 +1071,40 @@ func file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP() []byte {
 	return file_ai_scenar_scenario_v1_spec_proto_rawDescData
 }
 
-var file_ai_scenar_scenario_v1_spec_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_ai_scenar_scenario_v1_spec_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_ai_scenar_scenario_v1_spec_proto_goTypes = []any{
 	(*ScenarioSpec)(nil),             // 0: ai.scenar.scenario.v1.ScenarioSpec
 	(*ViewportConfig)(nil),           // 1: ai.scenar.scenario.v1.ViewportConfig
-	(*Step)(nil),                     // 2: ai.scenar.scenario.v1.Step
-	(*StepAction)(nil),               // 3: ai.scenar.scenario.v1.StepAction
-	(*ClickConfig)(nil),              // 4: ai.scenar.scenario.v1.ClickConfig
-	(*TypeConfig)(nil),               // 5: ai.scenar.scenario.v1.TypeConfig
-	(*HoverConfig)(nil),              // 6: ai.scenar.scenario.v1.HoverConfig
-	(*DragConfig)(nil),               // 7: ai.scenar.scenario.v1.DragConfig
-	(*ScrollToConfig)(nil),           // 8: ai.scenar.scenario.v1.ScrollToConfig
-	(*ViewportTransitionConfig)(nil), // 9: ai.scenar.scenario.v1.ViewportTransitionConfig
-	(*structpb.Struct)(nil),          // 10: google.protobuf.Struct
-	(ActionType)(0),                  // 11: ai.scenar.scenario.v1.ActionType
+	(*SoundtrackConfig)(nil),         // 2: ai.scenar.scenario.v1.SoundtrackConfig
+	(*Step)(nil),                     // 3: ai.scenar.scenario.v1.Step
+	(*StepAction)(nil),               // 4: ai.scenar.scenario.v1.StepAction
+	(*ClickConfig)(nil),              // 5: ai.scenar.scenario.v1.ClickConfig
+	(*TypeConfig)(nil),               // 6: ai.scenar.scenario.v1.TypeConfig
+	(*HoverConfig)(nil),              // 7: ai.scenar.scenario.v1.HoverConfig
+	(*DragConfig)(nil),               // 8: ai.scenar.scenario.v1.DragConfig
+	(*ScrollToConfig)(nil),           // 9: ai.scenar.scenario.v1.ScrollToConfig
+	(*ViewportTransitionConfig)(nil), // 10: ai.scenar.scenario.v1.ViewportTransitionConfig
+	(*structpb.Struct)(nil),          // 11: google.protobuf.Struct
+	(ActionType)(0),                  // 12: ai.scenar.scenario.v1.ActionType
 }
 var file_ai_scenar_scenario_v1_spec_proto_depIdxs = []int32{
 	1,  // 0: ai.scenar.scenario.v1.ScenarioSpec.viewport:type_name -> ai.scenar.scenario.v1.ViewportConfig
-	2,  // 1: ai.scenar.scenario.v1.ScenarioSpec.steps:type_name -> ai.scenar.scenario.v1.Step
-	10, // 2: ai.scenar.scenario.v1.Step.props:type_name -> google.protobuf.Struct
-	3,  // 3: ai.scenar.scenario.v1.Step.interactions:type_name -> ai.scenar.scenario.v1.StepAction
-	11, // 4: ai.scenar.scenario.v1.StepAction.type:type_name -> ai.scenar.scenario.v1.ActionType
-	4,  // 5: ai.scenar.scenario.v1.StepAction.click_config:type_name -> ai.scenar.scenario.v1.ClickConfig
-	5,  // 6: ai.scenar.scenario.v1.StepAction.type_config:type_name -> ai.scenar.scenario.v1.TypeConfig
-	6,  // 7: ai.scenar.scenario.v1.StepAction.hover_config:type_name -> ai.scenar.scenario.v1.HoverConfig
-	7,  // 8: ai.scenar.scenario.v1.StepAction.drag_config:type_name -> ai.scenar.scenario.v1.DragConfig
-	8,  // 9: ai.scenar.scenario.v1.StepAction.scroll_to_config:type_name -> ai.scenar.scenario.v1.ScrollToConfig
-	9,  // 10: ai.scenar.scenario.v1.StepAction.viewport_transition_config:type_name -> ai.scenar.scenario.v1.ViewportTransitionConfig
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	3,  // 1: ai.scenar.scenario.v1.ScenarioSpec.steps:type_name -> ai.scenar.scenario.v1.Step
+	2,  // 2: ai.scenar.scenario.v1.ScenarioSpec.soundtrack:type_name -> ai.scenar.scenario.v1.SoundtrackConfig
+	11, // 3: ai.scenar.scenario.v1.Step.props:type_name -> google.protobuf.Struct
+	4,  // 4: ai.scenar.scenario.v1.Step.interactions:type_name -> ai.scenar.scenario.v1.StepAction
+	12, // 5: ai.scenar.scenario.v1.StepAction.type:type_name -> ai.scenar.scenario.v1.ActionType
+	5,  // 6: ai.scenar.scenario.v1.StepAction.click_config:type_name -> ai.scenar.scenario.v1.ClickConfig
+	6,  // 7: ai.scenar.scenario.v1.StepAction.type_config:type_name -> ai.scenar.scenario.v1.TypeConfig
+	7,  // 8: ai.scenar.scenario.v1.StepAction.hover_config:type_name -> ai.scenar.scenario.v1.HoverConfig
+	8,  // 9: ai.scenar.scenario.v1.StepAction.drag_config:type_name -> ai.scenar.scenario.v1.DragConfig
+	9,  // 10: ai.scenar.scenario.v1.StepAction.scroll_to_config:type_name -> ai.scenar.scenario.v1.ScrollToConfig
+	10, // 11: ai.scenar.scenario.v1.StepAction.viewport_transition_config:type_name -> ai.scenar.scenario.v1.ViewportTransitionConfig
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_ai_scenar_scenario_v1_spec_proto_init() }
@@ -952,7 +1113,8 @@ func file_ai_scenar_scenario_v1_spec_proto_init() {
 		return
 	}
 	file_ai_scenar_scenario_v1_enum_proto_init()
-	file_ai_scenar_scenario_v1_spec_proto_msgTypes[3].OneofWrappers = []any{
+	file_ai_scenar_scenario_v1_spec_proto_msgTypes[2].OneofWrappers = []any{}
+	file_ai_scenar_scenario_v1_spec_proto_msgTypes[4].OneofWrappers = []any{
 		(*StepAction_ClickConfig)(nil),
 		(*StepAction_TypeConfig)(nil),
 		(*StepAction_HoverConfig)(nil),
@@ -966,7 +1128,7 @@ func file_ai_scenar_scenario_v1_spec_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_scenar_scenario_v1_spec_proto_rawDesc), len(file_ai_scenar_scenario_v1_spec_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
