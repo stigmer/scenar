@@ -21,6 +21,8 @@ export interface EntryGeneratorInput {
   width: number;
   height: number;
   compositionId: string;
+  /** Burn step captions into the video (`scenar render --captions`). */
+  captions: boolean;
 }
 
 /**
@@ -107,11 +109,18 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   lines.push(``);
   lines.push(`function _VideoRoot() {`);
 
+  // `captions` is baked into the generated JSX (not read at render time):
+  // the entry is written per render invocation, so the flag's value IS the
+  // render's configuration — same treatment as fps/width/height above.
+  const compositionOpen = input.captions
+    ? `<ScenarioComposition bundle={_bundle} captions>`
+    : `<ScenarioComposition bundle={_bundle}>`;
+
   if (input.providersPath) {
     lines.push(`  return (`);
     lines.push(`    <AbsoluteFill>`);
     lines.push(`      <_Providers>`);
-    lines.push(`        <ScenarioComposition bundle={_bundle}>`);
+    lines.push(`        ${compositionOpen}`);
     lines.push(`          {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
     lines.push(`        </ScenarioComposition>`);
     lines.push(`      </_Providers>`);
@@ -120,7 +129,7 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   } else {
     lines.push(`  return (`);
     lines.push(`    <AbsoluteFill>`);
-    lines.push(`      <ScenarioComposition bundle={_bundle}>`);
+    lines.push(`      ${compositionOpen}`);
     lines.push(`        {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
     lines.push(`      </ScenarioComposition>`);
     lines.push(`    </AbsoluteFill>`);

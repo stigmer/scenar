@@ -16,6 +16,12 @@ export interface RunRenderOptions {
   readonly compositionId?: string;
   readonly entry?: string;
   readonly webpackOverride?: string;
+  /**
+   * Burn step captions into the video (each step's `narration` text as a
+   * subtitle overlay). Only applies to the auto-generated entry; a custom
+   * `--entry` owns its own `<ScenarioComposition>` props.
+   */
+  readonly captions?: boolean;
   readonly onLog?: (message: string) => void;
 }
 
@@ -55,6 +61,16 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
   const fps = options.fps ?? 30;
   const width = options.width ?? 1920;
   const height = options.height ?? 1080;
+  const captions = options.captions ?? false;
+
+  // A custom entry owns its own <ScenarioComposition> props, so --captions
+  // cannot reach it. Say so instead of silently ignoring the flag.
+  if (captions && options.entry) {
+    onLog(
+      "Warning: --captions has no effect with --entry. " +
+        'Pass captions to <ScenarioComposition> in your entry file instead.',
+    );
+  }
 
   let tempDir: string | undefined;
   try {
@@ -72,6 +88,7 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
       fps,
       width,
       height,
+      captions,
     });
     tempDir = generated?.tempDir;
 
@@ -82,6 +99,9 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
     onLog(`Scenario: ${scenarioId}`);
     onLog(`Steps:    ${bundle.steps.length}`);
     onLog(`Audio:    ${bundle.narrationManifest ? "yes (manifest found)" : "none"}`);
+    if (captions) {
+      onLog(`Captions: burned in (from step narration text)`);
+    }
     onLog(`Entry:    ${generated ? "(auto-generated)" : entryPoint}`);
     if (generated?.providersPath) {
       onLog(`Providers: ${generated.providersPath}`);
@@ -140,6 +160,7 @@ interface EntryResolutionInput {
   fps: number;
   width: number;
   height: number;
+  captions: boolean;
 }
 
 interface EntryResolutionResult {
@@ -176,6 +197,7 @@ async function resolveEntryPoint(input: EntryResolutionInput): Promise<EntryReso
     width: input.width,
     height: input.height,
     compositionId: input.compositionId,
+    captions: input.captions,
   });
 
   // Write the entry inside the scenario directory so webpack's standard

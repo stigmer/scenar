@@ -18,8 +18,12 @@ export interface ScenarioStep<T> {
   /** Data snapshot at this point in the timeline. */
   readonly data: T;
   /**
-   * Narration script for TTS generation. Consumed by the build script
-   * to produce audio files — not rendered at runtime.
+   * Narration script for this step. Consumed by `scenar narrate` to
+   * produce audio files, and rendered at runtime as the step's caption
+   * when the player has captions enabled (a presentation preference —
+   * the `captions` player prop, the `?captions=1` embed param, or
+   * `scenar render --captions`). Steps without narration play
+   * uncaptioned.
    */
   readonly narration?: string;
   /**

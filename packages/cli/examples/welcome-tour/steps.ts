@@ -27,6 +27,10 @@ export const steps: ScenarioStep<TourStepData>[] = [
   {
     delayMs: 0,
     data: { url: "app.acme.cloud/login", screen: "login" },
+    // `narration` doubles as the TTS script (`scenar narrate`) and the
+    // caption text when captions are enabled (`?captions=1` on the embed,
+    // `--captions` on render).
+    narration: "Welcome to Acme Cloud. Signing in takes you straight to your workspace.",
     // `shot` names this step's settled frame as a still-capture point:
     // `scenar shoot <bundle>` renders it to stills/login-screen.<theme>.png.
     // Steps without a shot are simply walked through.
@@ -35,14 +39,17 @@ export const steps: ScenarioStep<TourStepData>[] = [
   {
     delayMs: 2400,
     data: { url: "app.acme.cloud/home", screen: "dashboard" },
+    narration: "The dashboard shows your deployments and activity at a glance.",
   },
   {
     delayMs: 2600,
     data: { url: "app.acme.cloud/projects", screen: "projects" },
+    narration: "Every project lives here, with its environments one click away.",
   },
   {
     delayMs: 2600,
     data: { url: "app.acme.cloud/settings", screen: "settings" },
+    narration: "And settings is where you manage keys, members, and billing.",
     shot: "settings-screen",
   },
 ];

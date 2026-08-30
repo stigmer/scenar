@@ -9,6 +9,7 @@ interface RenderOptions {
   compositionId?: string;
   entry?: string;
   webpackOverride?: string;
+  captions?: boolean;
 }
 
 export function registerRenderCommand(program: Command): void {
@@ -30,6 +31,10 @@ export function registerRenderCommand(program: Command): void {
     .option("--width <number>", "video width in pixels (default: 1920)", "1920")
     .option("--height <number>", "video height in pixels (default: 1080)", "1080")
     .option("--composition-id <id>", "Remotion composition ID to render")
+    .option(
+      "--captions",
+      "burn step captions into the video (each step's narration text)",
+    )
     .option("--entry <path>", "path to a custom Remotion entry file")
     .option(
       "--webpack-override <path>",
@@ -46,6 +51,7 @@ export function registerRenderCommand(program: Command): void {
           compositionId: options.compositionId,
           entry: options.entry,
           webpackOverride: options.webpackOverride,
+          captions: options.captions ?? false,
           onLog: (message) => process.stderr.write(`${message}\n`),
         });
 

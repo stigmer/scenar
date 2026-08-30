@@ -9,6 +9,7 @@ import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
 import { useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
 import { PlaybackBurst, ScenarioAudioNotice } from "./PlaybackFeedback.js";
+import { CaptionOverlay } from "./CaptionOverlay.js";
 import { ScenarioControls } from "./ScenarioControls.js";
 import type { TimeDisplayMode } from "./format-playback-time.js";
 import { useScenarEmbedBridge } from "../embed/useScenarEmbedBridge.js";
@@ -50,6 +51,15 @@ interface ScenarioPlayerProps<T> {
    * the same numbers it passes to `DemoViewport`.
    */
   embedViewport?: ScenarEmbedViewport;
+  /**
+   * Enable step captions: each step's `narration` text renders as a
+   * subtitle-style overlay, initially visible, with a CC toggle in the
+   * control bar so the viewer can hide them. A presentation preference,
+   * not part of the scenario definition — the same scenario plays with or
+   * without captions. Defaults to false; without it the player renders no
+   * caption DOM and no CC control, exactly as before the feature existed.
+   */
+  captions?: boolean;
 }
 
 /**
@@ -81,6 +91,7 @@ export function ScenarioPlayer<T>({
   showSpeedControl = true,
   embed = false,
   embedViewport,
+  captions = false,
 }: ScenarioPlayerProps<T>) {
   const steps = stepsProp ?? bundle?.steps;
   const narrationManifest = manifestProp ?? bundle?.narrationManifest;
@@ -292,6 +303,15 @@ export function ScenarioPlayer<T>({
     unlock();
   }, [unlock]);
 
+  // Captions: the `captions` prop makes them *available* (and initially
+  // visible); this state is the viewer's CC toggle thereafter. Kept
+  // regardless of the prop so hook order is stable; without the prop no
+  // caption DOM or CC control ever renders.
+  const [captionsVisible, setCaptionsVisible] = useState(captions);
+  const handleToggleCaptions = useCallback(() => {
+    setCaptionsVisible((visible) => !visible);
+  }, []);
+
   // Fullscreen: offered only in the packed embed (the iframe already carries
   // `allowfullscreen`), where fullscreening the embed *document* is exactly
   // right — DemoViewport re-fits its zoom to the grown viewport. In-app
@@ -380,6 +400,21 @@ export function ScenarioPlayer<T>({
   const showControlBar = !hideControls;
   const showAudioNotice = audioBlocked && !isVideoExport && playbackState !== "idle";
 
+  // The active step's caption. Empty/absent narration renders nothing —
+  // steps without a script simply play uncaptioned.
+  const captionText = captions && captionsVisible ? steps[stepIndex]!.narration : undefined;
+
+  const captionOverlay = !!captionText && (
+    <CaptionOverlay
+      text={captionText}
+      // Export renders inline in the canonical content box (no chrome
+      // layer), so the caption uses canonical-pixel subtitle sizing; every
+      // other surface renders at native CSS pixels.
+      sizeVariant={isVideoExport ? "canonical" : "chrome"}
+      controlBarVisible={showControlBar && controlsVisible}
+    />
+  );
+
   const controlBar = showControlBar && (
     <ScenarioControls
       visible={controlsVisible}
@@ -389,6 +424,9 @@ export function ScenarioPlayer<T>({
       stepTimeline={stepTimeline}
       showSpeedControl={showSpeedControl}
       hasNarration={!!narrationManifest}
+      captionsEnabled={captions}
+      captionsVisible={captionsVisible}
+      onToggleCaptions={handleToggleCaptions}
       onToggleFullscreen={fullscreenAvailable ? handleToggleFullscreen : undefined}
       isFullscreen={isFullscreen}
       progressTrackRef={progressTrackRef}
@@ -440,8 +478,26 @@ export function ScenarioPlayer<T>({
          * through the React tree, so the bar's stopPropagation still shields
          * this div's click-to-toggle, and mousemove on the bar still reaches
          * the container's reveal handler.
+         *
+         * The caption overlay rides the same portal: like the bar, a caption
+         * is player chrome that must hold native pixel size under viewport
+         * zoom and camera moves. Rendered before the bar so its z-10 sits
+         * beneath the bar's z-20 in source order too.
          */}
-        {chromeTarget ? createPortal(controlBar, chromeTarget) : controlBar}
+        {chromeTarget ? (
+          createPortal(
+            <>
+              {captionOverlay}
+              {controlBar}
+            </>,
+            chromeTarget,
+          )
+        ) : (
+          <>
+            {captionOverlay}
+            {controlBar}
+          </>
+        )}
       </div>
 
       {narrationManifest && <audio ref={audioRef} preload="none" hidden />}
