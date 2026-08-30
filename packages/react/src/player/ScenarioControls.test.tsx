@@ -77,21 +77,35 @@ describe("ScenarioControls transport buttons", () => {
     const onToggleFullscreen = vi.fn();
     const { container } = renderControls({ muted: true, onToggleMute, onToggleFullscreen });
 
-    fireEvent.click(within(container).getByRole("button", { name: "Unmute narration" }));
+    fireEvent.click(within(container).getByRole("button", { name: "Unmute audio" }));
     expect(onToggleMute).toHaveBeenCalledTimes(1);
 
     fireEvent.click(within(container).getByRole("button", { name: "Enter fullscreen" }));
     expect(onToggleFullscreen).toHaveBeenCalledTimes(1);
   });
 
-  it("always shows the volume control, disabled when the tour has no narration", () => {
+  it("always shows the volume control, disabled when the tour has no audio", () => {
     const onToggleMute = vi.fn();
     const { container } = renderControls({ hasNarration: false, onToggleMute });
 
-    const volume = within(container).getByRole("button", { name: "No narration audio" });
+    const volume = within(container).getByRole("button", { name: "No audio" });
     expect(volume).toHaveProperty("disabled", true);
     fireEvent.click(volume);
     expect(onToggleMute).not.toHaveBeenCalled();
+  });
+
+  it("enables the volume control for a soundtrack-only tour (no narration)", () => {
+    const onToggleMute = vi.fn();
+    const { container } = renderControls({
+      hasNarration: false,
+      hasSoundtrack: true,
+      onToggleMute,
+    });
+
+    const volume = within(container).getByRole("button", { name: "Mute audio" });
+    expect(volume).toHaveProperty("disabled", false);
+    fireEvent.click(volume);
+    expect(onToggleMute).toHaveBeenCalledTimes(1);
   });
 
   it("stops clicks from reaching the content (which toggles play on click)", () => {

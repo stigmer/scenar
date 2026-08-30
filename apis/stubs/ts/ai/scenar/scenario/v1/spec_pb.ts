@@ -14,7 +14,7 @@ import type { JsonObject, Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/scenario/v1/spec.proto.
  */
 export const file_ai_scenar_scenario_v1_spec: GenFile = /*@__PURE__*/
-  fileDesc("CiBhaS9zY2VuYXIvc2NlbmFyaW8vdjEvc3BlYy5wcm90bxIVYWkuc2NlbmFyLnNjZW5hcmlvLnYxIn0KDFNjZW5hcmlvU3BlYxI3Cgh2aWV3cG9ydBgBIAEoCzIlLmFpLnNjZW5hci5zY2VuYXJpby52MS5WaWV3cG9ydENvbmZpZxI0CgVzdGVwcxgCIAMoCzIbLmFpLnNjZW5hci5zY2VuYXJpby52MS5TdGVwQgi6SAWSAQIIASJBCg5WaWV3cG9ydENvbmZpZxIWCgV3aWR0aBgBIAEoBUIHukgEGgIgABIXCgZoZWlnaHQYAiABKAVCB7pIBBoCIAAiwAEKBFN0ZXASFQoEdmlldxgBIAEoCUIHukgEcgIQARIZCghkZWxheV9tcxgCIAEoBUIHukgEGgIoABIWCg5uYXJyYXRpb25fdGV4dBgEIAEoCRImCgVwcm9wcxgFIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3QSNwoMaW50ZXJhY3Rpb25zGAYgAygLMiEuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlN0ZXBBY3Rpb25KBAgDEARSB2NhcHRpb24ijAQKClN0ZXBBY3Rpb24SIwoKYXRfcGVyY2VudBgBIAEoAkIPukgMCgodAACAPy0AAAAAEjkKBHR5cGUYAiABKA4yIS5haS5zY2VuYXIuc2NlbmFyaW8udjEuQWN0aW9uVHlwZUIIukgFggECEAESDgoGdGFyZ2V0GAMgASgJEjoKDGNsaWNrX2NvbmZpZxgKIAEoCzIiLmFpLnNjZW5hci5zY2VuYXJpby52MS5DbGlja0NvbmZpZ0gAEjgKC3R5cGVfY29uZmlnGAsgASgLMiEuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlR5cGVDb25maWdIABI6Cgxob3Zlcl9jb25maWcYDCABKAsyIi5haS5zY2VuYXIuc2NlbmFyaW8udjEuSG92ZXJDb25maWdIABI4CgtkcmFnX2NvbmZpZxgNIAEoCzIhLmFpLnNjZW5hci5zY2VuYXJpby52MS5EcmFnQ29uZmlnSAASQQoQc2Nyb2xsX3RvX2NvbmZpZxgOIAEoCzIlLmFpLnNjZW5hci5zY2VuYXJpby52MS5TY3JvbGxUb0NvbmZpZ0gAElUKGnZpZXdwb3J0X3RyYW5zaXRpb25fY29uZmlnGA8gASgLMi8uYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlZpZXdwb3J0VHJhbnNpdGlvbkNvbmZpZ0gAQggKBmNvbmZpZyINCgtDbGlja0NvbmZpZyJDCgpUeXBlQ29uZmlnEhUKBHRleHQYASABKAlCB7pIBHICEAESHgoNdHlwZV9kZWxheV9tcxgCIAEoBUIHukgEGgIoACIxCgtIb3ZlckNvbmZpZxIiChFob3Zlcl9kdXJhdGlvbl9tcxgBIAEoBUIHukgEGgIoACIqCgpEcmFnQ29uZmlnEhwKC2RyYWdfdGFyZ2V0GAEgASgJQge6SARyAhABIhAKDlNjcm9sbFRvQ29uZmlnIkkKGFZpZXdwb3J0VHJhbnNpdGlvbkNvbmZpZxIVCg12aWV3cG9ydF96b29tGAEgASgCEhYKDnZpZXdwb3J0X3Jlc2V0GAIgASgIYgZwcm90bzM", [file_ai_scenar_scenario_v1_enum, file_buf_validate_validate, file_google_protobuf_struct]);
+  fileDesc("CiBhaS9zY2VuYXIvc2NlbmFyaW8vdjEvc3BlYy5wcm90bxIVYWkuc2NlbmFyLnNjZW5hcmlvLnYxIroBCgxTY2VuYXJpb1NwZWMSNwoIdmlld3BvcnQYASABKAsyJS5haS5zY2VuYXIuc2NlbmFyaW8udjEuVmlld3BvcnRDb25maWcSNAoFc3RlcHMYAiADKAsyGy5haS5zY2VuYXIuc2NlbmFyaW8udjEuU3RlcEIIukgFkgECCAESOwoKc291bmR0cmFjaxgDIAEoCzInLmFpLnNjZW5hci5zY2VuYXJpby52MS5Tb3VuZHRyYWNrQ29uZmlnIkEKDlZpZXdwb3J0Q29uZmlnEhYKBXdpZHRoGAEgASgFQge6SAQaAiAAEhcKBmhlaWdodBgCIAEoBUIHukgEGgIgACLZAQoQU291bmR0cmFja0NvbmZpZxIfCgltdXNpY19zcmMYASABKAlCB7pIBHICEAFIAIgBARIqCgxtdXNpY192b2x1bWUYAiABKAJCD7pIDAoKHQAAgD8tAAAAAEgBiAEBEiwKDmR1Y2tpbmdfdm9sdW1lGAMgASgCQg+6SAwKCh0AAIA/LQAAAABIAogBARIQCgNzZngYBCABKAhIA4gBAUIMCgpfbXVzaWNfc3JjQg8KDV9tdXNpY192b2x1bWVCEQoPX2R1Y2tpbmdfdm9sdW1lQgYKBF9zZngiwAEKBFN0ZXASFQoEdmlldxgBIAEoCUIHukgEcgIQARIZCghkZWxheV9tcxgCIAEoBUIHukgEGgIoABIWCg5uYXJyYXRpb25fdGV4dBgEIAEoCRImCgVwcm9wcxgFIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3QSNwoMaW50ZXJhY3Rpb25zGAYgAygLMiEuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlN0ZXBBY3Rpb25KBAgDEARSB2NhcHRpb24ijAQKClN0ZXBBY3Rpb24SIwoKYXRfcGVyY2VudBgBIAEoAkIPukgMCgodAACAPy0AAAAAEjkKBHR5cGUYAiABKA4yIS5haS5zY2VuYXIuc2NlbmFyaW8udjEuQWN0aW9uVHlwZUIIukgFggECEAESDgoGdGFyZ2V0GAMgASgJEjoKDGNsaWNrX2NvbmZpZxgKIAEoCzIiLmFpLnNjZW5hci5zY2VuYXJpby52MS5DbGlja0NvbmZpZ0gAEjgKC3R5cGVfY29uZmlnGAsgASgLMiEuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlR5cGVDb25maWdIABI6Cgxob3Zlcl9jb25maWcYDCABKAsyIi5haS5zY2VuYXIuc2NlbmFyaW8udjEuSG92ZXJDb25maWdIABI4CgtkcmFnX2NvbmZpZxgNIAEoCzIhLmFpLnNjZW5hci5zY2VuYXJpby52MS5EcmFnQ29uZmlnSAASQQoQc2Nyb2xsX3RvX2NvbmZpZxgOIAEoCzIlLmFpLnNjZW5hci5zY2VuYXJpby52MS5TY3JvbGxUb0NvbmZpZ0gAElUKGnZpZXdwb3J0X3RyYW5zaXRpb25fY29uZmlnGA8gASgLMi8uYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlZpZXdwb3J0VHJhbnNpdGlvbkNvbmZpZ0gAQggKBmNvbmZpZyINCgtDbGlja0NvbmZpZyJDCgpUeXBlQ29uZmlnEhUKBHRleHQYASABKAlCB7pIBHICEAESHgoNdHlwZV9kZWxheV9tcxgCIAEoBUIHukgEGgIoACIxCgtIb3ZlckNvbmZpZxIiChFob3Zlcl9kdXJhdGlvbl9tcxgBIAEoBUIHukgEGgIoACIqCgpEcmFnQ29uZmlnEhwKC2RyYWdfdGFyZ2V0GAEgASgJQge6SARyAhABIhAKDlNjcm9sbFRvQ29uZmlnIkkKGFZpZXdwb3J0VHJhbnNpdGlvbkNvbmZpZxIVCg12aWV3cG9ydF96b29tGAEgASgCEhYKDnZpZXdwb3J0X3Jlc2V0GAIgASgIYgZwcm90bzM", [file_ai_scenar_scenario_v1_enum, file_buf_validate_validate, file_google_protobuf_struct]);
 
 /**
  * ScenarioSpec defines the desired state of a Scenario resource — the complete
@@ -78,6 +78,19 @@ export type ScenarioSpec = Message<"ai.scenar.scenario.v1.ScenarioSpec"> & {
    * @generated from field: repeated ai.scenar.scenario.v1.Step steps = 2;
    */
   steps: Step[];
+
+  /**
+   * Audio treatment for the scenario: background music with narration
+   * ducking, and interaction sound effects. When omitted, the scenario
+   * plays and renders exactly as before — silent apart from narration.
+   *
+   * The soundtrack plays in both outputs: the interactive embed (muteable
+   * through the player's audio control, off until the viewer unmutes) and
+   * the exported video. Same source, same result.
+   *
+   * @generated from field: ai.scenar.scenario.v1.SoundtrackConfig soundtrack = 3;
+   */
+  soundtrack?: SoundtrackConfig;
 };
 
 /**
@@ -128,6 +141,101 @@ export type ViewportConfig = Message<"ai.scenar.scenario.v1.ViewportConfig"> & {
  */
 export const ViewportConfigSchema: GenMessage<ViewportConfig> = /*@__PURE__*/
   messageDesc(file_ai_scenar_scenario_v1_spec, 1);
+
+/**
+ * SoundtrackConfig defines the scenario's audio treatment beyond narration:
+ * an optional background music track and optional interaction sound effects.
+ * Music and sound effects are independent — a scenario may use either
+ * without the other.
+ *
+ * Music plays under the whole scenario at music_volume, automatically
+ * ducking to ducking_volume while a narration clip plays so the voice
+ * stays intelligible. If the music asset is shorter than the scenario it
+ * loops seamlessly; either way it fades in at scenario start and fades
+ * out over the closing dwell, so the video never ends on a hard cut.
+ *
+ * Sound effects are derived, not authored: when sfx is true, the engine
+ * plays its built-in click and keystroke sounds at the exact moments the
+ * step interactions dispatch (a click sound when a click fires, one
+ * keystroke sound per typed character, click sounds at drag press and
+ * release). There is nothing to place on the timeline — the existing
+ * interactions drive everything.
+ *
+ * All fields are optional so presence is detectable: an explicit 0.0
+ * volume is honored, an unset volume uses the engine default.
+ *
+ * Example YAML (spec block):
+ *   spec:
+ *     soundtrack:
+ *       music_src: "./soundtrack/music.mp3"
+ *       music_volume: 0.25
+ *       ducking_volume: 0.08
+ *       sfx: true
+ *     steps:
+ *       - view: new-session
+ *         ...
+ *
+ * @generated from message ai.scenar.scenario.v1.SoundtrackConfig
+ */
+export type SoundtrackConfig = Message<"ai.scenar.scenario.v1.SoundtrackConfig"> & {
+  /**
+   * Background music asset reference. Like narration clip srcs, a
+   * relative path resolves against the scenario's own location (e.g.
+   * "./soundtrack/music.mp3" next to steps.ts); an absolute URL passes
+   * through unchanged. MP3 is the supported format — the same format
+   * narration uses, and the only audio type the packed-embed deploy
+   * contract serves.
+   *
+   * The music asset is provided by the scenario author; licensing stays
+   * with them, exactly like their view components. When unset, the
+   * scenario has no music (sound effects may still be enabled).
+   *
+   * @generated from field: optional string music_src = 1;
+   */
+  musicSrc?: string;
+
+  /**
+   * Base music level while no narration is playing, from 0.0 (silent)
+   * to 1.0 (full volume). When unset, the engine uses its built-in
+   * default (0.25 — clearly audible under silence without competing
+   * with interface sound effects).
+   *
+   * @generated from field: optional float music_volume = 2;
+   */
+  musicVolume?: number;
+
+  /**
+   * Absolute music level while a narration clip plays, from 0.0 to 1.0.
+   * This is the level the music ducks to — not a multiplier of
+   * music_volume — so what you write is what you hear. When unset, the
+   * engine uses its built-in default (0.08 — present but firmly under
+   * the voice).
+   *
+   * The engine ramps between music_volume and ducking_volume over a
+   * short window at each narration boundary so the duck is felt, not
+   * heard as a cut.
+   *
+   * @generated from field: optional float ducking_volume = 3;
+   */
+  duckingVolume?: number;
+
+  /**
+   * Enables the engine's built-in interaction sound effects (click and
+   * keystroke). Requires an explicit true — adding music alone never
+   * introduces sound effects. When unset or false, interactions stay
+   * silent.
+   *
+   * @generated from field: optional bool sfx = 4;
+   */
+  sfx?: boolean;
+};
+
+/**
+ * Describes the message ai.scenar.scenario.v1.SoundtrackConfig.
+ * Use `create(SoundtrackConfigSchema)` to create a new message.
+ */
+export const SoundtrackConfigSchema: GenMessage<SoundtrackConfig> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_scenario_v1_spec, 2);
 
 /**
  * Step represents a single point in the scenario timeline — a visual state
@@ -217,7 +325,7 @@ export type Step = Message<"ai.scenar.scenario.v1.Step"> & {
  * Use `create(StepSchema)` to create a new message.
  */
 export const StepSchema: GenMessage<Step> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 2);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 3);
 
 /**
  * StepAction defines a single timed interaction within a step — what the
@@ -342,7 +450,7 @@ export type StepAction = Message<"ai.scenar.scenario.v1.StepAction"> & {
  * Use `create(StepActionSchema)` to create a new message.
  */
 export const StepActionSchema: GenMessage<StepAction> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 3);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 4);
 
 /**
  * ClickConfig holds configuration for click actions.
@@ -361,7 +469,7 @@ export type ClickConfig = Message<"ai.scenar.scenario.v1.ClickConfig"> & {
  * Use `create(ClickConfigSchema)` to create a new message.
  */
 export const ClickConfigSchema: GenMessage<ClickConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 4);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 5);
 
 /**
  * TypeConfig holds configuration for type (text input) actions.
@@ -396,7 +504,7 @@ export type TypeConfig = Message<"ai.scenar.scenario.v1.TypeConfig"> & {
  * Use `create(TypeConfigSchema)` to create a new message.
  */
 export const TypeConfigSchema: GenMessage<TypeConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 5);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 6);
 
 /**
  * HoverConfig holds configuration for hover (tooltip/state reveal) actions.
@@ -424,7 +532,7 @@ export type HoverConfig = Message<"ai.scenar.scenario.v1.HoverConfig"> & {
  * Use `create(HoverConfigSchema)` to create a new message.
  */
 export const HoverConfigSchema: GenMessage<HoverConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 6);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 7);
 
 /**
  * DragConfig holds configuration for drag (drag-and-drop) actions.
@@ -451,7 +559,7 @@ export type DragConfig = Message<"ai.scenar.scenario.v1.DragConfig"> & {
  * Use `create(DragConfigSchema)` to create a new message.
  */
 export const DragConfigSchema: GenMessage<DragConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 7);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 8);
 
 /**
  * ScrollToConfig holds configuration for scroll_to actions.
@@ -471,7 +579,7 @@ export type ScrollToConfig = Message<"ai.scenar.scenario.v1.ScrollToConfig"> & {
  * Use `create(ScrollToConfigSchema)` to create a new message.
  */
 export const ScrollToConfigSchema: GenMessage<ScrollToConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 8);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 9);
 
 /**
  * ViewportTransitionConfig holds configuration for viewport zoom/pan
@@ -510,5 +618,5 @@ export type ViewportTransitionConfig = Message<"ai.scenar.scenario.v1.ViewportTr
  * Use `create(ViewportTransitionConfigSchema)` to create a new message.
  */
 export const ViewportTransitionConfigSchema: GenMessage<ViewportTransitionConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 9);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 10);
 

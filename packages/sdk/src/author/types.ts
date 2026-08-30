@@ -1,4 +1,4 @@
-import type { ScenarioStep, StepAction } from "@scenar/core";
+import type { ScenarioStep, Soundtrack, StepAction } from "@scenar/core";
 
 /**
  * A view registry maps opaque view identifiers (strings) to
@@ -62,6 +62,12 @@ export interface ScenarioInput<Views extends ViewRegistry> {
   readonly views: Views;
   /** Ordered sequence of steps. Must contain at least one entry. */
   readonly steps: readonly StepInput<Views>[];
+  /**
+   * Audio treatment: background music with narration ducking and
+   * interaction sound effects. Optional — omitted means silent apart
+   * from narration.
+   */
+  readonly soundtrack?: Soundtrack;
 }
 
 /**
@@ -72,4 +78,5 @@ export interface AuthoredScenario<Views extends ViewRegistry> {
   readonly viewport: ViewportConfig | undefined;
   readonly views: Views;
   readonly steps: readonly ScenarioStep<AuthoredStepData<Views>>[];
+  readonly soundtrack: Soundtrack | undefined;
 }

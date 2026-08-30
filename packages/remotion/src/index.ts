@@ -12,4 +12,5 @@ export type { ScenarioTimeline, AudioClip } from "./useScenarioTimeline.js";
 export {
   useScenarioTimeline,
   calculateScenarioTimeline,
+  msToFrames,
 } from "./useScenarioTimeline.js";

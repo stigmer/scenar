@@ -1,7 +1,13 @@
-import { resolve, join, basename } from "node:path";
+import { resolve, join, basename, dirname } from "node:path";
 import { stat, mkdir, writeFile, rm, readdir, copyFile, access } from "node:fs/promises";
 import { detectRenderExport } from "../render/detect-render-export.js";
 import { resolveProvidersPath } from "../render/resolve-providers.js";
+import type { AuthoredSoundtrack } from "../util/load-ts.js";
+import {
+  SFX_DEST_PATHS,
+  resolveMusicAsset,
+  resolveSfxAssetPaths,
+} from "../util/soundtrack-assets.js";
 import { generateEmbedEntry, generateEmbedHtml } from "./generate-embed-entry.js";
 import { collectPackShots, type CollectedPackShots } from "./collect-pack-shots.js";
 import { runViteBuild } from "./build.js";
@@ -159,6 +165,28 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
       await copyNarration(scenarioDir, outDir);
     }
 
+    // 4b. Copy the soundtrack's assets: the authored music file (at its
+    //     scenario-relative path, which is what the embed references) and
+    //     the built-in SFX set from @scenar/react. Discovery rides the same
+    //     SSR load as the shots; when the module was not loadable, the
+    //     soundtrack (if any) cannot ship — warn rather than silently
+    //     packing an embed whose audio 404s.
+    if (collectedShots.recorded) {
+      if (collectedShots.authoredSoundtrack) {
+        const copied = await copySoundtrack(
+          scenarioDir,
+          outDir,
+          collectedShots.authoredSoundtrack,
+        );
+        if (copied > 0) onLog(`Soundtrack: ${copied} audio file(s) copied into the bundle`);
+      }
+    } else {
+      onLog(
+        "Warning: steps module not loadable under Node — if this scenario authors a " +
+          "soundtrack, its audio files were NOT copied into the bundle.",
+      );
+    }
+
     // 5. Write the required scenario.json descriptor, recording the canonical
     //    viewport baked into the bundle so `deploy`/`serve`/`publish` can derive
     //    a correctly-proportioned embed snippet (DD-004), and — when known —
@@ -219,6 +247,43 @@ async function copyNarration(scenarioDir: string, outDir: string): Promise<void>
       await copyFile(join(srcDir, entry.name), join(destDir, entry.name));
     }
   }
+}
+
+/**
+ * Copy the soundtrack's audio into the bundle: the authored music file at
+ * its scenario-relative path (the embed references it by that same path),
+ * and the built-in SFX set from @scenar/react at the shared
+ * {@link SFX_DEST_PATHS} locations the generated entry points at. Returns
+ * the number of files copied. Remote music URLs copy nothing.
+ */
+async function copySoundtrack(
+  scenarioDir: string,
+  outDir: string,
+  soundtrack: AuthoredSoundtrack,
+): Promise<number> {
+  let copied = 0;
+
+  if (soundtrack.musicSrc) {
+    const music = await resolveMusicAsset(scenarioDir, soundtrack.musicSrc);
+    if (music) {
+      const dest = join(outDir, music.destRelPath);
+      await mkdir(dirname(dest), { recursive: true });
+      await copyFile(music.sourcePath, dest);
+      copied += 1;
+    }
+  }
+
+  if (soundtrack.sfx) {
+    const sfxPaths = resolveSfxAssetPaths(scenarioDir);
+    for (const sound of ["click", "keystroke"] as const) {
+      const dest = join(outDir, SFX_DEST_PATHS[sound]);
+      await mkdir(dirname(dest), { recursive: true });
+      await copyFile(sfxPaths[sound], dest);
+      copied += 1;
+    }
+  }
+
+  return copied;
 }
 
 /** One log-friendly line for the shot discovery outcome. */

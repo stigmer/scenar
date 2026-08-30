@@ -9,12 +9,14 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class ScenarioSpec(_message.Message):
-    __slots__ = ("viewport", "steps")
+    __slots__ = ("viewport", "steps", "soundtrack")
     VIEWPORT_FIELD_NUMBER: _ClassVar[int]
     STEPS_FIELD_NUMBER: _ClassVar[int]
+    SOUNDTRACK_FIELD_NUMBER: _ClassVar[int]
     viewport: ViewportConfig
     steps: _containers.RepeatedCompositeFieldContainer[Step]
-    def __init__(self, viewport: _Optional[_Union[ViewportConfig, _Mapping]] = ..., steps: _Optional[_Iterable[_Union[Step, _Mapping]]] = ...) -> None: ...
+    soundtrack: SoundtrackConfig
+    def __init__(self, viewport: _Optional[_Union[ViewportConfig, _Mapping]] = ..., steps: _Optional[_Iterable[_Union[Step, _Mapping]]] = ..., soundtrack: _Optional[_Union[SoundtrackConfig, _Mapping]] = ...) -> None: ...
 
 class ViewportConfig(_message.Message):
     __slots__ = ("width", "height")
@@ -23,6 +25,18 @@ class ViewportConfig(_message.Message):
     width: int
     height: int
     def __init__(self, width: _Optional[int] = ..., height: _Optional[int] = ...) -> None: ...
+
+class SoundtrackConfig(_message.Message):
+    __slots__ = ("music_src", "music_volume", "ducking_volume", "sfx")
+    MUSIC_SRC_FIELD_NUMBER: _ClassVar[int]
+    MUSIC_VOLUME_FIELD_NUMBER: _ClassVar[int]
+    DUCKING_VOLUME_FIELD_NUMBER: _ClassVar[int]
+    SFX_FIELD_NUMBER: _ClassVar[int]
+    music_src: str
+    music_volume: float
+    ducking_volume: float
+    sfx: bool
+    def __init__(self, music_src: _Optional[str] = ..., music_volume: _Optional[float] = ..., ducking_volume: _Optional[float] = ..., sfx: bool = ...) -> None: ...
 
 class Step(_message.Message):
     __slots__ = ("view", "delay_ms", "narration_text", "props", "interactions")

@@ -162,7 +162,28 @@ This synthesizes per-step audio from each step's narration text into a
 `narration/` folder. The default TTS engine (echogarden) is an optional install;
 `edge-tts`, `openai`, and `elevenlabs` are alternatives — see the command's `--help`.
 
-## 6. Pack and preview
+## 6. Add a soundtrack (optional)
+
+Give the tour background music and interaction sound effects. Export a
+`soundtrack` from `steps.ts`:
+
+```ts
+export const soundtrack: Soundtrack = {
+  musicSrc: "./soundtrack/music.mp3", // your MP3, next to steps.ts
+  sfx: true, // built-in click + keystroke sounds at each interaction
+};
+```
+
+Drop your music file at that path. The music plays under the whole tour and
+automatically ducks while narration speaks, so the voice stays clear. Sound
+effects need no authoring — the engine plays a click when a `click`
+interaction fires and a keystroke per typed character, derived from the
+interactions you already wrote. Both play in the embed (behind the player's
+mute control) and in rendered videos — same source, same result. Volumes are
+tunable with `musicVolume` (default 0.25) and `duckingVolume` (the level
+music ducks to while narration plays, default 0.08).
+
+## 7. Pack and preview
 
 ```bash
 npx @scenar/cli pack ./onboarding-tour
@@ -172,7 +193,7 @@ npx @scenar/cli serve ./onboarding-tour-bundle   # → http://localhost:4173/
 Open the URL and watch it play. Iterate: adjust `delayMs` dwell times, refine
 narration, re-run `narrate`/`pack`/`serve`.
 
-## 7. Publish
+## 8. Publish
 
 ```bash
 npx @scenar/cli publish ./onboarding-tour-bundle

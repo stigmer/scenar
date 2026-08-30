@@ -28,7 +28,12 @@ export interface ScenarioTimeline extends StepTimeline {
   fps: number;
 }
 
-function msToFrames(ms: number, fps: number): number {
+/**
+ * THE ms → frame conversion for the export path — every frame offset in
+ * the composition (steps, narration, soundtrack SFX) goes through this
+ * one rounding so nothing can drift by a frame against anything else.
+ */
+export function msToFrames(ms: number, fps: number): number {
   return Math.round((ms * fps) / 1000);
 }
 

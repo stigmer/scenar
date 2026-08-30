@@ -8,6 +8,7 @@
  */
 
 import type { NarrationManifest } from "../narration/types.js";
+import type { Soundtrack } from "./soundtrack.js";
 import type { ScenarioStep } from "./types.js";
 
 /**
@@ -26,4 +27,10 @@ export interface ScenarioBundle<T> {
    * narration (timing is purely delay-based).
    */
   readonly narrationManifest?: NarrationManifest;
+  /**
+   * Audio treatment: background music with narration ducking and
+   * interaction sound effects.  When `undefined`, the scenario plays
+   * silent apart from narration.
+   */
+  readonly soundtrack?: Soundtrack;
 }

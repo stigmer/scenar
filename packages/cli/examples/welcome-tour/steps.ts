@@ -1,4 +1,4 @@
-import type { ScenarioStep } from "@scenar/core";
+import type { ScenarioStep, Soundtrack } from "@scenar/core";
 
 /**
  * The screen shown at a given step. Each maps to a CSS-drawn @scenar/react
@@ -35,6 +35,14 @@ export const steps: ScenarioStep<TourStepData>[] = [
     // `scenar shoot <bundle>` renders it to stills/login-screen.<theme>.png.
     // Steps without a shot are simply walked through.
     shot: "login-screen",
+    // A timed click on the sign-in button (the LoginCardPage's
+    // `submitTargetId`). With `soundtrack.sfx` enabled below, the engine
+    // plays its click sound at the exact dispatch moment — SFX placement
+    // is derived from interactions, never authored.
+    interactions: [
+      { atPercent: 0.15, type: "set_cursor", target: "sign-in" },
+      { atPercent: 0.65, type: "click", target: "sign-in" },
+    ],
   },
   {
     delayMs: 2400,
@@ -53,3 +61,16 @@ export const steps: ScenarioStep<TourStepData>[] = [
     shot: "settings-screen",
   },
 ];
+
+/**
+ * The tour's audio treatment: a soft synthesized loop (see the provenance
+ * note in @scenar/react's scripts/generate-sfx.mjs — this asset is
+ * synthesized the same way, so no third-party licensing applies) that
+ * ducks under the narration, plus the engine's built-in click/keystroke
+ * sound effects. Both play in the packed embed (muteable via the player's
+ * audio control) and in `scenar render` output — same source, same result.
+ */
+export const soundtrack: Soundtrack = {
+  musicSrc: "./soundtrack/music.mp3",
+  sfx: true,
+};

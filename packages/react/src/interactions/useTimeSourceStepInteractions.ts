@@ -31,6 +31,16 @@ export function useTimeSourceStepInteractions<T>(
   const { stepIndex, narrationManifest, steps } = options;
   const firedRef = useRef<Set<string>>(new Set());
 
+  // Declared BEFORE the firing effect: effects run in declaration order,
+  // so on mount (and step change) the reset happens first and the keys the
+  // firing effect records survive the commit. With the order reversed, the
+  // mount commit would clear the keys recorded moments earlier and any
+  // event already past its threshold (an atPercent-0 action at frame 0)
+  // would dispatch a second time on the next render.
+  useEffect(() => {
+    firedRef.current.clear();
+  }, [stepIndex]);
+
   useEffect(() => {
     const actions = steps[stepIndex]?.interactions;
     if (!actions || actions.length === 0) return;
@@ -108,10 +118,6 @@ export function useTimeSourceStepInteractions<T>(
       }
     }
   });
-
-  useEffect(() => {
-    firedRef.current.clear();
-  }, [stepIndex]);
 
   function fire(key: string, elapsed: number, threshold: number, fn: () => void): void {
     if (elapsed >= threshold && !firedRef.current.has(key)) {

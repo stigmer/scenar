@@ -2,9 +2,11 @@ import { resolve, join } from "node:path";
 import { stat, mkdir, access, writeFile, rm } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { loadBundle, type CliBundle } from "../util/load-bundle.js";
+import { resolveSfxAssetPaths } from "../util/soundtrack-assets.js";
 import { generateRemotionEntry } from "./generate-entry.js";
 import { resolveProvidersPath } from "./resolve-providers.js";
 import { detectRenderExport } from "./detect-render-export.js";
+import { stageRenderAudio } from "./stage-audio.js";
 
 /** Options for {@link runRender}. Paths may be relative; resolved here. */
 export interface RunRenderOptions {
@@ -99,8 +101,38 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
     onLog(`Scenario: ${scenarioId}`);
     onLog(`Steps:    ${bundle.steps.length}`);
     onLog(`Audio:    ${bundle.narrationManifest ? "yes (manifest found)" : "none"}`);
+    if (bundle.soundtrack) {
+      const parts = [
+        bundle.soundtrack.musicSrc ? `music (${bundle.soundtrack.musicSrc})` : null,
+        bundle.soundtrack.sfx ? "sfx" : null,
+      ].filter(Boolean);
+      onLog(`Soundtrack: ${parts.length > 0 ? parts.join(" + ") : "configured (silent)"}`);
+    }
     if (captions) {
       onLog(`Captions: burned in (from step narration text)`);
+    }
+
+    // Stage every audio file into a Remotion public dir so staticFile()
+    // resolution finds real bytes — narration clips, the music asset, and
+    // the built-in SFX set. Only for the auto-generated entry: a custom
+    // --entry project owns its own public dir convention.
+    let publicDir: string | undefined;
+    if (generated) {
+      const candidatePublicDir = join(generated.tempDir, "public");
+      const sfxPaths = bundle.soundtrack?.sfx
+        ? resolveSfxAssetPaths(scenarioDir)
+        : undefined;
+      const stagedCount = await stageRenderAudio({
+        scenarioDir,
+        publicDir: candidatePublicDir,
+        hasNarration: !!bundle.narrationManifest,
+        soundtrack: bundle.soundtrack,
+        sfxPaths,
+      });
+      if (stagedCount > 0) {
+        publicDir = candidatePublicDir;
+        onLog(`Staged:   ${stagedCount} audio file(s) for the render`);
+      }
     }
     onLog(`Entry:    ${generated ? "(auto-generated)" : entryPoint}`);
     if (generated?.providersPath) {
@@ -121,6 +153,7 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
       width,
       height,
       webpackOverride,
+      publicDir,
       onLog,
     });
 
@@ -254,6 +287,8 @@ interface RenderConfig {
   width: number;
   height: number;
   webpackOverride?: (config: unknown) => unknown;
+  /** Staged audio dir for Remotion's staticFile() resolution, if any. */
+  publicDir?: string;
   onLog: (message: string) => void;
 }
 
@@ -275,6 +310,9 @@ async function renderScenario(config: RenderConfig): Promise<void> {
   const bundleOptions: Record<string, unknown> = { entryPoint: config.entryPoint };
   if (config.webpackOverride) {
     bundleOptions.webpackOverride = config.webpackOverride;
+  }
+  if (config.publicDir) {
+    bundleOptions.publicDir = config.publicDir;
   }
   const serveUrl = await (bundler.bundle as (opts: Record<string, unknown>) => Promise<string>)(
     bundleOptions,

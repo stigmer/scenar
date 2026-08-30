@@ -85,8 +85,21 @@ export interface ProtoStep {
   readonly interactions: readonly ProtoStepAction[];
 }
 
+/**
+ * Structural shape of a proto `SoundtrackConfig` message.
+ * All fields are proto3 `optional`, so absence is meaningful:
+ * an unset volume means "use the engine default".
+ */
+export interface ProtoSoundtrackConfig {
+  readonly musicSrc?: string;
+  readonly musicVolume?: number;
+  readonly duckingVolume?: number;
+  readonly sfx?: boolean;
+}
+
 /** Structural shape of the proto `ScenarioSpec` message. */
 export interface ProtoScenarioSpec {
   readonly viewport?: ProtoViewportConfig;
   readonly steps: readonly ProtoStep[];
+  readonly soundtrack?: ProtoSoundtrackConfig;
 }

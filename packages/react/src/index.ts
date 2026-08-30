@@ -10,6 +10,9 @@ export type {
   UseStepInteractionsOptions,
   NarrationEntry,
   NarrationManifest,
+  Soundtrack,
+  SfxEvent,
+  SfxSound,
   ViewportTransform,
   Position,
   StepTimeline,
@@ -51,6 +54,10 @@ export {
   resolveNarrationManifestUrls,
 } from "./narration/useNarrationManifest.js";
 export { useNarrationPlayback } from "./narration/useNarrationPlayback.js";
+
+// Soundtrack (music + derived SFX)
+export { useSoundtrackPlayback } from "./soundtrack/useSoundtrackPlayback.js";
+export type { SoundtrackSources } from "./soundtrack/useSoundtrackPlayback.js";
 
 // Cursor
 export { Cursor } from "./cursor/Cursor.js";

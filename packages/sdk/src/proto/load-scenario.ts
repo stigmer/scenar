@@ -7,6 +7,7 @@ import type {
 import { InvalidScenarioError } from "./errors.js";
 import type { ProtoScenarioSpec } from "./proto-types.js";
 import { mapProtoAction } from "./action-mapper.js";
+import { mapProtoSoundtrack } from "./soundtrack-mapper.js";
 
 /**
  * Options for {@link loadScenarioFromProto}.
@@ -76,5 +77,8 @@ export function loadScenarioFromProto<Views extends ViewRegistry>(
     viewport: spec.viewport ? { width: spec.viewport.width, height: spec.viewport.height } : undefined,
     views: options.views,
     steps,
+    soundtrack: spec.soundtrack
+      ? mapProtoSoundtrack(spec.soundtrack, "soundtrack")
+      : undefined,
   };
 }

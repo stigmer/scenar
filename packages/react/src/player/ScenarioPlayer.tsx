@@ -1,10 +1,11 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, useReducedMotion } from "framer-motion";
-import { type NarrationManifest, type ScenarEmbedViewport, type ScenarioBundle, type ScenarioStep, computeStepTimeline, deriveStepFromTime } from "@scenar/core";
+import { type NarrationManifest, type ScenarEmbedViewport, type ScenarioBundle, type ScenarioStep, type Soundtrack, computeStepTimeline, deriveStepFromTime } from "@scenar/core";
 import { useVideoExport } from "../video/VideoExportContext.js";
 import { useViewportChromeTarget, useViewportHostScaleSetter } from "../viewport/ViewportChrome.js";
 import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
+import { useSoundtrackPlayback, type SoundtrackSources } from "../soundtrack/useSoundtrackPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
 import { useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
@@ -60,6 +61,20 @@ interface ScenarioPlayerProps<T> {
    * caption DOM and no CC control, exactly as before the feature existed.
    */
   captions?: boolean;
+  /**
+   * The scenario's soundtrack (background music with narration ducking,
+   * interaction sound effects). When provided, takes precedence over
+   * `bundle.soundtrack`. Part of the scenario definition — authored in
+   * the spec, played in both the embed and the exported video. Absent
+   * means silent apart from narration, exactly as before the feature.
+   */
+  soundtrack?: Soundtrack;
+  /**
+   * Resolved asset URL overrides for soundtrack playback (music file,
+   * SFX set). Most integrators never set this — see `SoundtrackSources`
+   * for the defaults. The packed embed passes bundle-relative URLs.
+   */
+  soundtrackSources?: SoundtrackSources;
 }
 
 /**
@@ -92,9 +107,12 @@ export function ScenarioPlayer<T>({
   embed = false,
   embedViewport,
   captions = false,
+  soundtrack: soundtrackProp,
+  soundtrackSources,
 }: ScenarioPlayerProps<T>) {
   const steps = stepsProp ?? bundle?.steps;
   const narrationManifest = manifestProp ?? bundle?.narrationManifest;
+  const soundtrack = soundtrackProp ?? bundle?.soundtrack;
 
   if (!steps || steps.length === 0) {
     throw new Error(
@@ -116,6 +134,12 @@ export function ScenarioPlayer<T>({
   const setViewportHostScale = useViewportHostScaleSetter();
   const lastIndex = steps.length - 1;
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Current position for relative seeks and soundtrack sync, written per
+  // frame (and on every paused/idle reposition) by usePlaybackProgress.
+  // A ref, not state: readers only need the instantaneous value (a skip
+  // click, a gain-automation frame), never a re-render.
+  const currentTimeMsRef = useRef(0);
 
   const [playbackRate, setPlaybackRate] = useState(() => {
     if (typeof window === "undefined") return 1;
@@ -184,6 +208,24 @@ export function ScenarioPlayer<T>({
     setProgressionMuted(muted);
   }, [muted]);
 
+  // Soundtrack (music + SFX) shares narration's mute switch and unlock
+  // gesture; inert during video export (the Remotion composition places
+  // all export audio itself).
+  const soundtrackAudio = useSoundtrackPlayback({
+    soundtrack,
+    steps,
+    narrationManifest,
+    stepIndex,
+    playing,
+    muted,
+    playbackRate,
+    isVideoExport,
+    currentTimeMsRef,
+    sources: soundtrackSources,
+  });
+  const hasAudibleSoundtrack =
+    !isVideoExport && !!soundtrack && (!!soundtrack.musicSrc || soundtrack.sfx === true);
+
   const stepTimeline = useMemo(
     () => computeStepTimeline(steps, muted ? null : narrationManifest),
     [steps, muted, narrationManifest],
@@ -221,15 +263,16 @@ export function ScenarioPlayer<T>({
   }, [playbackState, scheduleHide]);
 
   const handlePlay = useCallback(() => {
-    // Start narration synchronously in the click's call stack — this is what
-    // unlocks audio on iOS Safari. `play()` then flips playback state and the
-    // narration effects take over.
+    // Start narration and soundtrack synchronously in the click's call
+    // stack — this is what unlocks audio on iOS Safari. `play()` then
+    // flips playback state and the audio effects take over.
     unlock();
+    soundtrackAudio.unlock();
     play();
     if (coordinatorRef.current) {
       PlaybackCoordinator.notifyPlaying(coordinatorRef.current.id);
     }
-  }, [play, unlock]);
+  }, [play, unlock, soundtrackAudio]);
 
   const handleSeekToTime = useCallback(
     (timeMs: number) => {
@@ -238,6 +281,7 @@ export function ScenarioPlayer<T>({
       const stepStart = stepTimeline.stepStartTimesMs[targetIndex] ?? 0;
       seekToStep(targetIndex, Math.max(0, clamped - stepStart));
       seekToTime(clamped, stepTimeline);
+      soundtrackAudio.seekTo(clamped);
 
       // Seek preserves the play/pause state, so only claim the "single
       // active player" slot when this player actually keeps playing —
@@ -246,13 +290,8 @@ export function ScenarioPlayer<T>({
         PlaybackCoordinator.notifyPlaying(coordinatorRef.current.id);
       }
     },
-    [seekToTime, seekToStep, stepTimeline, lastIndex, playing],
+    [seekToTime, seekToStep, stepTimeline, lastIndex, playing, soundtrackAudio],
   );
-
-  // Current position for relative seeks, written per frame (and on every
-  // paused/idle reposition) by usePlaybackProgress. A ref, not state: the
-  // value only matters at the instant a skip button is clicked.
-  const currentTimeMsRef = useRef(0);
 
   // The ±10s transport skips. Each click is one deliberate, absolute seek
   // (clamped by handleSeekToTime), matching every mainstream player — the
@@ -424,6 +463,7 @@ export function ScenarioPlayer<T>({
       stepTimeline={stepTimeline}
       showSpeedControl={showSpeedControl}
       hasNarration={!!narrationManifest}
+      hasSoundtrack={hasAudibleSoundtrack}
       captionsEnabled={captions}
       captionsVisible={captionsVisible}
       onToggleCaptions={handleToggleCaptions}
@@ -501,6 +541,9 @@ export function ScenarioPlayer<T>({
       </div>
 
       {narrationManifest && <audio ref={audioRef} preload="none" hidden />}
+      {soundtrackAudio.hasMusic && (
+        <audio ref={soundtrackAudio.musicRef} preload="none" hidden loop />
+      )}
     </div>
   );
 }

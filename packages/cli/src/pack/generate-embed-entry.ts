@@ -133,6 +133,31 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(``);
   lines.push(`const _steps: any = _findSteps(_stepsModule as unknown as Record<string, unknown>);`);
 
+  // --- Soundtrack resolution (mirror of the CLI's findAuthoredSoundtrack) ---
+  // Same runtime-discovery contract as _findSteps: read from the very module
+  // the bundle bakes in, so the embed can never disagree with the authored
+  // config. Pack copies the referenced assets (music, the built-in SFX set)
+  // into the bundle; the sources below point at those copies.
+  lines.push(``);
+  lines.push(`function _findSoundtrack(mod: Record<string, unknown>): any {`);
+  lines.push(`  for (const val of Object.values(mod)) {`);
+  lines.push(`    if (`);
+  lines.push(`      typeof val === "object" && val !== null && !Array.isArray(val) &&`);
+  lines.push(`      "soundtrack" in val &&`);
+  lines.push(`      Array.isArray((val as any).steps) && (val as any).steps.length > 0 &&`);
+  lines.push(`      typeof (val as any).steps[0] === "object" && (val as any).steps[0] !== null &&`);
+  lines.push(`      "delayMs" in (val as any).steps[0]`);
+  lines.push(`    ) return (val as any).soundtrack;`);
+  lines.push(`  }`);
+  lines.push(`  return (mod as any)["soundtrack"];`);
+  lines.push(`}`);
+  lines.push(``);
+  lines.push(`const _soundtrack: any = _findSoundtrack(_stepsModule as unknown as Record<string, unknown>);`);
+  lines.push(``);
+  lines.push(`const _soundtrackSources = {`);
+  lines.push(`  sfx: { click: "./soundtrack/sfx/click.mp3", keystroke: "./soundtrack/sfx/keystroke.mp3" },`);
+  lines.push(`};`);
+
   // --- Narration manifest URL resolver (stable module-level reference) ---
   // The manifest is fetched at runtime from its own relative location so that
   // useNarrationManifest resolves each clip src against it (audio lives under
@@ -247,6 +272,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`    id: ${JSON.stringify(input.scenarioId)},`);
   lines.push(`    steps: _steps,`);
   lines.push(`    narrationManifest: ${manifestExpr},`);
+  lines.push(`    soundtrack: _soundtrack,`);
   lines.push(`  };`);
   const open = input.providersPath ? `<_Providers>` : ``;
   const close = input.providersPath ? `</_Providers>` : ``;
@@ -264,7 +290,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   // embedViewport mirrors DemoViewport's numbers on purpose: the bundle
   // announces the exact canonical size it lays out at, so a host can adopt
   // iframe-as-screen scaling (see @scenar/embed's mount).
-  lines.push(`          <ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: ${input.canonicalWidth}, heightPx: ${input.shellHeight} }} captions={_captions} onStepChange={_handleStepChange}>`);
+  lines.push(`          <ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: ${input.canonicalWidth}, heightPx: ${input.shellHeight} }} captions={_captions} soundtrackSources={_soundtrackSources} onStepChange={_handleStepChange}>`);
   lines.push(`            ${stepRender}`);
   lines.push(`          </ScenarioPlayer>`);
   lines.push(`          <Cursor target={_cursorTarget} containerRef={_cameraRef} showRipple={_showRipple} isDragging={_dragging} />`);

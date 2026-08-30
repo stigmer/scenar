@@ -98,6 +98,62 @@ export function findAuthoredViewport(exports: Record<string, unknown>): Authored
 }
 
 /**
+ * A scenario-authored soundtrack, mirroring the proto `SoundtrackConfig`
+ * in camelCase (the same shape as `@scenar/core`'s `Soundtrack`).
+ */
+export interface AuthoredSoundtrack {
+  musicSrc?: string;
+  musicVolume?: number;
+  duckingVolume?: number;
+  sfx?: boolean;
+}
+
+/** The soundtrack's known field names — used to pick a clean copy. */
+const SOUNDTRACK_FIELDS = ["musicSrc", "musicVolume", "duckingVolume", "sfx"] as const;
+
+function pickSoundtrack(value: unknown): AuthoredSoundtrack | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const soundtrack: Record<string, unknown> = {};
+  for (const field of SOUNDTRACK_FIELDS) {
+    if (record[field] !== undefined) soundtrack[field] = record[field];
+  }
+  return soundtrack as AuthoredSoundtrack;
+}
+
+/**
+ * Find the scenario's authored soundtrack in a loaded module's exports,
+ * or null when the module authors none.
+ *
+ * Mirrors {@link findAuthoredViewport}'s two authored forms and
+ * precedence exactly:
+ *
+ * 1. A scenario-shaped export — an object carrying both a `soundtrack`
+ *    and a delayMs-bearing `steps` array (what `createScenario()`
+ *    returns when the author passes a soundtrack).
+ * 2. An export *named* `soundtrack` — the directory-form counterpart,
+ *    for authors of a raw steps array.
+ *
+ * Field validity (volume ranges, non-empty musicSrc) is the validator's
+ * concern, not discovery's — this only locates the authored object.
+ */
+export function findAuthoredSoundtrack(
+  exports: Record<string, unknown>,
+): AuthoredSoundtrack | null {
+  for (const value of Object.values(exports)) {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) continue;
+    const record = value as Record<string, unknown>;
+    if (record["soundtrack"] !== undefined && isStepsShape(record["steps"])) {
+      return pickSoundtrack(record["soundtrack"]);
+    }
+  }
+  if (exports["soundtrack"] !== undefined) {
+    return pickSoundtrack(exports["soundtrack"]);
+  }
+  return null;
+}
+
+/**
  * Dynamically import a TypeScript steps file and extract the
  * steps array by duck-typing ({@link findStepsArray}).
  *
@@ -112,4 +168,17 @@ export async function loadStepsFromTs(filePath: string): Promise<ImportedStep[]>
     throw new Error(`No steps array found in ${filePath}`);
   }
   return steps;
+}
+
+/**
+ * Dynamically import a TypeScript steps file and extract the authored
+ * soundtrack ({@link findAuthoredSoundtrack}), or null when the module
+ * authors none. Node caches the module, so calling this alongside
+ * {@link loadStepsFromTs} costs one import.
+ */
+export async function loadSoundtrackFromTs(
+  filePath: string,
+): Promise<AuthoredSoundtrack | null> {
+  const mod = await import(pathToFileURL(filePath).href);
+  return findAuthoredSoundtrack(mod.default ?? mod);
 }

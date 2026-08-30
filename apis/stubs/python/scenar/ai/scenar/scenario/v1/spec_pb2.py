@@ -27,7 +27,7 @@ from buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n ai/scenar/scenario/v1/spec.proto\x12\x15\x61i.scenar.scenario.v1\x1a ai/scenar/scenario/v1/enum.proto\x1a\x1b\x62uf/validate/validate.proto\x1a\x1cgoogle/protobuf/struct.proto\"\x8e\x01\n\x0cScenarioSpec\x12\x41\n\x08viewport\x18\x01 \x01(\x0b\x32%.ai.scenar.scenario.v1.ViewportConfigR\x08viewport\x12;\n\x05steps\x18\x02 \x03(\x0b\x32\x1b.ai.scenar.scenario.v1.StepB\x08\xbaH\x05\x92\x01\x02\x08\x01R\x05steps\"P\n\x0eViewportConfig\x12\x1d\n\x05width\x18\x01 \x01(\x05\x42\x07\xbaH\x04\x1a\x02 \x00R\x05width\x12\x1f\n\x06height\x18\x02 \x01(\x05\x42\x07\xbaH\x04\x1a\x02 \x00R\x06height\"\xf3\x01\n\x04Step\x12\x1b\n\x04view\x18\x01 \x01(\tB\x07\xbaH\x04r\x02\x10\x01R\x04view\x12\"\n\x08\x64\x65lay_ms\x18\x02 \x01(\x05\x42\x07\xbaH\x04\x1a\x02(\x00R\x07\x64\x65layMs\x12%\n\x0enarration_text\x18\x04 \x01(\tR\rnarrationText\x12-\n\x05props\x18\x05 \x01(\x0b\x32\x17.google.protobuf.StructR\x05props\x12\x45\n\x0cinteractions\x18\x06 \x03(\x0b\x32!.ai.scenar.scenario.v1.StepActionR\x0cinteractionsJ\x04\x08\x03\x10\x04R\x07\x63\x61ption\"\x81\x05\n\nStepAction\x12.\n\nat_percent\x18\x01 \x01(\x02\x42\x0f\xbaH\x0c\n\n\x1d\x00\x00\x80?-\x00\x00\x00\x00R\tatPercent\x12?\n\x04type\x18\x02 \x01(\x0e\x32!.ai.scenar.scenario.v1.ActionTypeB\x08\xbaH\x05\x82\x01\x02\x10\x01R\x04type\x12\x16\n\x06target\x18\x03 \x01(\tR\x06target\x12G\n\x0c\x63lick_config\x18\n \x01(\x0b\x32\".ai.scenar.scenario.v1.ClickConfigH\x00R\x0b\x63lickConfig\x12\x44\n\x0btype_config\x18\x0b \x01(\x0b\x32!.ai.scenar.scenario.v1.TypeConfigH\x00R\ntypeConfig\x12G\n\x0chover_config\x18\x0c \x01(\x0b\x32\".ai.scenar.scenario.v1.HoverConfigH\x00R\x0bhoverConfig\x12\x44\n\x0b\x64rag_config\x18\r \x01(\x0b\x32!.ai.scenar.scenario.v1.DragConfigH\x00R\ndragConfig\x12Q\n\x10scroll_to_config\x18\x0e \x01(\x0b\x32%.ai.scenar.scenario.v1.ScrollToConfigH\x00R\x0escrollToConfig\x12o\n\x1aviewport_transition_config\x18\x0f \x01(\x0b\x32/.ai.scenar.scenario.v1.ViewportTransitionConfigH\x00R\x18viewportTransitionConfigB\x08\n\x06\x63onfig\"\r\n\x0b\x43lickConfig\"V\n\nTypeConfig\x12\x1b\n\x04text\x18\x01 \x01(\tB\x07\xbaH\x04r\x02\x10\x01R\x04text\x12+\n\rtype_delay_ms\x18\x02 \x01(\x05\x42\x07\xbaH\x04\x1a\x02(\x00R\x0btypeDelayMs\"B\n\x0bHoverConfig\x12\x33\n\x11hover_duration_ms\x18\x01 \x01(\x05\x42\x07\xbaH\x04\x1a\x02(\x00R\x0fhoverDurationMs\"6\n\nDragConfig\x12(\n\x0b\x64rag_target\x18\x01 \x01(\tB\x07\xbaH\x04r\x02\x10\x01R\ndragTarget\"\x10\n\x0eScrollToConfig\"f\n\x18ViewportTransitionConfig\x12#\n\rviewport_zoom\x18\x01 \x01(\x02R\x0cviewportZoom\x12%\n\x0eviewport_reset\x18\x02 \x01(\x08R\rviewportResetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n ai/scenar/scenario/v1/spec.proto\x12\x15\x61i.scenar.scenario.v1\x1a ai/scenar/scenario/v1/enum.proto\x1a\x1b\x62uf/validate/validate.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xd7\x01\n\x0cScenarioSpec\x12\x41\n\x08viewport\x18\x01 \x01(\x0b\x32%.ai.scenar.scenario.v1.ViewportConfigR\x08viewport\x12;\n\x05steps\x18\x02 \x03(\x0b\x32\x1b.ai.scenar.scenario.v1.StepB\x08\xbaH\x05\x92\x01\x02\x08\x01R\x05steps\x12G\n\nsoundtrack\x18\x03 \x01(\x0b\x32\'.ai.scenar.scenario.v1.SoundtrackConfigR\nsoundtrack\"P\n\x0eViewportConfig\x12\x1d\n\x05width\x18\x01 \x01(\x05\x42\x07\xbaH\x04\x1a\x02 \x00R\x05width\x12\x1f\n\x06height\x18\x02 \x01(\x05\x42\x07\xbaH\x04\x1a\x02 \x00R\x06height\"\x84\x02\n\x10SoundtrackConfig\x12)\n\tmusic_src\x18\x01 \x01(\tB\x07\xbaH\x04r\x02\x10\x01H\x00R\x08musicSrc\x88\x01\x01\x12\x37\n\x0cmusic_volume\x18\x02 \x01(\x02\x42\x0f\xbaH\x0c\n\n\x1d\x00\x00\x80?-\x00\x00\x00\x00H\x01R\x0bmusicVolume\x88\x01\x01\x12;\n\x0e\x64ucking_volume\x18\x03 \x01(\x02\x42\x0f\xbaH\x0c\n\n\x1d\x00\x00\x80?-\x00\x00\x00\x00H\x02R\rduckingVolume\x88\x01\x01\x12\x15\n\x03sfx\x18\x04 \x01(\x08H\x03R\x03sfx\x88\x01\x01\x42\x0c\n\n_music_srcB\x0f\n\r_music_volumeB\x11\n\x0f_ducking_volumeB\x06\n\x04_sfx\"\xf3\x01\n\x04Step\x12\x1b\n\x04view\x18\x01 \x01(\tB\x07\xbaH\x04r\x02\x10\x01R\x04view\x12\"\n\x08\x64\x65lay_ms\x18\x02 \x01(\x05\x42\x07\xbaH\x04\x1a\x02(\x00R\x07\x64\x65layMs\x12%\n\x0enarration_text\x18\x04 \x01(\tR\rnarrationText\x12-\n\x05props\x18\x05 \x01(\x0b\x32\x17.google.protobuf.StructR\x05props\x12\x45\n\x0cinteractions\x18\x06 \x03(\x0b\x32!.ai.scenar.scenario.v1.StepActionR\x0cinteractionsJ\x04\x08\x03\x10\x04R\x07\x63\x61ption\"\x81\x05\n\nStepAction\x12.\n\nat_percent\x18\x01 \x01(\x02\x42\x0f\xbaH\x0c\n\n\x1d\x00\x00\x80?-\x00\x00\x00\x00R\tatPercent\x12?\n\x04type\x18\x02 \x01(\x0e\x32!.ai.scenar.scenario.v1.ActionTypeB\x08\xbaH\x05\x82\x01\x02\x10\x01R\x04type\x12\x16\n\x06target\x18\x03 \x01(\tR\x06target\x12G\n\x0c\x63lick_config\x18\n \x01(\x0b\x32\".ai.scenar.scenario.v1.ClickConfigH\x00R\x0b\x63lickConfig\x12\x44\n\x0btype_config\x18\x0b \x01(\x0b\x32!.ai.scenar.scenario.v1.TypeConfigH\x00R\ntypeConfig\x12G\n\x0chover_config\x18\x0c \x01(\x0b\x32\".ai.scenar.scenario.v1.HoverConfigH\x00R\x0bhoverConfig\x12\x44\n\x0b\x64rag_config\x18\r \x01(\x0b\x32!.ai.scenar.scenario.v1.DragConfigH\x00R\ndragConfig\x12Q\n\x10scroll_to_config\x18\x0e \x01(\x0b\x32%.ai.scenar.scenario.v1.ScrollToConfigH\x00R\x0escrollToConfig\x12o\n\x1aviewport_transition_config\x18\x0f \x01(\x0b\x32/.ai.scenar.scenario.v1.ViewportTransitionConfigH\x00R\x18viewportTransitionConfigB\x08\n\x06\x63onfig\"\r\n\x0b\x43lickConfig\"V\n\nTypeConfig\x12\x1b\n\x04text\x18\x01 \x01(\tB\x07\xbaH\x04r\x02\x10\x01R\x04text\x12+\n\rtype_delay_ms\x18\x02 \x01(\x05\x42\x07\xbaH\x04\x1a\x02(\x00R\x0btypeDelayMs\"B\n\x0bHoverConfig\x12\x33\n\x11hover_duration_ms\x18\x01 \x01(\x05\x42\x07\xbaH\x04\x1a\x02(\x00R\x0fhoverDurationMs\"6\n\nDragConfig\x12(\n\x0b\x64rag_target\x18\x01 \x01(\tB\x07\xbaH\x04r\x02\x10\x01R\ndragTarget\"\x10\n\x0eScrollToConfig\"f\n\x18ViewportTransitionConfig\x12#\n\rviewport_zoom\x18\x01 \x01(\x02R\x0cviewportZoom\x12%\n\x0eviewport_reset\x18\x02 \x01(\x08R\rviewportResetb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -40,6 +40,12 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_VIEWPORTCONFIG'].fields_by_name['width']._serialized_options = b'\272H\004\032\002 \000'
   _globals['_VIEWPORTCONFIG'].fields_by_name['height']._loaded_options = None
   _globals['_VIEWPORTCONFIG'].fields_by_name['height']._serialized_options = b'\272H\004\032\002 \000'
+  _globals['_SOUNDTRACKCONFIG'].fields_by_name['music_src']._loaded_options = None
+  _globals['_SOUNDTRACKCONFIG'].fields_by_name['music_src']._serialized_options = b'\272H\004r\002\020\001'
+  _globals['_SOUNDTRACKCONFIG'].fields_by_name['music_volume']._loaded_options = None
+  _globals['_SOUNDTRACKCONFIG'].fields_by_name['music_volume']._serialized_options = b'\272H\014\n\n\035\000\000\200?-\000\000\000\000'
+  _globals['_SOUNDTRACKCONFIG'].fields_by_name['ducking_volume']._loaded_options = None
+  _globals['_SOUNDTRACKCONFIG'].fields_by_name['ducking_volume']._serialized_options = b'\272H\014\n\n\035\000\000\200?-\000\000\000\000'
   _globals['_STEP'].fields_by_name['view']._loaded_options = None
   _globals['_STEP'].fields_by_name['view']._serialized_options = b'\272H\004r\002\020\001'
   _globals['_STEP'].fields_by_name['delay_ms']._loaded_options = None
@@ -57,23 +63,25 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_DRAGCONFIG'].fields_by_name['drag_target']._loaded_options = None
   _globals['_DRAGCONFIG'].fields_by_name['drag_target']._serialized_options = b'\272H\004r\002\020\001'
   _globals['_SCENARIOSPEC']._serialized_start=153
-  _globals['_SCENARIOSPEC']._serialized_end=295
-  _globals['_VIEWPORTCONFIG']._serialized_start=297
-  _globals['_VIEWPORTCONFIG']._serialized_end=377
-  _globals['_STEP']._serialized_start=380
-  _globals['_STEP']._serialized_end=623
-  _globals['_STEPACTION']._serialized_start=626
-  _globals['_STEPACTION']._serialized_end=1267
-  _globals['_CLICKCONFIG']._serialized_start=1269
-  _globals['_CLICKCONFIG']._serialized_end=1282
-  _globals['_TYPECONFIG']._serialized_start=1284
-  _globals['_TYPECONFIG']._serialized_end=1370
-  _globals['_HOVERCONFIG']._serialized_start=1372
-  _globals['_HOVERCONFIG']._serialized_end=1438
-  _globals['_DRAGCONFIG']._serialized_start=1440
-  _globals['_DRAGCONFIG']._serialized_end=1494
-  _globals['_SCROLLTOCONFIG']._serialized_start=1496
-  _globals['_SCROLLTOCONFIG']._serialized_end=1512
-  _globals['_VIEWPORTTRANSITIONCONFIG']._serialized_start=1514
-  _globals['_VIEWPORTTRANSITIONCONFIG']._serialized_end=1616
+  _globals['_SCENARIOSPEC']._serialized_end=368
+  _globals['_VIEWPORTCONFIG']._serialized_start=370
+  _globals['_VIEWPORTCONFIG']._serialized_end=450
+  _globals['_SOUNDTRACKCONFIG']._serialized_start=453
+  _globals['_SOUNDTRACKCONFIG']._serialized_end=713
+  _globals['_STEP']._serialized_start=716
+  _globals['_STEP']._serialized_end=959
+  _globals['_STEPACTION']._serialized_start=962
+  _globals['_STEPACTION']._serialized_end=1603
+  _globals['_CLICKCONFIG']._serialized_start=1605
+  _globals['_CLICKCONFIG']._serialized_end=1618
+  _globals['_TYPECONFIG']._serialized_start=1620
+  _globals['_TYPECONFIG']._serialized_end=1706
+  _globals['_HOVERCONFIG']._serialized_start=1708
+  _globals['_HOVERCONFIG']._serialized_end=1774
+  _globals['_DRAGCONFIG']._serialized_start=1776
+  _globals['_DRAGCONFIG']._serialized_end=1830
+  _globals['_SCROLLTOCONFIG']._serialized_start=1832
+  _globals['_SCROLLTOCONFIG']._serialized_end=1848
+  _globals['_VIEWPORTTRANSITIONCONFIG']._serialized_start=1850
+  _globals['_VIEWPORTTRANSITIONCONFIG']._serialized_end=1952
 # @@protoc_insertion_point(module_scope)

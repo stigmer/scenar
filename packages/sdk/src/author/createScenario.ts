@@ -59,5 +59,6 @@ export function createScenario<Views extends ViewRegistry>(
     viewport: input.viewport,
     views: input.views,
     steps,
+    soundtrack: input.soundtrack,
   };
 }

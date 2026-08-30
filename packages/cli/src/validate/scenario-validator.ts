@@ -44,6 +44,7 @@ export function validateScenario(scenario: unknown): ValidationResult {
 
   validateViewport(obj["viewport"], errors);
   validateSteps(obj["steps"], errors);
+  validateSoundtrack(obj["soundtrack"], errors);
 
   return { valid: errors.length === 0, errors };
 }
@@ -66,6 +67,47 @@ function validateViewport(
   }
   if (typeof vp["height"] !== "number" || vp["height"] <= 0) {
     errors.push({ path: "viewport.height", reason: "height must be a positive integer." });
+  }
+}
+
+function validateSoundtrack(
+  soundtrack: unknown,
+  errors: ValidationError[],
+): void {
+  if (soundtrack === undefined || soundtrack === null) return;
+
+  if (typeof soundtrack !== "object" || Array.isArray(soundtrack)) {
+    errors.push({ path: "soundtrack", reason: "soundtrack must be an object." });
+    return;
+  }
+
+  const st = soundtrack as Record<string, unknown>;
+
+  if (st["musicSrc"] !== undefined) {
+    if (typeof st["musicSrc"] !== "string" || st["musicSrc"].length === 0) {
+      errors.push({
+        path: "soundtrack.musicSrc",
+        reason: "musicSrc must be a non-empty asset reference (e.g. \"./soundtrack/music.mp3\").",
+      });
+    }
+  }
+
+  validateVolume(st["musicVolume"], "soundtrack.musicVolume", errors);
+  validateVolume(st["duckingVolume"], "soundtrack.duckingVolume", errors);
+
+  if (st["sfx"] !== undefined && typeof st["sfx"] !== "boolean") {
+    errors.push({ path: "soundtrack.sfx", reason: "sfx must be a boolean." });
+  }
+}
+
+function validateVolume(
+  value: unknown,
+  path: string,
+  errors: ValidationError[],
+): void {
+  if (value === undefined) return;
+  if (typeof value !== "number" || value < 0 || value > 1) {
+    errors.push({ path, reason: "must be a number between 0.0 and 1.0." });
   }
 }
 
