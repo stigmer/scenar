@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
 import {
   Audio,
   Sequence,
@@ -6,11 +6,34 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import type { ScenarioBundle } from "@scenar/core";
+import {
+  type ScenarioBundle,
+  type SfxSound,
+  computeMusicEnvelope,
+  deriveSfxTimeline,
+  musicGainAt,
+} from "@scenar/core";
 import { TimeSourceProvider, VideoExportProvider, ScenarioPlayer } from "@scenar/react";
-import { useScenarioTimeline, type AudioClip } from "./useScenarioTimeline.js";
+import { msToFrames, useScenarioTimeline } from "./useScenarioTimeline.js";
 
 const DEFAULT_FPS = 30;
+
+/**
+ * Frame window an SFX `<Sequence>` stays mounted. Comfortably longer than
+ * the ~35 ms synthesized ticks (plus MP3 encoder padding), short enough
+ * that rapid typing never accumulates hundreds of live audio tags.
+ */
+const SFX_WINDOW_MS = 500;
+
+/**
+ * Default staged locations of the built-in SFX set, mirroring where
+ * `scenar render` stages `@scenar/react`'s assets in the public dir.
+ * Resolved through the same `staticFile` path as every other audio src.
+ */
+const DEFAULT_SFX_SRCS: Record<SfxSound, string> = {
+  click: "soundtrack/sfx/click.mp3",
+  keystroke: "soundtrack/sfx/keystroke.mp3",
+};
 
 interface ScenarioCompositionProps<T> {
   /** Self-contained scenario bundle with steps and optional narration. */
@@ -33,6 +56,13 @@ interface ScenarioCompositionProps<T> {
    * identically. Defaults to false.
    */
   captions?: boolean;
+  /**
+   * Asset paths for the built-in SFX set when `bundle.soundtrack.sfx` is
+   * enabled, resolved like every other audio src (through `staticFile`
+   * when `useStaticFile` is on). Defaults to the locations `scenar
+   * render` stages them at (`soundtrack/sfx/<name>.mp3`).
+   */
+  sfxSrcs?: Record<SfxSound, string>;
 }
 
 /**
@@ -83,6 +113,7 @@ export function ScenarioComposition<T>({
   fps: fpsProp,
   useStaticFile: useStaticFileProp = true,
   captions = false,
+  sfxSrcs = DEFAULT_SFX_SRCS,
 }: ScenarioCompositionProps<T>) {
   const videoConfig = useVideoConfig();
   const fps = fpsProp ?? videoConfig.fps ?? DEFAULT_FPS;
@@ -95,6 +126,43 @@ export function ScenarioComposition<T>({
   );
 
   const currentTimeMs = (frame / fps) * 1000;
+
+  const soundtrack = bundle.soundtrack;
+
+  // Music level per frame — the same pure @scenar/core envelope the
+  // browser player automates through its gain node, evaluated here as a
+  // Remotion volume function so both outputs duck identically.
+  const musicEnvelope = useMemo(
+    () =>
+      soundtrack?.musicSrc
+        ? computeMusicEnvelope(bundle.steps, bundle.narrationManifest, soundtrack)
+        : null,
+    [soundtrack, bundle.steps, bundle.narrationManifest],
+  );
+  const musicVolume = useMemo(
+    () =>
+      musicEnvelope
+        ? (f: number) => musicGainAt(musicEnvelope, (f / fps) * 1000)
+        : undefined,
+    [musicEnvelope, fps],
+  );
+
+  // Derived SFX events converted from step-relative offsets to absolute
+  // frames via the shared step starts — the export-side consumer of the
+  // same `deriveSfxTimeline` the browser scheduler plays.
+  const sfxClips = useMemo(() => {
+    if (soundtrack?.sfx !== true) return [];
+    return deriveSfxTimeline(bundle.steps, bundle.narrationManifest).map(
+      (event, index) => ({
+        key: `sfx-${index}`,
+        startFrame: msToFrames(
+          (timeline.stepStartTimesMs[event.stepIndex] ?? 0) + event.offsetMs,
+          fps,
+        ),
+        src: sfxSrcs[event.sound],
+      }),
+    );
+  }, [soundtrack, bundle.steps, bundle.narrationManifest, timeline, fps, sfxSrcs]);
 
   return (
     <>
@@ -115,7 +183,28 @@ export function ScenarioComposition<T>({
           from={clip.startFrame}
           durationInFrames={clip.durationFrames}
         >
-          <Audio src={resolveAudioSrc(clip, useStaticFileProp)} />
+          <Audio src={resolveAudioSrc(clip.src, useStaticFileProp)} />
+        </Sequence>
+      ))}
+
+      {soundtrack?.musicSrc && (
+        // The music spans the whole composition: `loop` folds a shorter
+        // asset seamlessly; the volume function carries fade-in, ducking,
+        // and the closing fade-out, so no trim math is needed here.
+        <Audio
+          loop
+          src={resolveAudioSrc(soundtrack.musicSrc, useStaticFileProp)}
+          volume={musicVolume}
+        />
+      )}
+
+      {sfxClips.map((clip) => (
+        <Sequence
+          key={clip.key}
+          from={clip.startFrame}
+          durationInFrames={msToFrames(SFX_WINDOW_MS, fps)}
+        >
+          <Audio src={resolveAudioSrc(clip.src, useStaticFileProp)} />
         </Sequence>
       ))}
     </>
@@ -123,13 +212,15 @@ export function ScenarioComposition<T>({
 }
 
 /**
- * Resolve audio source URL.  When `useStaticFile` is true, paths are
- * resolved through Remotion's `staticFile()` (strips leading `/`).
- * This matches Stigmer's pattern: `staticFile(clip.src.replace(/^\//, ""))`.
+ * Resolve an audio source URL.  When `useStaticFile` is true, paths are
+ * resolved through Remotion's `staticFile()`, stripping a leading `/`
+ * (Stigmer's original pattern) or `./` (the form `scenar narrate` and
+ * soundtrack configs write) so the path lands inside the staged public
+ * dir.
  */
-function resolveAudioSrc(clip: AudioClip, useStaticFileFn: boolean): string {
+function resolveAudioSrc(src: string, useStaticFileFn: boolean): string {
   if (useStaticFileFn) {
-    return staticFile(clip.src.replace(/^\//, ""));
+    return staticFile(src.replace(/^(\.\/|\/)/, ""));
   }
-  return clip.src;
+  return src;
 }
