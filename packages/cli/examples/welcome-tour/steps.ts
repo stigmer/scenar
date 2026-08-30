@@ -1,4 +1,4 @@
-import type { ScenarioStep, Soundtrack } from "@scenar/core";
+import type { ScenarioStep, Soundtrack, TitleCards } from "@scenar/core";
 
 /**
  * The screen shown at a given step. Each maps to a CSS-drawn @scenar/react
@@ -73,4 +73,26 @@ export const steps: ScenarioStep<TourStepData>[] = [
 export const soundtrack: Soundtrack = {
   musicSrc: "./soundtrack/music.mp3",
   sfx: true,
+};
+
+/**
+ * Intro/outro title cards framing the tour. Cards are synthesized steps:
+ * the engine injects them into the timeline (chapters, scrubbing, video
+ * duration, and the music envelope all account for them) and renders them
+ * with its built-in card component — no view, no props, no registry
+ * entry. The logo ships through the same deploy-allowlist image path the
+ * dashboard logo exercises.
+ */
+export const titleCards: TitleCards = {
+  intro: {
+    title: "Acme Cloud",
+    subtitle: "Your workspace, in one tour",
+    logoSrc: "./logo.png",
+  },
+  outro: {
+    title: "Start shipping today",
+    ctaText: "acme.cloud/start",
+    logoSrc: "./logo.png",
+    durationMs: 4000,
+  },
 };
