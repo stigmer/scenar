@@ -8,15 +8,26 @@ interface CacheEntry {
 }
 
 interface CacheFile {
+  /**
+   * The generating provider's cache identity (see `TtsProvider.fingerprint`).
+   * Audio from one provider/model/default-voice configuration must never be
+   * served as a cache hit for another. Legacy cache files predate this field;
+   * they never match and regenerate once.
+   */
+  fingerprint: string;
   voice: string;
   steps: (CacheEntry | null)[];
 }
 
 const CACHE_FILENAME = ".narration-cache.json";
 
-export function computeHash(narration: string, voice: string): string {
+export function computeHash(
+  narration: string,
+  voice: string,
+  fingerprint: string,
+): string {
   return createHash("sha256")
-    .update(`${voice}\0${narration}`)
+    .update(`${fingerprint}\0${voice}\0${narration}`)
     .digest("hex");
 }
 
@@ -49,16 +60,20 @@ export async function fileExists(filePath: string): Promise<boolean> {
 }
 
 /**
- * Check whether a step's narration is already cached (matching hash
- * and the MP3 file still exists on disk).
+ * Check whether a step's narration is already cached: the cache file was
+ * written by the same provider configuration (fingerprint) and voice, the
+ * step's hash matches, and the MP3 file still exists on disk.
  */
 export function isCached(
   cache: CacheFile | null,
   stepIndex: number,
   hash: string,
   voice: string,
+  fingerprint: string,
 ): boolean {
-  if (!cache || cache.voice !== voice) return false;
+  if (!cache || cache.fingerprint !== fingerprint || cache.voice !== voice) {
+    return false;
+  }
   const entry = cache.steps[stepIndex];
   return entry !== null && entry !== undefined && entry.hash === hash;
 }
@@ -71,6 +86,7 @@ export function getCachedDuration(
 }
 
 export function buildCacheFile(
+  fingerprint: string,
   voice: string,
   totalSteps: number,
   entries: Map<number, { hash: string; durationMs: number }>,
@@ -82,5 +98,5 @@ export function buildCacheFile(
   for (const [idx, entry] of entries) {
     steps[idx] = entry;
   }
-  return { voice, steps };
+  return { fingerprint, voice, steps };
 }

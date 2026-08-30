@@ -10,6 +10,16 @@ export interface TtsProvider {
   readonly name: string;
 
   /**
+   * Cache identity: the provider name plus every piece of static
+   * configuration that changes the audio bytes (model, default voice,
+   * engine). The narration cache keys on this, so audio regenerates
+   * whenever any of those inputs change — switching providers or models
+   * must never serve stale audio from a previous configuration.
+   * Per-call inputs (requested voice, text) are hashed separately.
+   */
+  readonly fingerprint: string;
+
+  /**
    * Generate speech audio for the given text.
    * Returns the raw audio bytes and the audio duration.
    */

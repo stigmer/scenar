@@ -158,7 +158,7 @@ function registerNarrate(server: McpServer): void {
         "Requires the chosen TTS provider's optional dependency to be installed.",
       inputSchema: {
         target: z.string().describe("scenario file (.yaml/.ts) or a directory of scenarios"),
-        tts: z.enum(["echogarden", "edge-tts", "openai"]).optional().describe("TTS provider (default: echogarden)"),
+        tts: z.enum(["echogarden", "edge-tts", "openai", "elevenlabs"]).optional().describe("TTS provider (default: echogarden)"),
         out: z.string().optional().describe("output directory for audio"),
         voice: z.string().optional().describe("voice name (provider-specific)"),
         baseUrl: z.string().optional().describe("URL path prefix for src fields in the manifest"),

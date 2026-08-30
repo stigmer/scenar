@@ -25,10 +25,14 @@ const mockLoadTs = vi.mocked(loadStepsFromTs);
 const mockDiscover = vi.mocked(discoverScenarios);
 const mockResolveProvider = vi.mocked(resolveProvider);
 
-function createMockProvider(responses: Array<{ audio: Buffer; durationMs: number }>): TtsProvider {
+function createMockProvider(
+  responses: Array<{ audio: Buffer; durationMs: number }>,
+  fingerprint = "test-tts/default-config",
+): TtsProvider {
   let callIndex = 0;
   return {
     name: "test-tts",
+    fingerprint,
     synthesize: vi.fn(async () => {
       const response = responses[callIndex];
       if (!response) throw new Error("unexpected synthesize call");
@@ -108,6 +112,7 @@ describe("scenar narrate — runtime manifest format", () => {
     expect(manifest).not.toHaveProperty("ttsProvider");
 
     const cache = JSON.parse(readFileSync(join(outDir, "my-demo", ".narration-cache.json"), "utf-8"));
+    expect(cache.fingerprint).toBe("test-tts/default-config");
     expect(cache.steps).toHaveLength(3);
     expect(cache.steps[0]).toHaveProperty("hash");
     expect(cache.steps[0]).toHaveProperty("durationMs", 2340);
@@ -161,6 +166,65 @@ describe("scenar narrate — runtime manifest format", () => {
 
     expect(provider2.synthesize).not.toHaveBeenCalled();
     expect(stderrData).toContain("cached");
+  });
+
+  it("regenerates on second run when the provider fingerprint changes", async () => {
+    const scenariosDir = join(tempDir, "scenarios");
+    mkdirSync(join(scenariosDir, "switch-demo"), { recursive: true });
+    writeFileSync(join(scenariosDir, "switch-demo", "steps.ts"), "");
+
+    mockDiscover.mockResolvedValue([
+      { id: "switch-demo", stepsPath: join(scenariosDir, "switch-demo", "steps.ts") },
+    ]);
+
+    mockLoadTs.mockResolvedValue([
+      { delayMs: 0, narration: "Hello world." },
+    ]);
+
+    const outDir = join(tempDir, "out");
+
+    const { registerNarrateCommand } = await import("../commands/narrate.js");
+    const { Command } = await import("commander");
+
+    const openaiLike = createMockProvider(
+      [{ audio: Buffer.from("openai-audio"), durationMs: 1200 }],
+      "openai/tts-1/alloy",
+    );
+    mockResolveProvider.mockResolvedValue(openaiLike);
+
+    const program1 = new Command();
+    registerNarrateCommand(program1);
+    await program1.parseAsync([
+      "node", "scenar", "narrate", scenariosDir, "--out", outDir,
+    ]);
+
+    expect(openaiLike.synthesize).toHaveBeenCalledTimes(1);
+
+    // Same text, same voice — but a different provider configuration.
+    // The old audio must NOT be served as a cache hit.
+    const elevenlabsLike = createMockProvider(
+      [{ audio: Buffer.from("elevenlabs-audio"), durationMs: 1350 }],
+      "elevenlabs/eleven_multilingual_v2/21m00Tcm4TlvDq8ikWAM",
+    );
+    mockResolveProvider.mockResolvedValue(elevenlabsLike);
+
+    const program2 = new Command();
+    registerNarrateCommand(program2);
+    await program2.parseAsync([
+      "node", "scenar", "narrate", scenariosDir, "--out", outDir,
+    ]);
+
+    expect(elevenlabsLike.synthesize).toHaveBeenCalledTimes(1);
+
+    const manifest = JSON.parse(
+      readFileSync(join(outDir, "switch-demo", "manifest.json"), "utf-8"),
+    );
+    expect(manifest.steps[0].durationMs).toBe(1350);
+
+    const cache = JSON.parse(
+      readFileSync(join(outDir, "switch-demo", ".narration-cache.json"), "utf-8"),
+    );
+    expect(cache.fingerprint).toBe("elevenlabs/eleven_multilingual_v2/21m00Tcm4TlvDq8ikWAM");
   });
 
   it("warns when no scenarios have narration", async () => {

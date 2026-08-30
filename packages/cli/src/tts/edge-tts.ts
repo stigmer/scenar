@@ -43,6 +43,7 @@ export async function isEdgeTtsAvailable(): Promise<boolean> {
 export function createEdgeTtsProvider(): TtsProvider {
   return {
     name: "edge-tts",
+    fingerprint: `edge-tts/${DEFAULT_VOICE}`,
 
     async synthesize(text: string, options: TtsOptions): Promise<TtsResult> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,7 +55,7 @@ export function createEdgeTtsProvider(): TtsProvider {
         throw new Error(
           "edge-tts-universal is not installed. Install it with:\n\n" +
             "  pnpm add edge-tts-universal\n\n" +
-            "Or use a different TTS provider: --tts echogarden, --tts openai",
+            "Or use a different TTS provider: --tts echogarden, --tts openai, --tts elevenlabs",
         );
       }
 

@@ -17,7 +17,7 @@ export function registerNarrateCommand(program: Command): void {
         "containing scenario subdirectories (each with a steps.ts).",
     )
     .argument("<file-or-dir>", "path to scenario file (.yaml/.ts) or directory")
-    .option("--tts <provider>", "TTS provider: echogarden, edge-tts, or openai", "echogarden")
+    .option("--tts <provider>", "TTS provider: echogarden, edge-tts, openai, or elevenlabs", "echogarden")
     .option("--out <dir>", "output directory for audio files")
     .option("--voice <voice>", "voice name (provider-specific)")
     .option("--base-url <path>", "URL path prefix for src fields in manifest")

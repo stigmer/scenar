@@ -160,7 +160,7 @@ npx @scenar/cli narrate ./onboarding-tour
 
 This synthesizes per-step audio from each step's narration text into a
 `narration/` folder. The default TTS engine (echogarden) is an optional install;
-`edge-tts` and `openai` are alternatives — see the command's `--help`.
+`edge-tts`, `openai`, and `elevenlabs` are alternatives — see the command's `--help`.
 
 ## 6. Pack and preview
 

@@ -20,7 +20,7 @@ import type { TtsProvider } from "../tts/types.js";
 export interface RunNarrateOptions {
   /** A scenario YAML file, a .ts steps file, or a directory of scenarios. */
   readonly target: string;
-  /** TTS provider name: echogarden, edge-tts, or openai (default echogarden). */
+  /** TTS provider name: echogarden, edge-tts, openai, or elevenlabs (default echogarden). */
   readonly tts?: string;
   /** Output directory for audio (default: alongside the scenario). */
   readonly out?: string;
@@ -143,14 +143,17 @@ async function generateNarration(opts: GenerateOptions): Promise<GenerateStats> 
   const cacheEntries = new Map<number, { hash: string; durationMs: number }>();
 
   for (const step of narratedSteps) {
-    const hash = computeHash(step.text, voice);
+    const hash = computeHash(step.text, voice, provider.fingerprint);
     const fileName = `step-${step.index}.mp3`;
     const mp3Path = join(outDir, fileName);
 
     const srcPrefix = baseUrl ? `${baseUrl.replace(/\/$/, "")}/${scenarioId}` : `.`;
     const src = `${srcPrefix}/${fileName}`;
 
-    if (isCached(existingCache, step.index, hash, voice) && (await fileExists(mp3Path))) {
+    if (
+      isCached(existingCache, step.index, hash, voice, provider.fingerprint) &&
+      (await fileExists(mp3Path))
+    ) {
       const durationMs = getCachedDuration(existingCache!, step.index);
       manifestEntries.set(step.index, { src, durationMs });
       cacheEntries.set(step.index, { hash, durationMs });
@@ -172,7 +175,7 @@ async function generateNarration(opts: GenerateOptions): Promise<GenerateStats> 
   const manifest = buildRuntimeManifest(totalSteps, manifestEntries);
   await writeFile(join(outDir, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
 
-  const cache = buildCacheFile(voice, totalSteps, cacheEntries);
+  const cache = buildCacheFile(provider.fingerprint, voice, totalSteps, cacheEntries);
   await saveCache(outDir, cache);
 
   onLog(`\x1b[32m+\x1b[0m ${scenarioId}: ${stats.generated} generated, ${stats.cached} cached`);
