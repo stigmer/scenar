@@ -33,6 +33,13 @@ const HTMLElementBase: typeof HTMLElement =
  * - `title` — accessible iframe title (defaults to a generic label).
  * - `theme` — `auto` (default) | `light` | `dark`.
  *
+ * Corners: the element is the one clipping surface — it carries
+ * `overflow: hidden`, and the host rounds by styling `border-radius` on the
+ * element itself. The internal iframe must NOT carry a radius: under
+ * iframe-as-screen the mount lays it out at the canonical viewport and scales
+ * it down with a transform, so an iframe radius lives in pre-transform space
+ * and renders at `radius x scale` — a mismatched, mostly ineffective clip.
+ *
  * Events: re-dispatches every embed event as a DOM `CustomEvent` named
  * `scenar:<type>` (e.g. `scenar:ready`, `scenar:completed`) with the event in
  * `detail`, so a vanilla host can listen without touching `postMessage`.
@@ -106,6 +113,7 @@ export class ScenarEmbedElement extends HTMLElementBase {
     this.style.display = "block";
     this.style.position = "relative";
     this.style.width = "100%";
+    this.style.overflow = "hidden";
     this.setAspectRatio(EMBED_BASE_ASPECT_WIDTH, EMBED_BASE_ASPECT_HEIGHT);
 
     const iframe = document.createElement("iframe");
@@ -113,8 +121,7 @@ export class ScenarEmbedElement extends HTMLElementBase {
     iframe.setAttribute("loading", "lazy");
     iframe.setAttribute("allow", "autoplay; fullscreen");
     iframe.setAttribute("allowfullscreen", "");
-    iframe.style.cssText =
-      "position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:inherit";
+    iframe.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0";
 
     this.appendChild(iframe);
     this.iframe = iframe;

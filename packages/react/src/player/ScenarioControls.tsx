@@ -192,8 +192,14 @@ export function ScenarioControls({
   );
 
   return (
+    // The scrim paints edge-to-edge with square corners on purpose: any corner
+    // radius is the host boundary's job (the embed wrapper / <scenar-embed>
+    // element clips with overflow:hidden at whatever radius the host styles).
+    // A radius here would render at native pixel size (the chrome layer
+    // counter-zooms) and disagree with the host's clip, leaking backdrop
+    // wedges at the bottom corners.
     <motion.div
-      className="absolute inset-x-0 bottom-0 z-20 rounded-b-lg bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-2.5 pt-12"
+      className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-2.5 pt-12"
       initial={false}
       animate={{ opacity: visible ? 1 : 0 }}
       transition={{ duration: 0.2 }}
