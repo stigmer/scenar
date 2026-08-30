@@ -11,6 +11,7 @@ const DEFAULT_VOICE = "alloy";
 export function createOpenAIProvider(): TtsProvider {
   return {
     name: "openai",
+    fingerprint: `openai/${DEFAULT_MODEL}/${DEFAULT_VOICE}`,
 
     async synthesize(text: string, options: TtsOptions): Promise<TtsResult> {
       const apiKey = process.env["OPENAI_API_KEY"];
@@ -19,7 +20,7 @@ export function createOpenAIProvider(): TtsProvider {
           "OPENAI_API_KEY environment variable is not set.\n\n" +
           "Set it before running narrate:\n" +
           "  export OPENAI_API_KEY=sk-...\n\n" +
-          "Or use a different TTS provider: --tts echogarden",
+          "Or use a different TTS provider: --tts echogarden, --tts elevenlabs",
         );
       }
 

@@ -1,5 +1,7 @@
 import type { TtsProvider, TtsOptions, TtsResult } from "./types.js";
 
+const ENGINE = "vits";
+
 /**
  * Checks whether the `echogarden` package is available at runtime.
  * Returns `true` if it can be imported, `false` otherwise.
@@ -26,6 +28,7 @@ export async function isEchogardenAvailable(): Promise<boolean> {
 export function createEchogardenProvider(): TtsProvider {
   return {
     name: "echogarden",
+    fingerprint: `echogarden/${ENGINE}`,
 
     async synthesize(text: string, options: TtsOptions): Promise<TtsResult> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,12 +39,12 @@ export function createEchogardenProvider(): TtsProvider {
         throw new Error(
           "Echogarden is not installed. Install it with:\n\n" +
           "  pnpm add echogarden\n\n" +
-          "Or use a different TTS provider: --tts edge-tts, --tts openai",
+          "Or use a different TTS provider: --tts edge-tts, --tts openai, --tts elevenlabs",
         );
       }
 
       const result = await echogarden.synthesize(text, {
-        engine: "vits",
+        engine: ENGINE,
         voice: options.voice,
       });
 

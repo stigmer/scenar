@@ -1,14 +1,16 @@
 import type { TtsProvider } from "./types.js";
 import { createEchogardenProvider, isEchogardenAvailable } from "./echogarden.js";
 import { createEdgeTtsProvider, isEdgeTtsAvailable } from "./edge-tts.js";
+import { createElevenLabsProvider } from "./elevenlabs.js";
 import { createOpenAIProvider } from "./openai.js";
 
-export type TtsProviderName = "echogarden" | "edge-tts" | "openai";
+export type TtsProviderName = "echogarden" | "edge-tts" | "openai" | "elevenlabs";
 
 const KNOWN_PROVIDERS: ReadonlySet<string> = new Set<TtsProviderName>([
   "echogarden",
   "edge-tts",
   "openai",
+  "elevenlabs",
 ]);
 
 /**
@@ -30,6 +32,10 @@ export async function resolveProvider(providerName: string): Promise<TtsProvider
     return createOpenAIProvider();
   }
 
+  if (providerName === "elevenlabs") {
+    return createElevenLabsProvider();
+  }
+
   if (providerName === "edge-tts") {
     const available = await isEdgeTtsAvailable();
     if (!available) {
@@ -38,7 +44,8 @@ export async function resolveProvider(providerName: string): Promise<TtsProvider
         "  pnpm add edge-tts-universal\n\n" +
         "Or use a different provider:\n\n" +
         "  scenar narrate <file> --tts echogarden   (offline, pnpm add echogarden)\n" +
-        "  scenar narrate <file> --tts openai        (requires OPENAI_API_KEY)",
+        "  scenar narrate <file> --tts openai        (requires OPENAI_API_KEY)\n" +
+        "  scenar narrate <file> --tts elevenlabs    (requires ELEVENLABS_API_KEY)",
       );
     }
     return createEdgeTtsProvider();
@@ -52,8 +59,9 @@ export async function resolveProvider(providerName: string): Promise<TtsProvider
       "Or use free online TTS (requires network):\n\n" +
       "  scenar narrate <file> --tts edge-tts\n" +
       "  pnpm add edge-tts-universal\n\n" +
-      "Or use OpenAI TTS (requires API key):\n\n" +
-      "  scenar narrate <file> --tts openai",
+      "Or use an API-key TTS provider:\n\n" +
+      "  scenar narrate <file> --tts openai        (requires OPENAI_API_KEY)\n" +
+      "  scenar narrate <file> --tts elevenlabs    (requires ELEVENLABS_API_KEY)",
     );
   }
 
