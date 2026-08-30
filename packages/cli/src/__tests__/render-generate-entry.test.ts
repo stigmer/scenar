@@ -6,6 +6,7 @@ const BASE = {
   renderFilePath: "/proj/scenarios/welcome-tour/index.tsx",
   scenarioId: "welcome-tour",
   hasNarration: false,
+  hasPresenter: false,
   providersPath: null,
   fps: 30,
   width: 1920,
@@ -72,11 +73,30 @@ describe("generateRemotionEntry title cards", () => {
     expect(src).toContain(
       'import { ScenarioComposition, applyTitleCards, calculateScenarioTimeline } from "@scenar/remotion";',
     );
-    expect(src).toContain("const _applied = applyTitleCards(_steps, _manifest, _titleCards);");
+    expect(src).toContain("const _applied = applyTitleCards(_steps, _manifest, _titleCards, _presenterManifest);");
     expect(src.indexOf("const _applied = applyTitleCards(")).toBeLessThan(
       src.indexOf("calculateScenarioTimeline("),
     );
     expect(src).toContain("steps: _applied.steps as any,");
     expect(src).toContain("narrationManifest: _applied.narrationManifest,");
+  });
+});
+
+describe("generateRemotionEntry presenter", () => {
+  it("imports the presenter manifest and pads it through card synthesis", () => {
+    const src = generateRemotionEntry({ ...BASE, hasPresenter: true, captions: false });
+    expect(src).toContain(
+      'import _presenterManifest from "/proj/scenarios/welcome-tour/presenter/manifest.json";',
+    );
+    expect(src).toContain(
+      "const _applied = applyTitleCards(_steps, _manifest, _titleCards, _presenterManifest);",
+    );
+    expect(src).toContain("presenterManifest: _applied.presenterManifest,");
+  });
+
+  it("declares an undefined presenter manifest when the scenario has none", () => {
+    const src = generateRemotionEntry({ ...BASE, captions: false });
+    expect(src).toContain("const _presenterManifest = undefined;");
+    expect(src).not.toContain("import _presenterManifest");
   });
 });

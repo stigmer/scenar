@@ -15,6 +15,8 @@ export interface EntryGeneratorInput {
   scenarioId: string;
   /** Whether the scenario has a narration manifest. */
   hasNarration: boolean;
+  /** Whether the scenario has a presenter manifest (+ clips). */
+  hasPresenter: boolean;
   /** Absolute path to the providers file, or null if none found. */
   providersPath: string | null;
   fps: number;
@@ -64,6 +66,13 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
     lines.push(`import _manifest from ${JSON.stringify(manifestPath)};`);
   } else {
     lines.push(`const _manifest = undefined;`);
+  }
+
+  if (input.hasPresenter) {
+    const presenterManifestPath = `${scenarioPath}/presenter/manifest.json`;
+    lines.push(`import _presenterManifest from ${JSON.stringify(presenterManifestPath)};`);
+  } else {
+    lines.push(`const _presenterManifest = undefined;`);
   }
 
   if (input.providersPath) {
@@ -140,12 +149,13 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   // outro card lengthens durationInFrames exactly like an authored step.
 
   lines.push(``);
-  lines.push(`const _applied = applyTitleCards(_steps, _manifest, _titleCards);`);
+  lines.push(`const _applied = applyTitleCards(_steps, _manifest, _titleCards, _presenterManifest);`);
   lines.push(`const _bundle = {`);
   lines.push(`  id: ${JSON.stringify(input.scenarioId)},`);
   lines.push(`  steps: _applied.steps as any,`);
   lines.push(`  narrationManifest: _applied.narrationManifest,`);
   lines.push(`  soundtrack: _soundtrack,`);
+  lines.push(`  presenterManifest: _applied.presenterManifest,`);
   lines.push(`};`);
   lines.push(``);
   lines.push(

@@ -51,6 +51,41 @@ describe("stageRenderAssets", () => {
     expect(await exists(join(publicDir, "manifest.json"))).toBe(false);
   });
 
+  it("stages presenter clips flat at the public root beside narration (srcs are ./step-N.mp4)", async () => {
+    await mkdir(join(scenarioDir, "narration"), { recursive: true });
+    await writeFile(join(scenarioDir, "narration", "step-0.mp3"), "audio-0");
+    await writeFile(join(scenarioDir, "narration", "manifest.json"), "{}");
+    await mkdir(join(scenarioDir, "presenter"), { recursive: true });
+    await writeFile(join(scenarioDir, "presenter", "step-0.mp4"), "clip-0");
+    await writeFile(join(scenarioDir, "presenter", "manifest.json"), "{}");
+    await writeFile(join(scenarioDir, "presenter", ".presenter-cache.json"), "{}");
+
+    const staged = await stageRenderAssets({
+      scenarioDir,
+      publicDir,
+      hasNarration: true,
+      hasPresenter: true,
+    });
+
+    // step-0.mp3 + step-0.mp4 — same basename, different extensions, no collision.
+    expect(staged).toBe(2);
+    expect(await readFile(join(publicDir, "step-0.mp3"), "utf-8")).toBe("audio-0");
+    expect(await readFile(join(publicDir, "step-0.mp4"), "utf-8")).toBe("clip-0");
+    // Manifests are imported by the entry; the cache never leaves the scenario.
+    expect(await exists(join(publicDir, "manifest.json"))).toBe(false);
+    expect(await exists(join(publicDir, ".presenter-cache.json"))).toBe(false);
+  });
+
+  it("stages no presenter clips when the scenario has none", async () => {
+    const staged = await stageRenderAssets({
+      scenarioDir,
+      publicDir,
+      hasNarration: false,
+      hasPresenter: false,
+    });
+    expect(staged).toBe(0);
+  });
+
   it("stages the music asset at its scenario-relative path", async () => {
     await mkdir(join(scenarioDir, "soundtrack"), { recursive: true });
     await writeFile(join(scenarioDir, "soundtrack", "music.mp3"), "music-bytes");

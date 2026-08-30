@@ -87,6 +87,7 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
       scenarioId,
       compositionId,
       hasNarration: !!bundle.narrationManifest,
+      hasPresenter: !!bundle.presenterManifest,
       fps,
       width,
       height,
@@ -133,6 +134,7 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
         scenarioDir,
         publicDir: candidatePublicDir,
         hasNarration: !!bundle.narrationManifest,
+        hasPresenter: !!bundle.presenterManifest,
         soundtrack: bundle.soundtrack,
         sfxPaths,
         titleCards: bundle.titleCards,
@@ -198,6 +200,7 @@ interface EntryResolutionInput {
   scenarioId: string;
   compositionId: string;
   hasNarration: boolean;
+  hasPresenter: boolean;
   fps: number;
   width: number;
   height: number;
@@ -233,6 +236,7 @@ async function resolveEntryPoint(input: EntryResolutionInput): Promise<EntryReso
     renderFilePath,
     scenarioId: input.scenarioId,
     hasNarration: input.hasNarration,
+    hasPresenter: input.hasPresenter,
     providersPath,
     fps: input.fps,
     width: input.width,

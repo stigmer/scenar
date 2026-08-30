@@ -14,7 +14,36 @@ const BASE = {
   scenarioId: "welcome-tour",
   canonicalWidth: 896,
   shellHeight: 480,
+  hasPresenter: false,
 } as const;
+
+describe("generateEmbedEntry presenter", () => {
+  it("fetches the presenter manifest at runtime and pads it through card synthesis", () => {
+    const src = generateEmbedEntry({
+      ...BASE,
+      hasNarration: false,
+      hasPresenter: true,
+      providersPath: null,
+    });
+    expect(src).toContain("usePresenterManifest");
+    expect(src).toContain('const _resolvePresenterManifestUrl = () => "./presenter/manifest.json";');
+    expect(src).toContain(
+      'const _presenterManifest = usePresenterManifest("welcome-tour", _resolvePresenterManifestUrl);',
+    );
+    expect(src).toContain(
+      "applyTitleCards(_steps as any, undefined, _titleCards, _presenterManifest)",
+    );
+    expect(src).toContain("presenterManifest: _applied.presenterManifest,");
+  });
+
+  it("emits no presenter wiring when the scenario has none", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    expect(src).not.toContain("usePresenterManifest");
+    expect(src).toContain(
+      "applyTitleCards(_steps as any, undefined, _titleCards, undefined)",
+    );
+  });
+});
 
 describe("generateEmbedEntry", () => {
   it("mounts ScenarioPlayer into #root with the renderStep contract", () => {
@@ -117,14 +146,14 @@ describe("generateEmbedEntry", () => {
     const without = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
     // No narration: card synthesis pads nothing and interactions are
     // timed by step delays only.
-    expect(without).toContain("applyTitleCards(_steps as any, undefined, _titleCards)");
+    expect(without).toContain("applyTitleCards(_steps as any, undefined, _titleCards, undefined)");
 
     const withNarration = generateEmbedEntry({ ...BASE, hasNarration: true, providersPath: null });
     // With narration: _manifest flows through card synthesis (which pads
     // it in lockstep with any injected card steps) into both the bundle
     // and useStepInteractions, so interaction timing tracks the
     // spoken-clip durations.
-    expect(withNarration).toContain("applyTitleCards(_steps as any, _manifest, _titleCards)");
+    expect(withNarration).toContain("applyTitleCards(_steps as any, _manifest, _titleCards, undefined)");
     expect(withNarration).toContain("narrationManifest: _applied.narrationManifest,");
   });
 
@@ -138,7 +167,7 @@ describe("generateEmbedEntry", () => {
     // Applied inside _App (the manifest arrives asynchronously), memoized so
     // the steps identity stays stable and the scheduler is not re-armed.
     expect(src).toContain("const _applied = useMemo(");
-    expect(src).toContain("applyTitleCards(_steps as any, _manifest, _titleCards)");
+    expect(src).toContain("applyTitleCards(_steps as any, _manifest, _titleCards, undefined)");
     expect(src).toContain("steps: _applied.steps as any,");
     // Capture mode (?shot) deliberately stays on the AUTHORED steps: shots
     // live on authored steps and cards declare none.
@@ -184,7 +213,7 @@ describe("generateEmbedEntry", () => {
 
   it("fetches the narration manifest at runtime only when present", () => {
     const without = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
-    expect(without).toContain("applyTitleCards(_steps as any, undefined, _titleCards)");
+    expect(without).toContain("applyTitleCards(_steps as any, undefined, _titleCards, undefined)");
     expect(without).not.toContain("useNarrationManifest");
     expect(without).not.toContain("import _manifest");
 
@@ -203,7 +232,7 @@ describe("generateEmbedEntry", () => {
     );
     // The fetched manifest flows through card synthesis (which pads it in
     // lockstep with any injected card steps) into the bundle.
-    expect(withNarration).toContain("applyTitleCards(_steps as any, _manifest, _titleCards)");
+    expect(withNarration).toContain("applyTitleCards(_steps as any, _manifest, _titleCards, undefined)");
     expect(withNarration).toContain("narrationManifest: _applied.narrationManifest,");
   });
 

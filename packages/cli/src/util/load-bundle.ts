@@ -24,6 +24,9 @@ export interface CliBundle {
   narrationManifest?: {
     steps: Array<{ src: string; durationMs: number } | null>;
   };
+  presenterManifest?: {
+    steps: Array<{ src: string; durationMs: number } | null>;
+  };
   soundtrack?: AuthoredSoundtrack;
   titleCards?: AuthoredTitleCards;
 }
@@ -33,31 +36,36 @@ export interface CliBundle {
  *   <dir>/steps.ts       — required (step definitions, optional
  *                          `soundtrack` named export)
  *   <dir>/narration/manifest.json — optional (narration manifest)
+ *   <dir>/presenter/manifest.json — optional (presenter manifest)
  *
  * The scenario id defaults to the directory base name.
  */
 export async function loadBundle(dir: string): Promise<CliBundle> {
   const stepsPath = join(dir, "steps.ts");
-  const manifestPath = join(dir, "narration", "manifest.json");
 
   const steps = await loadStepsFromTs(stepsPath);
   const soundtrack = await loadSoundtrackFromTs(stepsPath);
   const titleCards = await loadTitleCardsFromTs(stepsPath);
 
-  let narrationManifest: CliBundle["narrationManifest"];
-  try {
-    await access(manifestPath);
-    const raw = await readFile(manifestPath, "utf-8");
-    narrationManifest = JSON.parse(raw) as CliBundle["narrationManifest"];
-  } catch {
-    // No manifest — scenario plays without narration.
-  }
-
   return {
     id: basename(dir),
     steps,
-    narrationManifest,
+    narrationManifest: await readPositionalManifest(join(dir, "narration", "manifest.json")),
+    presenterManifest: await readPositionalManifest(join(dir, "presenter", "manifest.json")),
     soundtrack: soundtrack ?? undefined,
     titleCards: titleCards ?? undefined,
   };
+}
+
+/** Read a positional clip manifest, or undefined when none exists. */
+async function readPositionalManifest(
+  manifestPath: string,
+): Promise<CliBundle["narrationManifest"]> {
+  try {
+    await access(manifestPath);
+    const raw = await readFile(manifestPath, "utf-8");
+    return JSON.parse(raw) as CliBundle["narrationManifest"];
+  } catch {
+    return undefined; // No manifest — the scenario plays without this track.
+  }
 }

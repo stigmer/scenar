@@ -29,6 +29,7 @@ describe("bundle-contract: validateRelativePath", () => {
     expect(validateRelativePath("assets/index-abc.css")).toBeNull();
     expect(validateRelativePath("scenario.json")).toBeNull();
     expect(validateRelativePath("narration/0.mp3")).toBeNull();
+    expect(validateRelativePath("presenter/step-0.mp4")).toBeNull();
   });
 
   it("accepts raster images and modern fonts (the Vite asset case)", () => {
@@ -122,6 +123,7 @@ describe("bundle-contract: content types", () => {
       css: "text/css",
       json: "application/json",
       mp3: "audio/mpeg",
+      mp4: "video/mp4",
       png: "image/png",
       jpg: "image/jpeg",
       jpeg: "image/jpeg",
