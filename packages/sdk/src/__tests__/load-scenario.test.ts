@@ -248,4 +248,40 @@ describe("loadScenarioFromProto", () => {
       expect(err.path).toBe("soundtrack.musicSrc");
     }
   });
+
+  it("carries title cards through without synthesizing card steps", () => {
+    const modified: ProtoScenarioSpec = {
+      ...makeValidScenario(),
+      titleCards: {
+        intro: { title: "Acme", subtitle: "Ship fast" },
+        outro: { title: "Try it", ctaText: "acme.dev" },
+      },
+    };
+
+    const scenario = loadScenarioFromProto(modified, { views });
+    // Config is carried, not applied: still exactly the authored steps.
+    expect(scenario.steps).toHaveLength(2);
+    expect(scenario.titleCards?.intro?.title).toBe("Acme");
+    expect(scenario.titleCards?.outro?.ctaText).toBe("acme.dev");
+  });
+
+  it("leaves titleCards undefined when the spec has none", () => {
+    const scenario = loadScenarioFromProto(makeValidScenario(), { views });
+    expect(scenario.titleCards).toBeUndefined();
+  });
+
+  it("throws when a title card's title is empty", () => {
+    const modified: ProtoScenarioSpec = {
+      ...makeValidScenario(),
+      titleCards: { intro: { title: "" } },
+    };
+
+    try {
+      loadScenarioFromProto(modified, { views });
+      expect.fail("should have thrown");
+    } catch (e) {
+      const err = e as InvalidScenarioError;
+      expect(err.path).toBe("titleCards.intro.title");
+    }
+  });
 });

@@ -27,5 +27,7 @@ export type {
   ProtoStep,
   ProtoStepAction,
   ProtoStepActionConfig,
+  ProtoTitleCard,
+  ProtoTitleCardsConfig,
   ProtoViewportConfig,
 } from "./proto/proto-types.js";

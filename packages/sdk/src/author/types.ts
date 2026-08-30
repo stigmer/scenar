@@ -1,4 +1,4 @@
-import type { ScenarioStep, Soundtrack, StepAction } from "@scenar/core";
+import type { ScenarioStep, Soundtrack, StepAction, TitleCards } from "@scenar/core";
 
 /**
  * A view registry maps opaque view identifiers (strings) to
@@ -68,6 +68,17 @@ export interface ScenarioInput<Views extends ViewRegistry> {
    * from narration.
    */
   readonly soundtrack?: Soundtrack;
+  /**
+   * Intro/outro title cards framing the scenario. Optional — omitted
+   * means the scenario plays exactly as authored.
+   *
+   * Carried through untouched, like `soundtrack`: card steps are
+   * synthesized at bundle assembly by `applyTitleCards` (from
+   * `@scenar/core`), which the CLI's render/pack pipelines call for
+   * you. When embedding directly, apply it between `createScenario()`
+   * and the player.
+   */
+  readonly titleCards?: TitleCards;
 }
 
 /**
@@ -79,4 +90,5 @@ export interface AuthoredScenario<Views extends ViewRegistry> {
   readonly views: Views;
   readonly steps: readonly ScenarioStep<AuthoredStepData<Views>>[];
   readonly soundtrack: Soundtrack | undefined;
+  readonly titleCards: TitleCards | undefined;
 }
