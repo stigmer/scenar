@@ -58,6 +58,7 @@ function renderScreen(screen: TourScreen): ReactNode {
             { label: "Password", type: "password" },
           ]}
           submitLabel="Sign in"
+          submitTargetId="sign-in"
           footerText="Forgot password?"
         />
       );
