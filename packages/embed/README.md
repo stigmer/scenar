@@ -64,6 +64,26 @@ const mount = createEmbedMount(iframeElement, {
 `theme` is `auto` (default), `light`, or `dark`. `auto` tracks the host page's
 `dark` class on `<html>` and re-themes the embed when it toggles.
 
+## Corners
+
+The embed paints edge-to-edge; the host boundary owns the corner radius. Round
+the React component's wrapper (via `className` or `style`) or the
+`<scenar-embed>` element itself (via CSS `border-radius`) — the boundary
+carries `overflow: hidden`, so everything inside clips to your radius:
+
+```tsx
+<ScenarEmbed src="…" style={{ borderRadius: 12 }} />
+```
+
+```css
+scenar-embed { border-radius: 12px; }
+```
+
+Do not style the internal iframe. Under iframe-as-screen scaling it is laid
+out at the tour's canonical viewport and transform-scaled to fit, so a radius
+on the iframe would shrink with the scale factor instead of matching your
+layout.
+
 ## License
 
 Apache-2.0

@@ -23,13 +23,18 @@ export interface EmbedSnippetInput {
  * verbatim. Attribute values are escaped, since the snippet is copy-pasted into
  * third-party HTML.
  *
+ * The wrapper carries `overflow:hidden` so it honors the embed corner contract:
+ * a host that adds `border-radius` to the wrapper gets cleanly clipped corners
+ * (the embed paints edge-to-edge; the host boundary owns the radius, same as
+ * `@scenar/embed`'s adapters).
+ *
  * Pure function — returns the snippet string; the caller decides where to print.
  */
 export function buildEmbedSnippet(input: EmbedSnippetInput): string {
   const { embedUrl, viewport } = input;
   const title = input.title ?? "Scenar embed";
   return [
-    `<div style="position:relative;width:100%;max-width:${viewport.width}px;aspect-ratio:${viewport.width}/${viewport.height}">`,
+    `<div style="position:relative;width:100%;max-width:${viewport.width}px;aspect-ratio:${viewport.width}/${viewport.height};overflow:hidden">`,
     `  <iframe`,
     `    src="${escapeAttr(embedUrl)}"`,
     `    title="${escapeAttr(title)}"`,

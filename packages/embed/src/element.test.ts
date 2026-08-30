@@ -65,6 +65,16 @@ describe("<scenar-embed>", () => {
     expect(el.style.aspectRatio).toBe("896 / 480");
   });
 
+  it("clips its content so a host-applied border-radius rounds the embed", () => {
+    const { el, iframe } = mountElement({ src: SRC });
+    // The element is the one clipping surface: the host rounds the element,
+    // and everything inside — including the transform-scaled iframe — clips
+    // to it. The iframe itself must carry no radius (it would live in
+    // pre-transform space and render at radius x scale).
+    expect(el.style.overflow).toBe("hidden");
+    expect(iframe.style.borderRadius).toBe("");
+  });
+
   it("falls back to a generic accessible title", () => {
     const { iframe } = mountElement({ src: SRC });
     expect(iframe.getAttribute("title")).toBe("Interactive product tour");

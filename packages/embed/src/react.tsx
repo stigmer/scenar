@@ -52,6 +52,15 @@ export interface ScenarEmbedProps extends EmbedSource {
  * SSR-safe: the iframe renders without a `src` on the server and on the first
  * client render, so hydration never mismatches; the effect then assigns the
  * themed `src` and adopts the embed's reported aspect ratio.
+ *
+ * Corners: the wrapper is the one clipping surface — it carries
+ * `overflow: hidden`, and the host supplies any corner radius via `className`
+ * or `style`. The iframe itself must NOT carry a `border-radius`: under
+ * iframe-as-screen the mount lays the iframe out at the canonical viewport and
+ * scales it down with a transform, so a radius on the iframe lives in
+ * pre-transform space and renders at `radius x scale` — a mismatched, mostly
+ * ineffective clip. The embed paints edge-to-edge and the host boundary owns
+ * the corners.
  */
 export const ScenarEmbed = forwardRef<ScenarEmbedHandle, ScenarEmbedProps>(
   function ScenarEmbed({ src, id, base, title, theme = "auto", onEvent, className, style }, ref) {
@@ -98,7 +107,13 @@ export const ScenarEmbed = forwardRef<ScenarEmbedHandle, ScenarEmbedProps>(
     return (
       <div
         className={className}
-        style={{ position: "relative", width: "100%", aspectRatio: ratio, ...style }}
+        style={{
+          position: "relative",
+          width: "100%",
+          aspectRatio: ratio,
+          overflow: "hidden",
+          ...style,
+        }}
       >
         <iframe
           ref={iframeRef}
@@ -112,7 +127,6 @@ export const ScenarEmbed = forwardRef<ScenarEmbedHandle, ScenarEmbedProps>(
             width: "100%",
             height: "100%",
             border: 0,
-            borderRadius: "inherit",
           }}
         />
       </div>

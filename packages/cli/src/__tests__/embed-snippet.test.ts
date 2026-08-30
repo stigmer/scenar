@@ -11,6 +11,11 @@ describe("buildEmbedSnippet", () => {
     expect(snippet).toContain("width:100%");
   });
 
+  it("clips the wrapper so a host-applied border-radius rounds the embed", () => {
+    const snippet = buildEmbedSnippet({ embedUrl, viewport: { width: 896, height: 480 } });
+    expect(snippet).toContain("overflow:hidden");
+  });
+
   it("embeds the URL as the iframe src and lazy-loads", () => {
     const snippet = buildEmbedSnippet({ embedUrl, viewport: { width: 896, height: 480 } });
     expect(snippet).toContain(`src="${embedUrl}"`);

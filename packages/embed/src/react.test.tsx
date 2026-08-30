@@ -45,6 +45,20 @@ describe("ScenarEmbed (React)", () => {
     expect(wrapper.style.aspectRatio).toBe("896 / 480");
   });
 
+  it("clips the wrapper so a host-applied border-radius rounds the embed", () => {
+    render(<ScenarEmbed src={SRC} title="t" />);
+    const iframe = screen.getByTitle("t") as HTMLIFrameElement;
+    stubFrame(iframe);
+
+    // The wrapper is the one clipping surface: the host rounds it via
+    // className/style, and everything inside — including the transform-scaled
+    // iframe — clips to it. The iframe itself must carry no radius (it would
+    // live in pre-transform space and render at radius x scale).
+    const wrapper = iframe.parentElement as HTMLElement;
+    expect(wrapper.style.overflow).toBe("hidden");
+    expect(iframe.style.borderRadius).toBe("");
+  });
+
   it("resolves id + base into the embed src", () => {
     render(<ScenarEmbed id="welcome" base="https://embed.example/demos" title="t" />);
     const iframe = screen.getByTitle("t") as HTMLIFrameElement;
