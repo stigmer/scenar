@@ -29,6 +29,15 @@
     --scenar-cursor-stroke: #ffffff;
 
     /*
+     * Caption overlay (CaptionOverlay.tsx). Deliberately theme-invariant,
+     * like `--scenar-chrome`: captions sit on arbitrary tour content, so
+     * they follow the white-on-scrim video-subtitle convention rather than
+     * the light/dark palette behind them. Hosts retheme by overriding.
+     */
+    --scenar-caption-surface: rgb(0 0 0 / 0.5);
+    --scenar-caption-foreground: rgb(255 255 255 / 0.95);
+
+    /*
      * Stage: the backdrop a framed window floats on, plus the window's
      * elevation and radius. The backdrop is a macOS-wallpaper-style mesh:
      * three soft radial glows over a diagonal base. The gradient geometry

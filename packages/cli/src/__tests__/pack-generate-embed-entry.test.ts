@@ -24,7 +24,7 @@ describe("generateEmbedEntry", () => {
     // embedViewport mirrors the DemoViewport numbers so the ready handshake
     // announces the exact canonical size the bundle lays out at.
     expect(src).toContain(
-      "<ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: 896, heightPx: 480 }} onStepChange={_handleStepChange}>",
+      "<ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: 896, heightPx: 480 }} captions={_captions} onStepChange={_handleStepChange}>",
     );
     expect(src).toContain("renderStep(data, stepIndex)");
     expect(src).toContain('getElementById("root")');
@@ -84,6 +84,15 @@ describe("generateEmbedEntry", () => {
     const layerCloseIndex = src.indexOf("</ViewportTransformLayer>");
     expect(cursorIndex).toBeGreaterThan(-1);
     expect(cursorIndex).toBeLessThan(layerCloseIndex);
+  });
+
+  it("reads ?captions once at module load and forwards it as the player prop", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    // Same frame-time-preference family as ?theme: module-load read, and
+    // absent/other values keep captions off — prior embed behavior.
+    expect(src).toContain('new URLSearchParams(window.location.search).get("captions")');
+    expect(src).toContain('return v === "1" || v === "true";');
+    expect(src).toContain("captions={_captions}");
   });
 
   it("feeds the narration manifest into the interaction scheduler when present", () => {

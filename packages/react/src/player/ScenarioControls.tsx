@@ -18,6 +18,16 @@ interface ScenarioControlsProps {
   stepTimeline: StepTimeline;
   showSpeedControl: boolean;
   hasNarration: boolean;
+  /**
+   * Whether the player has captions enabled (the `captions` prop). The CC
+   * toggle renders only when true — players without captions show no new
+   * control, keeping the pre-captions bar unchanged.
+   */
+  captionsEnabled?: boolean;
+  /** Whether captions are currently shown (drives the toggle's state). */
+  captionsVisible?: boolean;
+  /** Fired when the viewer clicks the CC toggle. */
+  onToggleCaptions?: () => void;
   /** Render the fullscreen toggle. Undefined hides the control entirely. */
   onToggleFullscreen?: () => void;
   /** Whether the page is currently fullscreen (drives the toggle icon). */
@@ -89,6 +99,9 @@ export function ScenarioControls({
   stepTimeline,
   showSpeedControl,
   hasNarration,
+  captionsEnabled = false,
+  captionsVisible = false,
+  onToggleCaptions,
   onToggleFullscreen,
   isFullscreen = false,
   progressTrackRef,
@@ -297,6 +310,31 @@ export function ScenarioControls({
         )}
 
         <div className="ml-auto flex items-center gap-2">
+          {/*
+           * CC toggle — settings cluster, before speed, where YouTube keeps
+           * it (Jakob's Law). The active state is the underline bar beneath
+           * the glyph, the convention viewers already read as "captions on".
+           */}
+          {captionsEnabled && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleCaptions?.();
+              }}
+              className="relative flex h-9 w-9 items-center justify-center rounded text-white/90 transition-colors hover:text-white"
+              aria-label={captionsVisible ? "Hide captions" : "Show captions"}
+              aria-pressed={captionsVisible}
+            >
+              <CaptionsIcon />
+              {captionsVisible && (
+                <span
+                  aria-hidden
+                  className="absolute bottom-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-white"
+                />
+              )}
+            </button>
+          )}
+
           {showSpeedControl && (
             <SpeedMenu playbackRate={playbackRate} onSelectSpeed={onSelectSpeed} />
           )}
@@ -362,6 +400,22 @@ function SkipForwardIcon() {
       <path d="M21 3v5h-5" />
       <text x="12" y="16" textAnchor="middle" fontSize="8.5" fontWeight="600" fill="currentColor" stroke="none" fontFamily="inherit">
         10
+      </text>
+    </svg>
+  );
+}
+
+/*
+ * The CC glyph shared by every mainstream player: a rounded rect with "CC"
+ * as SVG text (no stroke, inherits currentColor) so the glyph stays one
+ * color like its siblings — same construction as the skip glyphs' "10".
+ */
+function CaptionsIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+      <text x="12" y="15.5" textAnchor="middle" fontSize="8" fontWeight="700" fill="currentColor" stroke="none" fontFamily="inherit">
+        CC
       </text>
     </svg>
   );

@@ -42,6 +42,17 @@ describe("scenar render", () => {
     expect(optionNames).toContain("--entry");
     expect(optionNames).toContain("--composition-id");
     expect(optionNames).toContain("--webpack-override");
+    expect(optionNames).toContain("--captions");
+  });
+
+  it("keeps --captions a boolean flag that defaults off", () => {
+    const program = createProgram();
+    const renderCmd = program.commands.find((c) => c.name() === "render");
+    const captions = renderCmd!.options.find((o) => o.long === "--captions");
+    expect(captions).toBeDefined();
+    // No <value> placeholder: presence of the flag is the opt-in.
+    expect(captions!.flags).toBe("--captions");
+    expect(captions!.defaultValue).toBeUndefined();
   });
 
   it("defaults fps to 30, width to 1920, height to 1080", () => {

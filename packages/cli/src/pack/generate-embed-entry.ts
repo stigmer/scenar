@@ -50,6 +50,11 @@ export interface EmbedEntryInput {
  * selector). The default is light, so existing embeds are unaffected; a host can
  * theme-sync simply by framing `…/?theme=dark`.
  *
+ * Captions (`?captions=1`): same frame-time-preference family as `?theme` —
+ * enables the player's step captions (narration text as a subtitle overlay,
+ * with a CC toggle in the control bar). Absent means off, preserving prior
+ * behavior.
+ *
  * Capture (`?shot`): with a `shot` query param present, the entry mounts
  * `ScenarioCaptureMount` instead of the playback tree — the TimeSource-driven
  * catch-up mount behind `scenar shoot` (DD-02). The driver installs on
@@ -148,6 +153,20 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`})();`);
   lines.push(`const _rootClass = _theme === "dark" ? SCENAR_CLASS + " dark" : SCENAR_CLASS;`);
 
+  // --- Captions: opt-in via ?captions=1 (default off; backward-compatible) ---
+  // Same family as ?theme: a frame-time presentation preference the host
+  // chooses per embed instance (an iframe host writes no JSX, so the player's
+  // `captions` prop is reachable only through the URL). Read once at module
+  // load; "1" and "true" both enable, anything else (including absent)
+  // preserves prior behavior.
+  lines.push(``);
+  lines.push(`const _captions = (() => {`);
+  lines.push(`  try {`);
+  lines.push(`    const v = new URLSearchParams(window.location.search).get("captions");`);
+  lines.push(`    return v === "1" || v === "true";`);
+  lines.push(`  } catch { return false; }`);
+  lines.push(`})();`);
+
   // --- Capture mode: ?shot (bare = driver only; ?shot=<name> = auto-walk) ---
   // Read the same way as _theme: once, at module load, outside React. A null
   // value (param absent) means normal playback; "" (bare ?shot) means capture
@@ -245,7 +264,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   // embedViewport mirrors DemoViewport's numbers on purpose: the bundle
   // announces the exact canonical size it lays out at, so a host can adopt
   // iframe-as-screen scaling (see @scenar/embed's mount).
-  lines.push(`          <ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: ${input.canonicalWidth}, heightPx: ${input.shellHeight} }} onStepChange={_handleStepChange}>`);
+  lines.push(`          <ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: ${input.canonicalWidth}, heightPx: ${input.shellHeight} }} captions={_captions} onStepChange={_handleStepChange}>`);
   lines.push(`            ${stepRender}`);
   lines.push(`          </ScenarioPlayer>`);
   lines.push(`          <Cursor target={_cursorTarget} containerRef={_cameraRef} showRipple={_showRipple} isDragging={_dragging} />`);

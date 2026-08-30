@@ -26,6 +26,13 @@ interface ScenarioCompositionProps<T> {
    * Defaults to true.
    */
   useStaticFile?: boolean;
+  /**
+   * Burn step captions into the video: each step's `narration` text
+   * renders as a subtitle-style overlay. Forwarded to `ScenarioPlayer` —
+   * the same overlay the interactive embed shows, so both outputs caption
+   * identically. Defaults to false.
+   */
+  captions?: boolean;
 }
 
 /**
@@ -75,6 +82,7 @@ export function ScenarioComposition<T>({
   children,
   fps: fpsProp,
   useStaticFile: useStaticFileProp = true,
+  captions = false,
 }: ScenarioCompositionProps<T>) {
   const videoConfig = useVideoConfig();
   const fps = fpsProp ?? videoConfig.fps ?? DEFAULT_FPS;
@@ -95,7 +103,7 @@ export function ScenarioComposition<T>({
         stepStartTimesMs={timeline.stepStartTimesMs}
       >
         <VideoExportProvider>
-          <ScenarioPlayer bundle={bundle}>
+          <ScenarioPlayer bundle={bundle} captions={captions}>
             {children}
           </ScenarioPlayer>
         </VideoExportProvider>

@@ -3,10 +3,17 @@ import { cleanup, fireEvent, render, within } from "@testing-library/react";
 import type { ScenarioStep } from "@scenar/core";
 import { ScenarioPlayer } from "./ScenarioPlayer.js";
 import { VideoExportProvider } from "../video/VideoExportContext.js";
+import { TimeSourceProvider } from "../time/TimeSource.js";
 import { DemoViewport } from "../viewport/DemoViewport.js";
 
 // A long second step so the timeline never auto-advances mid-test.
 const STEPS = [{ delayMs: 0 }, { delayMs: 60_000 }] as unknown as ScenarioStep<unknown>[];
+
+// The same shape with narration scripts, for the caption tests.
+const CAPTIONED_STEPS = [
+  { delayMs: 0, narration: "Welcome to the tour." },
+  { delayMs: 60_000, narration: "This is the dashboard." },
+] as unknown as ScenarioStep<unknown>[];
 
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
@@ -216,5 +223,101 @@ describe("ScenarioPlayer chrome layer", () => {
     fireEvent.click(within(container).getByRole("button", { name: "Play" }));
     const root = container.querySelector("[data-demo-state]") as HTMLElement;
     expect(root.getAttribute("data-demo-state")).toBe("playing");
+  });
+});
+
+const captionIn = (container: HTMLElement) =>
+  container.querySelector("[data-scenar-captions]");
+
+describe("ScenarioPlayer captions", () => {
+  it("renders no caption DOM and no CC control without the captions prop — today's behavior", () => {
+    const { container } = render(
+      <ScenarioPlayer steps={CAPTIONED_STEPS}>{() => <div data-testid="content" />}</ScenarioPlayer>,
+    );
+
+    expect(captionIn(container)).toBeNull();
+    expect(within(container).queryByRole("button", { name: /captions/i })).toBeNull();
+  });
+
+  it("shows the active step's narration as the caption when enabled", () => {
+    const { container } = render(
+      <ScenarioPlayer steps={CAPTIONED_STEPS} captions>
+        {() => <div data-testid="content" />}
+      </ScenarioPlayer>,
+    );
+
+    expect(captionIn(container)).not.toBeNull();
+    expect(captionIn(container)!.textContent).toBe("Welcome to the tour.");
+  });
+
+  it("renders no caption for a step without narration, even when enabled", () => {
+    const { container } = render(
+      <ScenarioPlayer steps={STEPS} captions>
+        {() => <div data-testid="content" />}
+      </ScenarioPlayer>,
+    );
+
+    // Captions enabled, but the step has no script: uncaptioned playback,
+    // yet the CC control stays offered (other steps may have narration).
+    expect(captionIn(container)).toBeNull();
+    expect(
+      within(container).getByRole("button", { name: "Hide captions" }),
+    ).toBeDefined();
+  });
+
+  it("hides and re-shows captions from the CC toggle", () => {
+    const { container } = render(
+      <ScenarioPlayer steps={CAPTIONED_STEPS} captions>
+        {() => <div data-testid="content" />}
+      </ScenarioPlayer>,
+    );
+
+    const toggle = within(container).getByRole("button", { name: "Hide captions" });
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.click(toggle);
+    expect(captionIn(container)).toBeNull();
+    const reShow = within(container).getByRole("button", { name: "Show captions" });
+    expect(reShow.getAttribute("aria-pressed")).toBe("false");
+
+    fireEvent.click(reShow);
+    expect(captionIn(container)!.textContent).toBe("Welcome to the tour.");
+  });
+
+  it("portals the caption into the chrome layer with the control bar", () => {
+    const { container } = render(
+      <DemoViewport canonicalWidth={1280}>
+        <ScenarioPlayer steps={CAPTIONED_STEPS} captions>
+          {() => <div data-testid="content" />}
+        </ScenarioPlayer>
+      </DemoViewport>,
+    );
+
+    // Like the bar (see the chrome-layer suite): the caption is player
+    // chrome, so it must live in the unscaled overlay, not the zoomed canvas.
+    const outer = container.firstElementChild as HTMLElement;
+    const canvas = outer.firstElementChild as HTMLElement;
+    const caption = captionIn(container)!;
+    expect(caption).not.toBeNull();
+    expect(canvas.contains(caption)).toBe(false);
+    expect(outer.contains(caption)).toBe(true);
+  });
+
+  it("derives the same caption from the frame-driven time source as from step state", () => {
+    // Parity at a sampled point: with step 1 starting at 2000ms, a
+    // frame-driven time inside step 1 must caption step 1's narration —
+    // the same text the browser path shows once it advances to step 1.
+    // Both paths share deriveStepFromTime; this locks the caption to it.
+    const { container } = render(
+      <TimeSourceProvider currentTimeMs={2500} stepStartTimesMs={[0, 2000]}>
+        <VideoExportProvider>
+          <ScenarioPlayer steps={CAPTIONED_STEPS} captions>
+            {() => <div data-testid="content" />}
+          </ScenarioPlayer>
+        </VideoExportProvider>
+      </TimeSourceProvider>,
+    );
+
+    expect(captionIn(container)!.textContent).toBe("This is the dashboard.");
   });
 });
