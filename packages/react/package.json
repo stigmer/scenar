@@ -20,7 +20,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc --build && cp src/theme/tokens.css dist/theme.css && tailwindcss -i src/styles/index.css -o dist/styles.css --minify && mkdir -p dist/assets && cp -R assets/ dist/assets/",
+    "build": "tsc --build && cp src/theme/tokens.css dist/theme.css && tailwindcss -i src/styles/index.css -o dist/styles.css --minify && mkdir -p dist/assets && cp -R assets/. dist/assets/",
     "generate:sfx": "node scripts/generate-sfx.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests --config ../../vitest.config.ts",
