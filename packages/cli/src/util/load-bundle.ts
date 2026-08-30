@@ -1,6 +1,10 @@
 import { readFile, access } from "node:fs/promises";
 import { join, basename } from "node:path";
-import { loadStepsFromTs } from "./load-ts.js";
+import {
+  loadSoundtrackFromTs,
+  loadStepsFromTs,
+  type AuthoredSoundtrack,
+} from "./load-ts.js";
 
 /**
  * Lightweight bundle shape for CLI use. Mirrors the @scenar/core
@@ -13,11 +17,13 @@ export interface CliBundle {
   narrationManifest?: {
     steps: Array<{ src: string; durationMs: number } | null>;
   };
+  soundtrack?: AuthoredSoundtrack;
 }
 
 /**
  * Load a scenario bundle from a directory.  Expects:
- *   <dir>/steps.ts       — required (step definitions)
+ *   <dir>/steps.ts       — required (step definitions, optional
+ *                          `soundtrack` named export)
  *   <dir>/narration/manifest.json — optional (narration manifest)
  *
  * The scenario id defaults to the directory base name.
@@ -27,6 +33,7 @@ export async function loadBundle(dir: string): Promise<CliBundle> {
   const manifestPath = join(dir, "narration", "manifest.json");
 
   const steps = await loadStepsFromTs(stepsPath);
+  const soundtrack = await loadSoundtrackFromTs(stepsPath);
 
   let narrationManifest: CliBundle["narrationManifest"];
   try {
@@ -41,5 +48,6 @@ export async function loadBundle(dir: string): Promise<CliBundle> {
     id: basename(dir),
     steps,
     narrationManifest,
+    soundtrack: soundtrack ?? undefined,
   };
 }

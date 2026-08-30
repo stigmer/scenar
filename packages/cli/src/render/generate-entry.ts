@@ -91,6 +91,28 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   lines.push(``);
   lines.push(`const _steps: any = _findSteps(_stepsModule as unknown as Record<string, unknown>);`);
 
+  // --- Soundtrack resolution (mirror of the CLI's findAuthoredSoundtrack) ---
+  // Discovered from the very module the bundle bakes in, at module-eval
+  // time, so the render can never disagree with the authored config: a
+  // scenario-shaped export (createScenario) wins, then a `soundtrack`
+  // named export; absent means no soundtrack.
+
+  lines.push(``);
+  lines.push(`function _findSoundtrack(mod: Record<string, unknown>): any {`);
+  lines.push(`  for (const val of Object.values(mod)) {`);
+  lines.push(`    if (`);
+  lines.push(`      typeof val === "object" && val !== null && !Array.isArray(val) &&`);
+  lines.push(`      "soundtrack" in val &&`);
+  lines.push(`      Array.isArray((val as any).steps) && (val as any).steps.length > 0 &&`);
+  lines.push(`      typeof (val as any).steps[0] === "object" && (val as any).steps[0] !== null &&`);
+  lines.push(`      "delayMs" in (val as any).steps[0]`);
+  lines.push(`    ) return (val as any).soundtrack;`);
+  lines.push(`  }`);
+  lines.push(`  return (mod as any)["soundtrack"];`);
+  lines.push(`}`);
+  lines.push(``);
+  lines.push(`const _soundtrack: any = _findSoundtrack(_stepsModule as unknown as Record<string, unknown>);`);
+
   // --- Bundle + timeline ---
 
   lines.push(``);
@@ -98,6 +120,7 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   lines.push(`  id: ${JSON.stringify(input.scenarioId)},`);
   lines.push(`  steps: _steps,`);
   lines.push(`  narrationManifest: _manifest,`);
+  lines.push(`  soundtrack: _soundtrack,`);
   lines.push(`};`);
   lines.push(``);
   lines.push(

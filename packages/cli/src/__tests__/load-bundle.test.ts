@@ -53,4 +53,23 @@ describe("loadBundle", () => {
     const bundle = await loadBundle("/fake/scenarios/no-audio-demo");
     expect(bundle.narrationManifest).toBeUndefined();
   });
+
+  it("carries the authored soundtrack from the steps module", async () => {
+    const soundtrack = { musicSrc: "./soundtrack/music.mp3", sfx: true };
+    vi.mocked(loadTs.loadStepsFromTs).mockResolvedValue(mockSteps);
+    vi.mocked(loadTs.loadSoundtrackFromTs).mockResolvedValue(soundtrack);
+    vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
+
+    const bundle = await loadBundle("/fake/scenarios/scored-demo");
+    expect(bundle.soundtrack).toEqual(soundtrack);
+  });
+
+  it("leaves soundtrack undefined when the module authors none", async () => {
+    vi.mocked(loadTs.loadStepsFromTs).mockResolvedValue(mockSteps);
+    vi.mocked(loadTs.loadSoundtrackFromTs).mockResolvedValue(null);
+    vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
+
+    const bundle = await loadBundle("/fake/scenarios/silent-demo");
+    expect(bundle.soundtrack).toBeUndefined();
+  });
 });

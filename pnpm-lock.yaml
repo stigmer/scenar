@@ -59,12 +59,6 @@ importers:
 
   packages/cli:
     dependencies:
-      '@remotion/bundler':
-        specifier: 4.0.448
-        version: 4.0.448(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@remotion/renderer':
-        specifier: 4.0.448
-        version: 4.0.448(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@scenar/core':
         specifier: workspace:*
         version: link:../core
@@ -80,16 +74,22 @@ importers:
       echogarden:
         specifier: '>=2.0.0'
         version: 2.10.1(zod@4.3.6)
-      remotion:
-        specifier: 4.0.448
-        version: 4.0.448(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       yaml:
         specifier: ^2.7.0
         version: 2.8.3
     devDependencies:
+      '@remotion/bundler':
+        specifier: 4.0.448
+        version: 4.0.448(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@remotion/renderer':
+        specifier: 4.0.448
+        version: 4.0.448(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@scenar/react':
         specifier: workspace:*
         version: link:../react
+      '@scenar/remotion':
+        specifier: workspace:*
+        version: link:../remotion
       '@vitejs/plugin-react':
         specifier: ^4.3.0
         version: 4.7.0(vite@6.4.3(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.3))
@@ -99,6 +99,9 @@ importers:
       playwright:
         specifier: ^1.50.0
         version: 1.62.0
+      remotion:
+        specifier: 4.0.448
+        version: 4.0.448(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       vite:
         specifier: ^6.0.0
         version: 6.4.3(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.3)
@@ -151,6 +154,9 @@ importers:
         specifier: '>=18.0.0'
         version: 19.2.5(react@19.2.5)
     devDependencies:
+      '@breezystack/lamejs':
+        specifier: ^1.2.7
+        version: 1.2.7
       '@tailwindcss/cli':
         specifier: ^4.0.0
         version: 4.2.2
@@ -442,6 +448,9 @@ packages:
   '@bramus/specificity@2.4.2':
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
+
+  '@breezystack/lamejs@1.2.7':
+    resolution: {integrity: sha512-6wc7ck65ctA75Hq7FYHTtTvGnYs6msgdxiSUICQ+A01nVOWg6rqouZB8IdyteRlfpYYiFovkf67dIeOgWIUzTA==}
 
   '@bufbuild/protobuf@2.11.0':
     resolution: {integrity: sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ==}
@@ -4816,6 +4825,8 @@ snapshots:
   '@bramus/specificity@2.4.2':
     dependencies:
       css-tree: 3.2.1
+
+  '@breezystack/lamejs@1.2.7': {}
 
   '@bufbuild/protobuf@2.11.0': {}
 

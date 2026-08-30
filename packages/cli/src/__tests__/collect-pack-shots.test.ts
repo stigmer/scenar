@@ -43,6 +43,7 @@ describe("collectPackShots", () => {
       recorded: true,
       shots: ["opening", "detail-open"],
       authoredViewport: null,
+      authoredSoundtrack: null,
     });
   });
 
@@ -55,6 +56,7 @@ describe("collectPackShots", () => {
       recorded: true,
       shots: ["detail-open"],
       authoredViewport: null,
+      authoredSoundtrack: null,
     });
   });
 
@@ -64,6 +66,7 @@ describe("collectPackShots", () => {
       recorded: true,
       shots: [],
       authoredViewport: null,
+      authoredSoundtrack: null,
     });
   });
 
@@ -76,6 +79,7 @@ describe("collectPackShots", () => {
       recorded: true,
       shots: ["opening"],
       authoredViewport: { width: 1440, height: 900 },
+      authoredSoundtrack: null,
     });
   });
 

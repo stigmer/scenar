@@ -35,3 +35,20 @@ describe("generateRemotionEntry captions", () => {
     expect(src).toContain("<ScenarioComposition bundle={_bundle} captions>");
   });
 });
+
+describe("generateRemotionEntry soundtrack", () => {
+  it("discovers the soundtrack from the steps module at module-eval time", () => {
+    const src = generateRemotionEntry({ ...BASE, captions: false });
+    // The runtime mirror of the CLI's findAuthoredSoundtrack: scenario-shaped
+    // export first, then the `soundtrack` named export.
+    expect(src).toContain("function _findSoundtrack(");
+    expect(src).toContain(
+      "const _soundtrack: any = _findSoundtrack(_stepsModule as unknown as Record<string, unknown>);",
+    );
+  });
+
+  it("carries the discovered soundtrack on the bundle", () => {
+    const src = generateRemotionEntry({ ...BASE, captions: false });
+    expect(src).toContain("soundtrack: _soundtrack,");
+  });
+});

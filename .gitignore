@@ -4,4 +4,10 @@ dist/
 .DS_Store
 .npmrc
 .scenar-pack/
+.scenar-render/
 .packs/
+
+# Generated narration audio for the bundled example: TTS output is a derived
+# artifact (regenerate with `scenar narrate`), and third-party TTS services'
+# audio should not be redistributed from this repo.
+packages/cli/examples/welcome-tour/narration/

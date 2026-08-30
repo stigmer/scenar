@@ -24,7 +24,7 @@ describe("generateEmbedEntry", () => {
     // embedViewport mirrors the DemoViewport numbers so the ready handshake
     // announces the exact canonical size the bundle lays out at.
     expect(src).toContain(
-      "<ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: 896, heightPx: 480 }} captions={_captions} onStepChange={_handleStepChange}>",
+      "<ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: 896, heightPx: 480 }} captions={_captions} soundtrackSources={_soundtrackSources} onStepChange={_handleStepChange}>",
     );
     expect(src).toContain("renderStep(data, stepIndex)");
     expect(src).toContain('getElementById("root")');
@@ -93,6 +93,19 @@ describe("generateEmbedEntry", () => {
     expect(src).toContain('new URLSearchParams(window.location.search).get("captions")');
     expect(src).toContain('return v === "1" || v === "true";');
     expect(src).toContain("captions={_captions}");
+  });
+
+  it("discovers the soundtrack at runtime and points its sources at the bundle copies", () => {
+    const src = generateEmbedEntry({ ...BASE, hasNarration: false, providersPath: null });
+    // Runtime mirror of the CLI's findAuthoredSoundtrack — read from the very
+    // module the bundle bakes in, so the embed can never disagree with the
+    // authored config. Absent soundtrack yields undefined: prior behavior.
+    expect(src).toContain("function _findSoundtrack(");
+    expect(src).toContain("soundtrack: _soundtrack,");
+    // The SFX sources point at the files pack copies into the bundle.
+    expect(src).toContain('click: "./soundtrack/sfx/click.mp3"');
+    expect(src).toContain('keystroke: "./soundtrack/sfx/keystroke.mp3"');
+    expect(src).toContain("soundtrackSources={_soundtrackSources}");
   });
 
   it("feeds the narration manifest into the interaction scheduler when present", () => {

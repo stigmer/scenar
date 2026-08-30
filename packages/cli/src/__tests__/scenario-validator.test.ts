@@ -349,4 +349,72 @@ describe("validateScenario", () => {
     expect(result.valid).toBe(false);
     expect(result.errors.length).toBeGreaterThanOrEqual(4);
   });
+
+  // --- Soundtrack ---
+
+  it("accepts a valid soundtrack, including explicit 0.0 volumes", () => {
+    const result = validateScenario({
+      steps: [{ view: "x", delayMs: 0 }],
+      soundtrack: {
+        musicSrc: "./soundtrack/music.mp3",
+        musicVolume: 0.25,
+        duckingVolume: 0,
+        sfx: true,
+      },
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  it("accepts a soundtrack with only sfx (no music)", () => {
+    const result = validateScenario({
+      steps: [{ view: "x", delayMs: 0 }],
+      soundtrack: { sfx: true },
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  it("rejects a non-object soundtrack", () => {
+    const result = validateScenario({
+      steps: [{ view: "x", delayMs: 0 }],
+      soundtrack: "music.mp3",
+    });
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ path: "soundtrack" }),
+    );
+  });
+
+  it("rejects an empty musicSrc", () => {
+    const result = validateScenario({
+      steps: [{ view: "x", delayMs: 0 }],
+      soundtrack: { musicSrc: "" },
+    });
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ path: "soundtrack.musicSrc" }),
+    );
+  });
+
+  it.each([
+    ["musicVolume above 1", { musicVolume: 1.2 }, "soundtrack.musicVolume"],
+    ["musicVolume negative", { musicVolume: -0.1 }, "soundtrack.musicVolume"],
+    ["musicVolume non-numeric", { musicVolume: "loud" }, "soundtrack.musicVolume"],
+    ["duckingVolume above 1", { duckingVolume: 2 }, "soundtrack.duckingVolume"],
+  ])("rejects %s", (_name, soundtrack, expectedPath) => {
+    const result = validateScenario({
+      steps: [{ view: "x", delayMs: 0 }],
+      soundtrack,
+    });
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ path: expectedPath }),
+    );
+  });
+
+  it("rejects a non-boolean sfx", () => {
+    const result = validateScenario({
+      steps: [{ view: "x", delayMs: 0 }],
+      soundtrack: { sfx: "yes" },
+    });
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ path: "soundtrack.sfx" }),
+    );
+  });
 });

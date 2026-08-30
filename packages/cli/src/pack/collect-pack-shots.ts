@@ -1,5 +1,11 @@
 import { collectShotNames } from "@scenar/core";
-import { type AuthoredViewport, findAuthoredViewport, findStepsArray } from "../util/load-ts.js";
+import {
+  type AuthoredSoundtrack,
+  type AuthoredViewport,
+  findAuthoredSoundtrack,
+  findAuthoredViewport,
+  findStepsArray,
+} from "../util/load-ts.js";
 import { loadViteToolkit, sharedViteConfig } from "./build.js";
 import { stepsModuleSpecifier } from "./generate-embed-entry.js";
 
@@ -19,6 +25,8 @@ export type CollectedPackShots =
       readonly recorded: true;
       readonly shots: readonly string[];
       readonly authoredViewport: AuthoredViewport | null;
+      /** The scenario's authored soundtrack (null = it authors none). */
+      readonly authoredSoundtrack: AuthoredSoundtrack | null;
     }
   | { readonly recorded: false; readonly reason: string };
 
@@ -85,5 +93,6 @@ export async function collectPackShots(scenarioDir: string): Promise<CollectedPa
     recorded: true,
     shots: collectShotNames(steps),
     authoredViewport: findAuthoredViewport(stepsModule),
+    authoredSoundtrack: findAuthoredSoundtrack(stepsModule),
   };
 }
