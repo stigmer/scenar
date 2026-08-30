@@ -58,6 +58,16 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   lines.push(
     `import { ScenarioComposition, applyTitleCards, calculateScenarioTimeline } from "@scenar/remotion";`,
   );
+  lines.push(`import { SCENAR_CLASS } from "@scenar/react";`);
+  // The same stylesheet pair the packed embed entry loads: without them,
+  // authored step content built on @scenar/react (shells, page templates)
+  // renders unstyled — black frames in the MP4 (scenar#23). Remotion's
+  // bundler handles plain CSS imports natively; styles.css is the
+  // self-contained build, so no Tailwind processing is needed. The
+  // composition root carries SCENAR_CLASS (below) so the `.scenar`-scoped
+  // theme tokens resolve, exactly as the embed entry scopes its tree.
+  lines.push(`import "@scenar/react/theme.css";`);
+  lines.push(`import "@scenar/react/styles.css";`);
   lines.push(`import { renderStep } from ${JSON.stringify(renderImport)};`);
   lines.push(`import * as _stepsModule from ${JSON.stringify(stepsImport)};`);
 
@@ -176,7 +186,7 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
 
   if (input.providersPath) {
     lines.push(`  return (`);
-    lines.push(`    <AbsoluteFill>`);
+    lines.push(`    <AbsoluteFill className={SCENAR_CLASS}>`);
     lines.push(`      <_Providers>`);
     lines.push(`        ${compositionOpen}`);
     lines.push(`          {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
@@ -186,7 +196,7 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
     lines.push(`  );`);
   } else {
     lines.push(`  return (`);
-    lines.push(`    <AbsoluteFill>`);
+    lines.push(`    <AbsoluteFill className={SCENAR_CLASS}>`);
     lines.push(`      ${compositionOpen}`);
     lines.push(`        {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
     lines.push(`      </ScenarioComposition>`);
