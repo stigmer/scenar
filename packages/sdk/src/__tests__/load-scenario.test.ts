@@ -181,4 +181,71 @@ describe("loadScenarioFromProto", () => {
     const scenario = loadScenarioFromProto(modified, { views });
     expect(scenario.steps[0]!.narration).toBeUndefined();
   });
+
+  it("maps the soundtrack through, preserving explicit zeros", () => {
+    const modified: ProtoScenarioSpec = {
+      ...makeValidScenario(),
+      soundtrack: {
+        musicSrc: "./soundtrack/music.mp3",
+        musicVolume: 0.3,
+        duckingVolume: 0,
+        sfx: true,
+      },
+    };
+
+    const scenario = loadScenarioFromProto(modified, { views });
+    expect(scenario.soundtrack).toEqual({
+      musicSrc: "./soundtrack/music.mp3",
+      musicVolume: 0.3,
+      duckingVolume: 0,
+      sfx: true,
+    });
+  });
+
+  it("leaves soundtrack undefined when the spec has none", () => {
+    const scenario = loadScenarioFromProto(makeValidScenario(), { views });
+    expect(scenario.soundtrack).toBeUndefined();
+  });
+
+  it("preserves unset soundtrack fields as undefined (engine defaults apply)", () => {
+    const modified: ProtoScenarioSpec = {
+      ...makeValidScenario(),
+      soundtrack: { musicSrc: "./music.mp3" },
+    };
+
+    const scenario = loadScenarioFromProto(modified, { views });
+    expect(scenario.soundtrack?.musicVolume).toBeUndefined();
+    expect(scenario.soundtrack?.duckingVolume).toBeUndefined();
+    expect(scenario.soundtrack?.sfx).toBeUndefined();
+  });
+
+  it.each([
+    ["musicVolume", { musicVolume: 1.5 }, "soundtrack.musicVolume"],
+    ["duckingVolume", { duckingVolume: -0.1 }, "soundtrack.duckingVolume"],
+  ])("throws when %s is out of range", (_name, soundtrack, expectedPath) => {
+    const modified: ProtoScenarioSpec = { ...makeValidScenario(), soundtrack };
+
+    try {
+      loadScenarioFromProto(modified, { views });
+      expect.fail("should have thrown");
+    } catch (e) {
+      const err = e as InvalidScenarioError;
+      expect(err.path).toBe(expectedPath);
+    }
+  });
+
+  it("throws when musicSrc is present but empty", () => {
+    const modified: ProtoScenarioSpec = {
+      ...makeValidScenario(),
+      soundtrack: { musicSrc: "" },
+    };
+
+    try {
+      loadScenarioFromProto(modified, { views });
+      expect.fail("should have thrown");
+    } catch (e) {
+      const err = e as InvalidScenarioError;
+      expect(err.path).toBe("soundtrack.musicSrc");
+    }
+  });
 });

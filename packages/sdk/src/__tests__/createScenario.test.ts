@@ -103,4 +103,24 @@ describe("createScenario", () => {
 
     expect(scenario.steps[0]!.narration).toBe("Hello");
   });
+
+  it("carries the soundtrack through to the authored scenario", () => {
+    const soundtrack = { musicSrc: "./soundtrack/music.mp3", sfx: true };
+    const scenario = createScenario({
+      views: { settings: SettingsView },
+      steps: [{ view: "settings", delayMs: 0, props: { org: "a" } }],
+      soundtrack,
+    });
+
+    expect(scenario.soundtrack).toBe(soundtrack);
+  });
+
+  it("leaves soundtrack undefined when not authored", () => {
+    const scenario = createScenario({
+      views: { settings: SettingsView },
+      steps: [{ view: "settings", delayMs: 0, props: { org: "a" } }],
+    });
+
+    expect(scenario.soundtrack).toBeUndefined();
+  });
 });

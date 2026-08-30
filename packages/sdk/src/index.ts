@@ -23,6 +23,7 @@ export { PROTO_ACTION_TYPE } from "./proto/proto-types.js";
 export type {
   ProtoActionTypeValue,
   ProtoScenarioSpec,
+  ProtoSoundtrackConfig,
   ProtoStep,
   ProtoStepAction,
   ProtoStepActionConfig,
