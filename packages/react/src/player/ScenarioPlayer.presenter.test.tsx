@@ -111,9 +111,13 @@ describe("ScenarioPlayer presenter", () => {
         vi.advanceTimersByTime(900);
       });
 
-      const frame = container.querySelector("[data-scenar-presenter]")!;
+      const frame = container.querySelector("[data-scenar-presenter]") as HTMLElement;
       expect(frame.getAttribute("aria-hidden")).toBe("true");
-      expect(frame.className).toContain("pointer-events-none");
+      expect(frame.style.pointerEvents).toBe("none");
+      // Inline-styled with token fallbacks (the TitleCardView pattern), so
+      // the frame renders correctly on surfaces that load no stylesheet.
+      expect(frame.style.width).toBe("var(--scenar-presenter-width, 24%)");
+      expect(frame.style.position).toBe("absolute");
     } finally {
       vi.useRealTimers();
     }
