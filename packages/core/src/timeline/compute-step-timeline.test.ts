@@ -57,4 +57,25 @@ describe("computeStepTimeline", () => {
     expect(tl.stepStartTimesMs).toEqual([0]);
     expect(tl.totalDurationMs).toBe(3000);
   });
+
+  it("uses a final card step's duration as the closing dwell", () => {
+    const tl = computeStepTimeline(
+      [{ delayMs: 0 }, { delayMs: 3000, card: { durationMs: 5000 } }],
+      null,
+    );
+    expect(tl.totalDurationMs).toBe(3000 + 5000);
+  });
+
+  it("falls back to the default dwell for a final card step without a duration", () => {
+    const tl = computeStepTimeline([{ delayMs: 0 }, { delayMs: 3000, card: {} }], null);
+    expect(tl.totalDurationMs).toBe(3000 + 3000);
+  });
+
+  it("ignores a non-final card step's duration for the closing dwell", () => {
+    const tl = computeStepTimeline(
+      [{ delayMs: 0, card: { durationMs: 9000 } }, { delayMs: 2000 }],
+      null,
+    );
+    expect(tl.totalDurationMs).toBe(2000 + 3000);
+  });
 });
