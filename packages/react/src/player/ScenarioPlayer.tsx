@@ -11,6 +11,7 @@ import { useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
 import { PlaybackBurst, ScenarioAudioNotice } from "./PlaybackFeedback.js";
 import { CaptionOverlay } from "./CaptionOverlay.js";
+import { TitleCardView } from "./TitleCardView.js";
 import { ScenarioControls } from "./ScenarioControls.js";
 import type { TimeDisplayMode } from "./format-playback-time.js";
 import { useScenarEmbedBridge } from "../embed/useScenarEmbedBridge.js";
@@ -231,9 +232,14 @@ export function ScenarioPlayer<T>({
     [steps, muted, narrationManifest],
   );
 
-  // Step change callback
+  // Step change callback. Card steps are skipped: their `data` is an
+  // engine placeholder, and fabricating a `T` for the integrator's
+  // callback would violate their own type parameter (see
+  // ScenarioStep.card).
   useEffect(() => {
-    onStepChange?.(steps[stepIndex]!.data, stepIndex);
+    const step = steps[stepIndex]!;
+    if (step.card) return;
+    onStepChange?.(step.data, stepIndex);
   }, [stepIndex, steps, onStepChange]);
 
   // Controls auto-hide
@@ -498,7 +504,17 @@ export function ScenarioPlayer<T>({
         onClick={handleContentClick}
         style={{ cursor: !isVideoExport ? "pointer" : undefined }}
       >
-        {children(steps[stepIndex]!.data, stepIndex)}
+        {/*
+         * Synthesized card steps (ScenarioStep.card) are engine content:
+         * the built-in card renders instead of the scenario's render
+         * function, which never sees them — cards need no view, no props,
+         * no registry entry.
+         */}
+        {steps[stepIndex]!.card ? (
+          <TitleCardView card={steps[stepIndex]!.card!} />
+        ) : (
+          children(steps[stepIndex]!.data, stepIndex)
+        )}
 
         <AnimatePresence>
           {showAudioNotice && <ScenarioAudioNotice onEnableAudio={handleEnableAudio} />}
