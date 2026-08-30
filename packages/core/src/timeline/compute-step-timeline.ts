@@ -1,5 +1,3 @@
-import type { NarrationManifest } from "../narration/types.js";
-
 /**
  * Minimal step shape for timeline computation. Accepts any
  * ScenarioStep<T> without caring about the data payload. The optional
@@ -9,6 +7,20 @@ import type { NarrationManifest } from "../narration/types.js";
 interface StepTiming {
   delayMs: number;
   card?: { durationMs?: number };
+}
+
+/**
+ * Minimal manifest shape for timeline computation: any positional
+ * manifest whose entries carry a duration. Accepts the narration
+ * manifest, and — while the player is muted with a presenter track —
+ * the presenter manifest, whose clip durations equal the narration's
+ * for the same steps (the clip is derived from that audio). Feeding
+ * the presenter manifest to the muted timeline keeps the progress
+ * bar, scrubbing, and step advancement in agreement on presenter
+ * steps, and converges muted timing on the export timeline there.
+ */
+interface ManifestTiming {
+  readonly steps: readonly ({ readonly durationMs: number } | null | undefined)[];
 }
 
 /**
@@ -37,7 +49,7 @@ export interface StepTimeline {
  */
 export function computeStepTimeline(
   steps: readonly StepTiming[],
-  manifest: NarrationManifest | null | undefined,
+  manifest: ManifestTiming | null | undefined,
 ): StepTimeline {
   const stepStartTimesMs: number[] = [0];
 

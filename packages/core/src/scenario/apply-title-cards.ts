@@ -11,14 +11,16 @@
  * `soundtrack` — so expanded output never carries the config and double
  * expansion is impossible by data flow.
  *
- * The narration manifest stays keyed to AUTHORED steps everywhere
- * (`scenar narrate` never sees cards); this function pads `null`
- * entries at the injected positions so the expanded manifest lines up
- * with the expanded steps. Existing manifests therefore stay valid when
- * an author adds cards later — no regeneration required.
+ * The positional manifests stay keyed to AUTHORED steps everywhere
+ * (`scenar narrate` and `scenar presenter` never see cards); this
+ * function pads `null` entries at the injected positions — narration
+ * and presenter in the same single pass — so the expanded manifests
+ * line up with the expanded steps. Existing manifests therefore stay
+ * valid when an author adds cards later — no regeneration required.
  */
 
 import type { NarrationManifest } from "../narration/types.js";
+import type { PresenterManifest } from "../presenter/types.js";
 import { FINAL_DWELL_MS } from "../timeline/compute-step-timeline.js";
 import type { ScenarioStep } from "./types.js";
 import {
@@ -27,10 +29,11 @@ import {
   type TitleCards,
 } from "./title-cards.js";
 
-/** The result of card expansion: steps and manifest, index-aligned. */
+/** The result of card expansion: steps and manifests, index-aligned. */
 export interface AppliedTitleCards<T> {
   readonly steps: readonly ScenarioStep<T>[];
   readonly narrationManifest: NarrationManifest | undefined;
+  readonly presenterManifest: PresenterManifest | undefined;
 }
 
 /**
@@ -44,8 +47,8 @@ function cardStepData<T>(): T {
 }
 
 /**
- * Expand `steps` (and the index-parallel narration manifest, when one
- * exists) with the configured intro/outro cards.
+ * Expand `steps` (and the index-parallel narration and presenter
+ * manifests, when they exist) with the configured intro/outro cards.
  *
  * - **Intro**: prepended at index 0 with `delayMs: 0`; the card's
  *   visible time is encoded as the following step's transition delay
@@ -68,15 +71,17 @@ export function applyTitleCards<T>(
   steps: readonly ScenarioStep<T>[],
   narrationManifest: NarrationManifest | undefined,
   titleCards: TitleCards | undefined,
+  presenterManifest?: PresenterManifest,
 ): AppliedTitleCards<T> {
   const intro = titleCards?.intro;
   const outro = titleCards?.outro;
   if (!intro && !outro) {
-    return { steps, narrationManifest };
+    return { steps, narrationManifest, presenterManifest };
   }
 
   const expandedSteps: ScenarioStep<T>[] = [...steps];
   let manifestEntries = narrationManifest ? [...narrationManifest.steps] : undefined;
+  let presenterEntries = presenterManifest ? [...presenterManifest.steps] : undefined;
 
   if (intro && expandedSteps.length > 0) {
     const introDurationMs = intro.durationMs ?? TITLE_CARD_DURATION_DEFAULT_MS;
@@ -91,6 +96,7 @@ export function applyTitleCards<T>(
       card: { kind: "intro", ...pickCardContent(intro) },
     });
     manifestEntries?.unshift(null);
+    presenterEntries?.unshift(null);
   }
 
   if (outro) {
@@ -104,11 +110,13 @@ export function applyTitleCards<T>(
       ],
     });
     manifestEntries?.push(null);
+    presenterEntries?.push(null);
   }
 
   return {
     steps: expandedSteps,
     narrationManifest: manifestEntries ? { steps: manifestEntries } : undefined,
+    presenterManifest: presenterEntries ? { steps: presenterEntries } : undefined,
   };
 }
 

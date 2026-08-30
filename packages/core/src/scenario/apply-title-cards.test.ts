@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { NarrationManifest } from "../narration/types.js";
+import type { PresenterManifest } from "../presenter/types.js";
 import { FINAL_DWELL_MS, computeStepTimeline } from "../timeline/compute-step-timeline.js";
 import { deriveStepFromTime } from "../timeline/derive-step.js";
 import { applyTitleCards } from "./apply-title-cards.js";
@@ -154,6 +155,56 @@ describe("applyTitleCards", () => {
       });
       expect(authored).toEqual(stepsBefore);
       expect(manifest.steps).toEqual(manifestBefore);
+    });
+  });
+
+  describe("presenter manifest padding", () => {
+    const presenterManifest: PresenterManifest = {
+      steps: [{ src: "./step-0.mp4", durationMs: 2000 }, null],
+    };
+
+    it("pads narration and presenter manifests at identical positions", () => {
+      const result = applyTitleCards(authored, manifest, {
+        intro: { title: "Acme" },
+        outro: { title: "Try it" },
+      }, presenterManifest);
+
+      expect(result.narrationManifest!.steps).toEqual([null, ...manifest.steps, null]);
+      expect(result.presenterManifest!.steps).toEqual([
+        null,
+        ...presenterManifest.steps,
+        null,
+      ]);
+      // Index-aligned by construction: same length as the expanded steps.
+      expect(result.presenterManifest!.steps).toHaveLength(result.steps.length);
+      expect(result.narrationManifest!.steps).toHaveLength(result.steps.length);
+    });
+
+    it("returns the presenter manifest untouched when no card is configured", () => {
+      const result = applyTitleCards(authored, manifest, undefined, presenterManifest);
+      expect(result.presenterManifest).toBe(presenterManifest);
+    });
+
+    it("leaves an absent presenter manifest absent", () => {
+      const result = applyTitleCards(authored, manifest, { intro: { title: "Acme" } });
+      expect(result.presenterManifest).toBeUndefined();
+    });
+
+    it("pads the presenter manifest even when narration is absent", () => {
+      const result = applyTitleCards(authored, undefined, {
+        outro: { title: "Try it" },
+      }, presenterManifest);
+      expect(result.narrationManifest).toBeUndefined();
+      expect(result.presenterManifest!.steps).toEqual([...presenterManifest.steps, null]);
+    });
+
+    it("does not mutate the input presenter manifest", () => {
+      const entriesBefore = [...presenterManifest.steps];
+      applyTitleCards(authored, manifest, {
+        intro: { title: "Acme" },
+        outro: { title: "Try it" },
+      }, presenterManifest);
+      expect(presenterManifest.steps).toEqual(entriesBefore);
     });
   });
 

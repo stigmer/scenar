@@ -26,6 +26,12 @@ export { applyTitleCards } from "./scenario/apply-title-cards.js";
 // Narration types
 export type { NarrationEntry, NarrationManifest } from "./narration/types.js";
 
+// Presenter track
+export type { PresenterEntry, PresenterManifest } from "./presenter/types.js";
+export type { PresenterWindow } from "./presenter/derive-presenter-timeline.js";
+export { derivePresenterTimeline } from "./presenter/derive-presenter-timeline.js";
+export { PRESENTER_FADE_MS, presenterOpacityAt } from "./presenter/presenter-opacity.js";
+
 // Viewport types
 export type { ViewportTransform, ViewportCameraMove } from "./viewport/transform.js";
 export {
