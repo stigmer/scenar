@@ -10,6 +10,13 @@ export type {
   UseStepInteractionsOptions,
 } from "./scenario/step-action.js";
 
+// Soundtrack
+export type { Soundtrack } from "./scenario/soundtrack.js";
+export {
+  MUSIC_VOLUME_DEFAULT,
+  DUCKING_VOLUME_DEFAULT,
+} from "./scenario/soundtrack.js";
+
 // Narration types
 export type { NarrationEntry, NarrationManifest } from "./narration/types.js";
 
@@ -31,6 +38,18 @@ export type { StepTimeline } from "./timeline/compute-step-timeline.js";
 export { computeStepTimeline } from "./timeline/compute-step-timeline.js";
 export { deriveStepFromTime } from "./timeline/derive-step.js";
 export { getStepDurationMs } from "./timeline/step-duration.js";
+export type { ActionEvent, ActionEventKind } from "./timeline/derive-action-events.js";
+export { deriveActionEvents } from "./timeline/derive-action-events.js";
+export type { SfxEvent, SfxSound } from "./timeline/derive-sfx-timeline.js";
+export { deriveSfxTimeline } from "./timeline/derive-sfx-timeline.js";
+export type { DuckingWindow, MusicEnvelope } from "./timeline/music-envelope.js";
+export {
+  MUSIC_FADE_IN_MS,
+  MUSIC_FADE_OUT_MS,
+  DUCKING_RAMP_MS,
+  computeMusicEnvelope,
+  musicGainAt,
+} from "./timeline/music-envelope.js";
 export type { ScenarioShot } from "./timeline/collect-shots.js";
 export {
   SHOT_NAME_PATTERN,
