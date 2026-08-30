@@ -19,6 +19,12 @@ interface ScenarioControlsProps {
   showSpeedControl: boolean;
   hasNarration: boolean;
   /**
+   * Whether the scenario has an audible soundtrack (music and/or sound
+   * effects). Either audio source enables the volume control — one mute
+   * switch silences narration, music, and SFX together.
+   */
+  hasSoundtrack?: boolean;
+  /**
    * Whether the player has captions enabled (the `captions` prop). The CC
    * toggle renders only when true — players without captions show no new
    * control, keeping the pre-captions bar unchanged.
@@ -99,6 +105,7 @@ export function ScenarioControls({
   stepTimeline,
   showSpeedControl,
   hasNarration,
+  hasSoundtrack = false,
   captionsEnabled = false,
   captionsVisible = false,
   onToggleCaptions,
@@ -269,28 +276,29 @@ export function ScenarioControls({
 
         {/*
          * The volume control is always present so the bar reads the same on
-         * every tour (Jakob's Law — YouTube never hides it). Without
-         * narration there is nothing to mute, so it renders disabled with
-         * the muted glyph rather than disappearing.
+         * every tour (Jakob's Law — YouTube never hides it). Without any
+         * audio (narration or soundtrack) there is nothing to mute, so it
+         * renders disabled with the muted glyph rather than disappearing.
+         * One switch governs all audio: narration, music, and SFX.
          */}
         <button
           onClick={(e) => {
             e.stopPropagation();
-            if (hasNarration) onToggleMute();
+            if (hasNarration || hasSoundtrack) onToggleMute();
           }}
-          disabled={!hasNarration}
+          disabled={!hasNarration && !hasSoundtrack}
           className={`flex h-9 w-9 items-center justify-center rounded transition-colors ${
-            hasNarration ? "text-white/90 hover:text-white" : "text-white/40"
+            hasNarration || hasSoundtrack ? "text-white/90 hover:text-white" : "text-white/40"
           }`}
           aria-label={
-            hasNarration
+            hasNarration || hasSoundtrack
               ? muted
-                ? "Unmute narration"
-                : "Mute narration"
-              : "No narration audio"
+                ? "Unmute audio"
+                : "Mute audio"
+              : "No audio"
           }
         >
-          {!hasNarration || muted ? <VolumeXIcon /> : <VolumeIcon />}
+          {(!hasNarration && !hasSoundtrack) || muted ? <VolumeXIcon /> : <VolumeIcon />}
         </button>
 
         {timeLabelRef && (
