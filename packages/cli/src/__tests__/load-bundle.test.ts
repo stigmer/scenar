@@ -72,4 +72,26 @@ describe("loadBundle", () => {
     const bundle = await loadBundle("/fake/scenarios/silent-demo");
     expect(bundle.soundtrack).toBeUndefined();
   });
+
+  it("carries authored title cards without synthesizing card steps", async () => {
+    const titleCards = { intro: { title: "Acme" }, outro: { title: "Bye" } };
+    vi.mocked(loadTs.loadStepsFromTs).mockResolvedValue(mockSteps);
+    vi.mocked(loadTs.loadTitleCardsFromTs).mockResolvedValue(titleCards);
+    vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
+
+    const bundle = await loadBundle("/fake/scenarios/framed-demo");
+    expect(bundle.titleCards).toEqual(titleCards);
+    // The CLI bundle carries the AUTHORED shape — expansion happens in the
+    // generated entries, so the steps stay exactly as written.
+    expect(bundle.steps).toHaveLength(3);
+  });
+
+  it("leaves titleCards undefined when the module authors none", async () => {
+    vi.mocked(loadTs.loadStepsFromTs).mockResolvedValue(mockSteps);
+    vi.mocked(loadTs.loadTitleCardsFromTs).mockResolvedValue(null);
+    vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
+
+    const bundle = await loadBundle("/fake/scenarios/plain-demo");
+    expect(bundle.titleCards).toBeUndefined();
+  });
 });

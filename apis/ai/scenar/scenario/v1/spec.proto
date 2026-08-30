@@ -65,6 +65,18 @@ message ScenarioSpec {
   // through the player's audio control, off until the viewer unmutes) and
   // the exported video. Same source, same result.
   SoundtrackConfig soundtrack = 3;
+
+  // Intro and outro title cards framing the scenario: an opening card
+  // before the first authored step and/or a closing card after the last.
+  // When omitted, the scenario plays and renders exactly as before.
+  //
+  // Cards are synthesized steps: the engine injects them into the step
+  // timeline, so chapter markers, scrubbing, video duration, and the
+  // music envelope all account for them automatically. They appear in
+  // both outputs — the first and last moments of the interactive embed
+  // and the leading/trailing segments of the exported video. Same
+  // source, same result.
+  TitleCardsConfig title_cards = 4;
 }
 
 // ViewportConfig defines the canonical pixel dimensions at which the scenario
@@ -162,6 +174,79 @@ message SoundtrackConfig {
   // introduces sound effects. When unset or false, interactions stay
   // silent.
   optional bool sfx = 4;
+}
+
+// TitleCardsConfig frames the scenario with an intro card, an outro card,
+// or both. Either field may be set independently; a config with neither
+// is a no-op.
+//
+// The engine renders cards with its own built-in card component — the
+// scenario's render function is never called for a card step, so cards
+// need no view, no props, and no registry entry. Card visuals flow
+// through the --scenar-* theme tokens like every other engine-owned
+// surface.
+//
+// Cards are silent in this version: they carry no narration and no
+// captions, and their call-to-action text is not clickable (the player's
+// content surface toggles play/pause). Background music, when configured,
+// plays under the cards — the fade-in covers the intro and the closing
+// fade-out covers the outro.
+//
+// Example YAML (spec block):
+//   spec:
+//     title_cards:
+//       intro:
+//         title: "Acme Deploy"
+//         subtitle: "Ship in seconds"
+//         logo_src: "./logo.png"
+//       outro:
+//         title: "Try it today"
+//         cta_text: "acme.dev/start"
+//     steps:
+//       - view: new-session
+//         ...
+message TitleCardsConfig {
+  // Opening card shown before the first authored step. The first authored
+  // step's transition delay becomes the card's visible time (the card's
+  // duration_ms, or the engine default when unset).
+  TitleCard intro = 1;
+
+  // Closing card shown after the last authored step. The last authored
+  // step keeps its normal closing dwell before the card appears; the card
+  // then holds for its duration_ms (or the engine default). The engine
+  // clears the cursor and resets any viewport zoom as the card enters, so
+  // scenario end-state never leaks onto it.
+  TitleCard outro = 2;
+}
+
+// TitleCard is one card's content — deliberately small; this is a card,
+// not a page builder. Layout, typography, and theming are engine-owned.
+message TitleCard {
+  // Headline text. The one required field: a card exists to say something.
+  string title = 1 [(buf.validate.field).string.min_len = 1];
+
+  // Supporting line rendered under the title. When unset, the card shows
+  // the title (and logo, if any) alone.
+  optional string subtitle = 2 [(buf.validate.field).string.min_len = 1];
+
+  // Logo image asset reference. Like music_src, a relative path resolves
+  // against the scenario's own location (e.g. "./logo.png" next to
+  // steps.ts); an absolute URL passes through unchanged.
+  //
+  // Raster web formats only (png, jpg/jpeg, gif, webp, avif) — the
+  // packed-embed deploy contract deliberately excludes svg as active
+  // content, so inline SVG belongs in view components, not card assets.
+  optional string logo_src = 3 [(buf.validate.field).string.min_len = 1];
+
+  // Call-to-action text rendered as a distinct pill (e.g. a product URL
+  // or "Get started"). Display-only — not a link. Typically used on the
+  // outro.
+  optional string cta_text = 4 [(buf.validate.field).string.min_len = 1];
+
+  // How long the card stays on screen, in milliseconds. When unset, the
+  // engine uses its built-in default (3000 — long enough to read a title
+  // and subtitle, short enough to not delay the content).
+  optional int32 duration_ms = 5 [(buf.validate.field).int32.gt = 0];
 }
 
 // Step represents a single point in the scenario timeline — a visual state

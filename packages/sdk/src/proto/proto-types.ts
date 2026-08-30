@@ -97,9 +97,28 @@ export interface ProtoSoundtrackConfig {
   readonly sfx?: boolean;
 }
 
+/**
+ * Structural shape of a proto `TitleCard` message.
+ * Optional fields are proto3 `optional`, so absence is meaningful.
+ */
+export interface ProtoTitleCard {
+  readonly title: string;
+  readonly subtitle?: string;
+  readonly logoSrc?: string;
+  readonly ctaText?: string;
+  readonly durationMs?: number;
+}
+
+/** Structural shape of a proto `TitleCardsConfig` message. */
+export interface ProtoTitleCardsConfig {
+  readonly intro?: ProtoTitleCard;
+  readonly outro?: ProtoTitleCard;
+}
+
 /** Structural shape of the proto `ScenarioSpec` message. */
 export interface ProtoScenarioSpec {
   readonly viewport?: ProtoViewportConfig;
   readonly steps: readonly ProtoStep[];
   readonly soundtrack?: ProtoSoundtrackConfig;
+  readonly titleCards?: ProtoTitleCardsConfig;
 }

@@ -417,4 +417,50 @@ describe("validateScenario", () => {
       expect.objectContaining({ path: "soundtrack.sfx" }),
     );
   });
+
+  it("accepts valid title cards, one-sided or both", () => {
+    for (const titleCards of [
+      { intro: { title: "Acme", subtitle: "Fast", logoSrc: "./logo.png" } },
+      { outro: { title: "Try it", ctaText: "acme.dev", durationMs: 4000 } },
+      { intro: { title: "Acme" }, outro: { title: "Bye" } },
+    ]) {
+      const result = validateScenario({
+        steps: [{ view: "x", delayMs: 0 }],
+        titleCards,
+      });
+      expect(result.valid).toBe(true);
+    }
+  });
+
+  it("rejects a non-object titleCards", () => {
+    const result = validateScenario({
+      steps: [{ view: "x", delayMs: 0 }],
+      titleCards: "intro",
+    });
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ path: "titleCards" }),
+    );
+  });
+
+  it.each([
+    ["a missing title", { intro: {} }, "titleCards.intro.title"],
+    ["an empty title", { outro: { title: "" } }, "titleCards.outro.title"],
+    ["an empty subtitle", { intro: { title: "T", subtitle: "" } }, "titleCards.intro.subtitle"],
+    ["an empty logoSrc", { intro: { title: "T", logoSrc: "" } }, "titleCards.intro.logoSrc"],
+    ["an empty ctaText", { outro: { title: "T", ctaText: "" } }, "titleCards.outro.ctaText"],
+    ["a zero durationMs", { intro: { title: "T", durationMs: 0 } }, "titleCards.intro.durationMs"],
+    [
+      "a negative durationMs",
+      { intro: { title: "T", durationMs: -100 } },
+      "titleCards.intro.durationMs",
+    ],
+  ])("rejects a card with %s", (_name, titleCards, expectedPath) => {
+    const result = validateScenario({
+      steps: [{ view: "x", delayMs: 0 }],
+      titleCards,
+    });
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ path: expectedPath }),
+    );
+  });
 });

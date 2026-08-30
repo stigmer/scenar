@@ -115,6 +115,28 @@ describe("createScenario", () => {
     expect(scenario.soundtrack).toBe(soundtrack);
   });
 
+  it("carries title cards through without synthesizing card steps", () => {
+    const titleCards = { intro: { title: "Acme" }, outro: { title: "Try it" } };
+    const scenario = createScenario({
+      views: { settings: SettingsView },
+      steps: [{ view: "settings", delayMs: 0, props: { org: "a" } }],
+      titleCards,
+    });
+
+    // Config is carried, not applied: still exactly the authored steps.
+    expect(scenario.titleCards).toBe(titleCards);
+    expect(scenario.steps).toHaveLength(1);
+  });
+
+  it("leaves titleCards undefined when not authored", () => {
+    const scenario = createScenario({
+      views: { settings: SettingsView },
+      steps: [{ view: "settings", delayMs: 0, props: { org: "a" } }],
+    });
+
+    expect(scenario.titleCards).toBeUndefined();
+  });
+
   it("leaves soundtrack undefined when not authored", () => {
     const scenario = createScenario({
       views: { settings: SettingsView },

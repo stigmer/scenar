@@ -3,13 +3,20 @@ import { join, basename } from "node:path";
 import {
   loadSoundtrackFromTs,
   loadStepsFromTs,
+  loadTitleCardsFromTs,
   type AuthoredSoundtrack,
+  type AuthoredTitleCards,
 } from "./load-ts.js";
 
 /**
  * Lightweight bundle shape for CLI use. Mirrors the @scenar/core
  * ScenarioBundle interface but uses plain objects (the CLI does not
  * import @scenar/core at runtime to stay lightweight).
+ *
+ * Carries the AUTHORED shape: steps as written, title cards as config.
+ * Card-step synthesis (`applyTitleCards`) happens in the generated
+ * render/pack entries — the true bundle-assembly seam — never here; the
+ * CLI consumes this bundle for staging and inspection only.
  */
 export interface CliBundle {
   id: string;
@@ -18,6 +25,7 @@ export interface CliBundle {
     steps: Array<{ src: string; durationMs: number } | null>;
   };
   soundtrack?: AuthoredSoundtrack;
+  titleCards?: AuthoredTitleCards;
 }
 
 /**
@@ -34,6 +42,7 @@ export async function loadBundle(dir: string): Promise<CliBundle> {
 
   const steps = await loadStepsFromTs(stepsPath);
   const soundtrack = await loadSoundtrackFromTs(stepsPath);
+  const titleCards = await loadTitleCardsFromTs(stepsPath);
 
   let narrationManifest: CliBundle["narrationManifest"];
   try {
@@ -49,5 +58,6 @@ export async function loadBundle(dir: string): Promise<CliBundle> {
     steps,
     narrationManifest,
     soundtrack: soundtrack ?? undefined,
+    titleCards: titleCards ?? undefined,
   };
 }

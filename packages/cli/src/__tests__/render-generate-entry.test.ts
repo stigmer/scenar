@@ -52,3 +52,31 @@ describe("generateRemotionEntry soundtrack", () => {
     expect(src).toContain("soundtrack: _soundtrack,");
   });
 });
+
+describe("generateRemotionEntry title cards", () => {
+  it("discovers title cards from the steps module at module-eval time", () => {
+    const src = generateRemotionEntry({ ...BASE, captions: false });
+    // The runtime mirror of the CLI's findAuthoredTitleCards: scenario-shaped
+    // export first, then the `titleCards` named export.
+    expect(src).toContain("function _findTitleCards(");
+    expect(src).toContain(
+      "const _titleCards: any = _findTitleCards(_stepsModule as unknown as Record<string, unknown>);",
+    );
+  });
+
+  it("synthesizes card steps before the timeline calculation", () => {
+    const src = generateRemotionEntry({ ...BASE, captions: false });
+    // Bundle assembly is THE one card-synthesis point; running it before
+    // calculateScenarioTimeline is what makes an intro/outro lengthen
+    // durationInFrames exactly like an authored step.
+    expect(src).toContain(
+      'import { ScenarioComposition, applyTitleCards, calculateScenarioTimeline } from "@scenar/remotion";',
+    );
+    expect(src).toContain("const _applied = applyTitleCards(_steps, _manifest, _titleCards);");
+    expect(src.indexOf("const _applied = applyTitleCards(")).toBeLessThan(
+      src.indexOf("calculateScenarioTimeline("),
+    );
+    expect(src).toContain("steps: _applied.steps as any,");
+    expect(src).toContain("narrationManifest: _applied.narrationManifest,");
+  });
+});

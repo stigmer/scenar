@@ -14,7 +14,7 @@ import type { JsonObject, Message } from "@bufbuild/protobuf";
  * Describes the file ai/scenar/scenario/v1/spec.proto.
  */
 export const file_ai_scenar_scenario_v1_spec: GenFile = /*@__PURE__*/
-  fileDesc("CiBhaS9zY2VuYXIvc2NlbmFyaW8vdjEvc3BlYy5wcm90bxIVYWkuc2NlbmFyLnNjZW5hcmlvLnYxIroBCgxTY2VuYXJpb1NwZWMSNwoIdmlld3BvcnQYASABKAsyJS5haS5zY2VuYXIuc2NlbmFyaW8udjEuVmlld3BvcnRDb25maWcSNAoFc3RlcHMYAiADKAsyGy5haS5zY2VuYXIuc2NlbmFyaW8udjEuU3RlcEIIukgFkgECCAESOwoKc291bmR0cmFjaxgDIAEoCzInLmFpLnNjZW5hci5zY2VuYXJpby52MS5Tb3VuZHRyYWNrQ29uZmlnIkEKDlZpZXdwb3J0Q29uZmlnEhYKBXdpZHRoGAEgASgFQge6SAQaAiAAEhcKBmhlaWdodBgCIAEoBUIHukgEGgIgACLZAQoQU291bmR0cmFja0NvbmZpZxIfCgltdXNpY19zcmMYASABKAlCB7pIBHICEAFIAIgBARIqCgxtdXNpY192b2x1bWUYAiABKAJCD7pIDAoKHQAAgD8tAAAAAEgBiAEBEiwKDmR1Y2tpbmdfdm9sdW1lGAMgASgCQg+6SAwKCh0AAIA/LQAAAABIAogBARIQCgNzZngYBCABKAhIA4gBAUIMCgpfbXVzaWNfc3JjQg8KDV9tdXNpY192b2x1bWVCEQoPX2R1Y2tpbmdfdm9sdW1lQgYKBF9zZngiwAEKBFN0ZXASFQoEdmlldxgBIAEoCUIHukgEcgIQARIZCghkZWxheV9tcxgCIAEoBUIHukgEGgIoABIWCg5uYXJyYXRpb25fdGV4dBgEIAEoCRImCgVwcm9wcxgFIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3QSNwoMaW50ZXJhY3Rpb25zGAYgAygLMiEuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlN0ZXBBY3Rpb25KBAgDEARSB2NhcHRpb24ijAQKClN0ZXBBY3Rpb24SIwoKYXRfcGVyY2VudBgBIAEoAkIPukgMCgodAACAPy0AAAAAEjkKBHR5cGUYAiABKA4yIS5haS5zY2VuYXIuc2NlbmFyaW8udjEuQWN0aW9uVHlwZUIIukgFggECEAESDgoGdGFyZ2V0GAMgASgJEjoKDGNsaWNrX2NvbmZpZxgKIAEoCzIiLmFpLnNjZW5hci5zY2VuYXJpby52MS5DbGlja0NvbmZpZ0gAEjgKC3R5cGVfY29uZmlnGAsgASgLMiEuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlR5cGVDb25maWdIABI6Cgxob3Zlcl9jb25maWcYDCABKAsyIi5haS5zY2VuYXIuc2NlbmFyaW8udjEuSG92ZXJDb25maWdIABI4CgtkcmFnX2NvbmZpZxgNIAEoCzIhLmFpLnNjZW5hci5zY2VuYXJpby52MS5EcmFnQ29uZmlnSAASQQoQc2Nyb2xsX3RvX2NvbmZpZxgOIAEoCzIlLmFpLnNjZW5hci5zY2VuYXJpby52MS5TY3JvbGxUb0NvbmZpZ0gAElUKGnZpZXdwb3J0X3RyYW5zaXRpb25fY29uZmlnGA8gASgLMi8uYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlZpZXdwb3J0VHJhbnNpdGlvbkNvbmZpZ0gAQggKBmNvbmZpZyINCgtDbGlja0NvbmZpZyJDCgpUeXBlQ29uZmlnEhUKBHRleHQYASABKAlCB7pIBHICEAESHgoNdHlwZV9kZWxheV9tcxgCIAEoBUIHukgEGgIoACIxCgtIb3ZlckNvbmZpZxIiChFob3Zlcl9kdXJhdGlvbl9tcxgBIAEoBUIHukgEGgIoACIqCgpEcmFnQ29uZmlnEhwKC2RyYWdfdGFyZ2V0GAEgASgJQge6SARyAhABIhAKDlNjcm9sbFRvQ29uZmlnIkkKGFZpZXdwb3J0VHJhbnNpdGlvbkNvbmZpZxIVCg12aWV3cG9ydF96b29tGAEgASgCEhYKDnZpZXdwb3J0X3Jlc2V0GAIgASgIYgZwcm90bzM", [file_ai_scenar_scenario_v1_enum, file_buf_validate_validate, file_google_protobuf_struct]);
+  fileDesc("CiBhaS9zY2VuYXIvc2NlbmFyaW8vdjEvc3BlYy5wcm90bxIVYWkuc2NlbmFyLnNjZW5hcmlvLnYxIvgBCgxTY2VuYXJpb1NwZWMSNwoIdmlld3BvcnQYASABKAsyJS5haS5zY2VuYXIuc2NlbmFyaW8udjEuVmlld3BvcnRDb25maWcSNAoFc3RlcHMYAiADKAsyGy5haS5zY2VuYXIuc2NlbmFyaW8udjEuU3RlcEIIukgFkgECCAESOwoKc291bmR0cmFjaxgDIAEoCzInLmFpLnNjZW5hci5zY2VuYXJpby52MS5Tb3VuZHRyYWNrQ29uZmlnEjwKC3RpdGxlX2NhcmRzGAQgASgLMicuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlRpdGxlQ2FyZHNDb25maWciQQoOVmlld3BvcnRDb25maWcSFgoFd2lkdGgYASABKAVCB7pIBBoCIAASFwoGaGVpZ2h0GAIgASgFQge6SAQaAiAAItkBChBTb3VuZHRyYWNrQ29uZmlnEh8KCW11c2ljX3NyYxgBIAEoCUIHukgEcgIQAUgAiAEBEioKDG11c2ljX3ZvbHVtZRgCIAEoAkIPukgMCgodAACAPy0AAAAASAGIAQESLAoOZHVja2luZ192b2x1bWUYAyABKAJCD7pIDAoKHQAAgD8tAAAAAEgCiAEBEhAKA3NmeBgEIAEoCEgDiAEBQgwKCl9tdXNpY19zcmNCDwoNX211c2ljX3ZvbHVtZUIRCg9fZHVja2luZ192b2x1bWVCBgoEX3NmeCJ0ChBUaXRsZUNhcmRzQ29uZmlnEi8KBWludHJvGAEgASgLMiAuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlRpdGxlQ2FyZBIvCgVvdXRybxgCIAEoCzIgLmFpLnNjZW5hci5zY2VuYXJpby52MS5UaXRsZUNhcmQi3QEKCVRpdGxlQ2FyZBIWCgV0aXRsZRgBIAEoCUIHukgEcgIQARIeCghzdWJ0aXRsZRgCIAEoCUIHukgEcgIQAUgAiAEBEh4KCGxvZ29fc3JjGAMgASgJQge6SARyAhABSAGIAQESHgoIY3RhX3RleHQYBCABKAlCB7pIBHICEAFIAogBARIhCgtkdXJhdGlvbl9tcxgFIAEoBUIHukgEGgIgAEgDiAEBQgsKCV9zdWJ0aXRsZUILCglfbG9nb19zcmNCCwoJX2N0YV90ZXh0Qg4KDF9kdXJhdGlvbl9tcyLAAQoEU3RlcBIVCgR2aWV3GAEgASgJQge6SARyAhABEhkKCGRlbGF5X21zGAIgASgFQge6SAQaAigAEhYKDm5hcnJhdGlvbl90ZXh0GAQgASgJEiYKBXByb3BzGAUgASgLMhcuZ29vZ2xlLnByb3RvYnVmLlN0cnVjdBI3CgxpbnRlcmFjdGlvbnMYBiADKAsyIS5haS5zY2VuYXIuc2NlbmFyaW8udjEuU3RlcEFjdGlvbkoECAMQBFIHY2FwdGlvbiKMBAoKU3RlcEFjdGlvbhIjCgphdF9wZXJjZW50GAEgASgCQg+6SAwKCh0AAIA/LQAAAAASOQoEdHlwZRgCIAEoDjIhLmFpLnNjZW5hci5zY2VuYXJpby52MS5BY3Rpb25UeXBlQgi6SAWCAQIQARIOCgZ0YXJnZXQYAyABKAkSOgoMY2xpY2tfY29uZmlnGAogASgLMiIuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLkNsaWNrQ29uZmlnSAASOAoLdHlwZV9jb25maWcYCyABKAsyIS5haS5zY2VuYXIuc2NlbmFyaW8udjEuVHlwZUNvbmZpZ0gAEjoKDGhvdmVyX2NvbmZpZxgMIAEoCzIiLmFpLnNjZW5hci5zY2VuYXJpby52MS5Ib3ZlckNvbmZpZ0gAEjgKC2RyYWdfY29uZmlnGA0gASgLMiEuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLkRyYWdDb25maWdIABJBChBzY3JvbGxfdG9fY29uZmlnGA4gASgLMiUuYWkuc2NlbmFyLnNjZW5hcmlvLnYxLlNjcm9sbFRvQ29uZmlnSAASVQoadmlld3BvcnRfdHJhbnNpdGlvbl9jb25maWcYDyABKAsyLy5haS5zY2VuYXIuc2NlbmFyaW8udjEuVmlld3BvcnRUcmFuc2l0aW9uQ29uZmlnSABCCAoGY29uZmlnIg0KC0NsaWNrQ29uZmlnIkMKClR5cGVDb25maWcSFQoEdGV4dBgBIAEoCUIHukgEcgIQARIeCg10eXBlX2RlbGF5X21zGAIgASgFQge6SAQaAigAIjEKC0hvdmVyQ29uZmlnEiIKEWhvdmVyX2R1cmF0aW9uX21zGAEgASgFQge6SAQaAigAIioKCkRyYWdDb25maWcSHAoLZHJhZ190YXJnZXQYASABKAlCB7pIBHICEAEiEAoOU2Nyb2xsVG9Db25maWciSQoYVmlld3BvcnRUcmFuc2l0aW9uQ29uZmlnEhUKDXZpZXdwb3J0X3pvb20YASABKAISFgoOdmlld3BvcnRfcmVzZXQYAiABKAhiBnByb3RvMw", [file_ai_scenar_scenario_v1_enum, file_buf_validate_validate, file_google_protobuf_struct]);
 
 /**
  * ScenarioSpec defines the desired state of a Scenario resource — the complete
@@ -91,6 +91,22 @@ export type ScenarioSpec = Message<"ai.scenar.scenario.v1.ScenarioSpec"> & {
    * @generated from field: ai.scenar.scenario.v1.SoundtrackConfig soundtrack = 3;
    */
   soundtrack?: SoundtrackConfig;
+
+  /**
+   * Intro and outro title cards framing the scenario: an opening card
+   * before the first authored step and/or a closing card after the last.
+   * When omitted, the scenario plays and renders exactly as before.
+   *
+   * Cards are synthesized steps: the engine injects them into the step
+   * timeline, so chapter markers, scrubbing, video duration, and the
+   * music envelope all account for them automatically. They appear in
+   * both outputs — the first and last moments of the interactive embed
+   * and the leading/trailing segments of the exported video. Same
+   * source, same result.
+   *
+   * @generated from field: ai.scenar.scenario.v1.TitleCardsConfig title_cards = 4;
+   */
+  titleCards?: TitleCardsConfig;
 };
 
 /**
@@ -238,6 +254,129 @@ export const SoundtrackConfigSchema: GenMessage<SoundtrackConfig> = /*@__PURE__*
   messageDesc(file_ai_scenar_scenario_v1_spec, 2);
 
 /**
+ * TitleCardsConfig frames the scenario with an intro card, an outro card,
+ * or both. Either field may be set independently; a config with neither
+ * is a no-op.
+ *
+ * The engine renders cards with its own built-in card component — the
+ * scenario's render function is never called for a card step, so cards
+ * need no view, no props, and no registry entry. Card visuals flow
+ * through the --scenar-* theme tokens like every other engine-owned
+ * surface.
+ *
+ * Cards are silent in this version: they carry no narration and no
+ * captions, and their call-to-action text is not clickable (the player's
+ * content surface toggles play/pause). Background music, when configured,
+ * plays under the cards — the fade-in covers the intro and the closing
+ * fade-out covers the outro.
+ *
+ * Example YAML (spec block):
+ *   spec:
+ *     title_cards:
+ *       intro:
+ *         title: "Acme Deploy"
+ *         subtitle: "Ship in seconds"
+ *         logo_src: "./logo.png"
+ *       outro:
+ *         title: "Try it today"
+ *         cta_text: "acme.dev/start"
+ *     steps:
+ *       - view: new-session
+ *         ...
+ *
+ * @generated from message ai.scenar.scenario.v1.TitleCardsConfig
+ */
+export type TitleCardsConfig = Message<"ai.scenar.scenario.v1.TitleCardsConfig"> & {
+  /**
+   * Opening card shown before the first authored step. The first authored
+   * step's transition delay becomes the card's visible time (the card's
+   * duration_ms, or the engine default when unset).
+   *
+   * @generated from field: ai.scenar.scenario.v1.TitleCard intro = 1;
+   */
+  intro?: TitleCard;
+
+  /**
+   * Closing card shown after the last authored step. The last authored
+   * step keeps its normal closing dwell before the card appears; the card
+   * then holds for its duration_ms (or the engine default). The engine
+   * clears the cursor and resets any viewport zoom as the card enters, so
+   * scenario end-state never leaks onto it.
+   *
+   * @generated from field: ai.scenar.scenario.v1.TitleCard outro = 2;
+   */
+  outro?: TitleCard;
+};
+
+/**
+ * Describes the message ai.scenar.scenario.v1.TitleCardsConfig.
+ * Use `create(TitleCardsConfigSchema)` to create a new message.
+ */
+export const TitleCardsConfigSchema: GenMessage<TitleCardsConfig> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_scenario_v1_spec, 3);
+
+/**
+ * TitleCard is one card's content — deliberately small; this is a card,
+ * not a page builder. Layout, typography, and theming are engine-owned.
+ *
+ * @generated from message ai.scenar.scenario.v1.TitleCard
+ */
+export type TitleCard = Message<"ai.scenar.scenario.v1.TitleCard"> & {
+  /**
+   * Headline text. The one required field: a card exists to say something.
+   *
+   * @generated from field: string title = 1;
+   */
+  title: string;
+
+  /**
+   * Supporting line rendered under the title. When unset, the card shows
+   * the title (and logo, if any) alone.
+   *
+   * @generated from field: optional string subtitle = 2;
+   */
+  subtitle?: string;
+
+  /**
+   * Logo image asset reference. Like music_src, a relative path resolves
+   * against the scenario's own location (e.g. "./logo.png" next to
+   * steps.ts); an absolute URL passes through unchanged.
+   *
+   * Raster web formats only (png, jpg/jpeg, gif, webp, avif) — the
+   * packed-embed deploy contract deliberately excludes svg as active
+   * content, so inline SVG belongs in view components, not card assets.
+   *
+   * @generated from field: optional string logo_src = 3;
+   */
+  logoSrc?: string;
+
+  /**
+   * Call-to-action text rendered as a distinct pill (e.g. a product URL
+   * or "Get started"). Display-only — not a link. Typically used on the
+   * outro.
+   *
+   * @generated from field: optional string cta_text = 4;
+   */
+  ctaText?: string;
+
+  /**
+   * How long the card stays on screen, in milliseconds. When unset, the
+   * engine uses its built-in default (3000 — long enough to read a title
+   * and subtitle, short enough to not delay the content).
+   *
+   * @generated from field: optional int32 duration_ms = 5;
+   */
+  durationMs?: number;
+};
+
+/**
+ * Describes the message ai.scenar.scenario.v1.TitleCard.
+ * Use `create(TitleCardSchema)` to create a new message.
+ */
+export const TitleCardSchema: GenMessage<TitleCard> = /*@__PURE__*/
+  messageDesc(file_ai_scenar_scenario_v1_spec, 4);
+
+/**
  * Step represents a single point in the scenario timeline — a visual state
  * (which component renders) plus optional timed interactions (cursor actions,
  * typing, hovering, etc.) that occur while this step is active.
@@ -325,7 +464,7 @@ export type Step = Message<"ai.scenar.scenario.v1.Step"> & {
  * Use `create(StepSchema)` to create a new message.
  */
 export const StepSchema: GenMessage<Step> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 3);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 5);
 
 /**
  * StepAction defines a single timed interaction within a step — what the
@@ -450,7 +589,7 @@ export type StepAction = Message<"ai.scenar.scenario.v1.StepAction"> & {
  * Use `create(StepActionSchema)` to create a new message.
  */
 export const StepActionSchema: GenMessage<StepAction> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 4);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 6);
 
 /**
  * ClickConfig holds configuration for click actions.
@@ -469,7 +608,7 @@ export type ClickConfig = Message<"ai.scenar.scenario.v1.ClickConfig"> & {
  * Use `create(ClickConfigSchema)` to create a new message.
  */
 export const ClickConfigSchema: GenMessage<ClickConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 5);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 7);
 
 /**
  * TypeConfig holds configuration for type (text input) actions.
@@ -504,7 +643,7 @@ export type TypeConfig = Message<"ai.scenar.scenario.v1.TypeConfig"> & {
  * Use `create(TypeConfigSchema)` to create a new message.
  */
 export const TypeConfigSchema: GenMessage<TypeConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 6);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 8);
 
 /**
  * HoverConfig holds configuration for hover (tooltip/state reveal) actions.
@@ -532,7 +671,7 @@ export type HoverConfig = Message<"ai.scenar.scenario.v1.HoverConfig"> & {
  * Use `create(HoverConfigSchema)` to create a new message.
  */
 export const HoverConfigSchema: GenMessage<HoverConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 7);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 9);
 
 /**
  * DragConfig holds configuration for drag (drag-and-drop) actions.
@@ -559,7 +698,7 @@ export type DragConfig = Message<"ai.scenar.scenario.v1.DragConfig"> & {
  * Use `create(DragConfigSchema)` to create a new message.
  */
 export const DragConfigSchema: GenMessage<DragConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 8);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 10);
 
 /**
  * ScrollToConfig holds configuration for scroll_to actions.
@@ -579,7 +718,7 @@ export type ScrollToConfig = Message<"ai.scenar.scenario.v1.ScrollToConfig"> & {
  * Use `create(ScrollToConfigSchema)` to create a new message.
  */
 export const ScrollToConfigSchema: GenMessage<ScrollToConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 9);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 11);
 
 /**
  * ViewportTransitionConfig holds configuration for viewport zoom/pan
@@ -618,5 +757,5 @@ export type ViewportTransitionConfig = Message<"ai.scenar.scenario.v1.ViewportTr
  * Use `create(ViewportTransitionConfigSchema)` to create a new message.
  */
 export const ViewportTransitionConfigSchema: GenMessage<ViewportTransitionConfig> = /*@__PURE__*/
-  messageDesc(file_ai_scenar_scenario_v1_spec, 10);
+  messageDesc(file_ai_scenar_scenario_v1_spec, 12);
 

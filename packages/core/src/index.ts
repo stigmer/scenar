@@ -17,6 +17,12 @@ export {
   DUCKING_VOLUME_DEFAULT,
 } from "./scenario/soundtrack.js";
 
+// Title cards
+export type { TitleCard, TitleCards, StepCard } from "./scenario/title-cards.js";
+export { TITLE_CARD_DURATION_DEFAULT_MS } from "./scenario/title-cards.js";
+export type { AppliedTitleCards } from "./scenario/apply-title-cards.js";
+export { applyTitleCards } from "./scenario/apply-title-cards.js";
+
 // Narration types
 export type { NarrationEntry, NarrationManifest } from "./narration/types.js";
 
@@ -35,7 +41,7 @@ export { computeCursorPosition } from "./cursor/compute-position.js";
 
 // Timeline
 export type { StepTimeline } from "./timeline/compute-step-timeline.js";
-export { computeStepTimeline } from "./timeline/compute-step-timeline.js";
+export { FINAL_DWELL_MS, computeStepTimeline } from "./timeline/compute-step-timeline.js";
 export { deriveStepFromTime } from "./timeline/derive-step.js";
 export { getStepDurationMs } from "./timeline/step-duration.js";
 export type { ActionEvent, ActionEventKind } from "./timeline/derive-action-events.js";

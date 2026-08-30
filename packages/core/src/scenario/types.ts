@@ -6,6 +6,7 @@
  */
 
 import type { StepAction } from "./step-action.js";
+import type { StepCard } from "./title-cards.js";
 
 /**
  * A single step in a scenario timeline.
@@ -51,4 +52,17 @@ export interface ScenarioStep<T> {
    * bundle. Steps without a `shot` are simply walked through.
    */
   readonly shot?: string;
+  /**
+   * Marks this step as an engine-synthesized title card. Only
+   * `applyTitleCards` constructs card steps — authors configure cards
+   * through the scenario-level `titleCards` config, never by hand.
+   *
+   * The player renders card steps with its built-in card component and
+   * never calls the scenario's render function for them, so a card
+   * step's `data` is a placeholder that is never read. Card steps
+   * announce activation through the player's `onCardStepChange`
+   * callback instead of `onStepChange` — the engine cannot fabricate a
+   * real `T` for the latter.
+   */
+  readonly card?: StepCard;
 }

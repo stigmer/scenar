@@ -81,7 +81,18 @@ type ScenarioSpec struct {
 	// The soundtrack plays in both outputs: the interactive embed (muteable
 	// through the player's audio control, off until the viewer unmutes) and
 	// the exported video. Same source, same result.
-	Soundtrack    *SoundtrackConfig `protobuf:"bytes,3,opt,name=soundtrack,proto3" json:"soundtrack,omitempty"`
+	Soundtrack *SoundtrackConfig `protobuf:"bytes,3,opt,name=soundtrack,proto3" json:"soundtrack,omitempty"`
+	// Intro and outro title cards framing the scenario: an opening card
+	// before the first authored step and/or a closing card after the last.
+	// When omitted, the scenario plays and renders exactly as before.
+	//
+	// Cards are synthesized steps: the engine injects them into the step
+	// timeline, so chapter markers, scrubbing, video duration, and the
+	// music envelope all account for them automatically. They appear in
+	// both outputs — the first and last moments of the interactive embed
+	// and the leading/trailing segments of the exported video. Same
+	// source, same result.
+	TitleCards    *TitleCardsConfig `protobuf:"bytes,4,opt,name=title_cards,json=titleCards,proto3" json:"title_cards,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -133,6 +144,13 @@ func (x *ScenarioSpec) GetSteps() []*Step {
 func (x *ScenarioSpec) GetSoundtrack() *SoundtrackConfig {
 	if x != nil {
 		return x.Soundtrack
+	}
+	return nil
+}
+
+func (x *ScenarioSpec) GetTitleCards() *TitleCardsConfig {
+	if x != nil {
+		return x.TitleCards
 	}
 	return nil
 }
@@ -333,6 +351,190 @@ func (x *SoundtrackConfig) GetSfx() bool {
 	return false
 }
 
+// TitleCardsConfig frames the scenario with an intro card, an outro card,
+// or both. Either field may be set independently; a config with neither
+// is a no-op.
+//
+// The engine renders cards with its own built-in card component — the
+// scenario's render function is never called for a card step, so cards
+// need no view, no props, and no registry entry. Card visuals flow
+// through the --scenar-* theme tokens like every other engine-owned
+// surface.
+//
+// Cards are silent in this version: they carry no narration and no
+// captions, and their call-to-action text is not clickable (the player's
+// content surface toggles play/pause). Background music, when configured,
+// plays under the cards — the fade-in covers the intro and the closing
+// fade-out covers the outro.
+//
+// Example YAML (spec block):
+//
+//	spec:
+//	  title_cards:
+//	    intro:
+//	      title: "Acme Deploy"
+//	      subtitle: "Ship in seconds"
+//	      logo_src: "./logo.png"
+//	    outro:
+//	      title: "Try it today"
+//	      cta_text: "acme.dev/start"
+//	  steps:
+//	    - view: new-session
+//	      ...
+type TitleCardsConfig struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Opening card shown before the first authored step. The first authored
+	// step's transition delay becomes the card's visible time (the card's
+	// duration_ms, or the engine default when unset).
+	Intro *TitleCard `protobuf:"bytes,1,opt,name=intro,proto3" json:"intro,omitempty"`
+	// Closing card shown after the last authored step. The last authored
+	// step keeps its normal closing dwell before the card appears; the card
+	// then holds for its duration_ms (or the engine default). The engine
+	// clears the cursor and resets any viewport zoom as the card enters, so
+	// scenario end-state never leaks onto it.
+	Outro         *TitleCard `protobuf:"bytes,2,opt,name=outro,proto3" json:"outro,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TitleCardsConfig) Reset() {
+	*x = TitleCardsConfig{}
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TitleCardsConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TitleCardsConfig) ProtoMessage() {}
+
+func (x *TitleCardsConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TitleCardsConfig.ProtoReflect.Descriptor instead.
+func (*TitleCardsConfig) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *TitleCardsConfig) GetIntro() *TitleCard {
+	if x != nil {
+		return x.Intro
+	}
+	return nil
+}
+
+func (x *TitleCardsConfig) GetOutro() *TitleCard {
+	if x != nil {
+		return x.Outro
+	}
+	return nil
+}
+
+// TitleCard is one card's content — deliberately small; this is a card,
+// not a page builder. Layout, typography, and theming are engine-owned.
+type TitleCard struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Headline text. The one required field: a card exists to say something.
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// Supporting line rendered under the title. When unset, the card shows
+	// the title (and logo, if any) alone.
+	Subtitle *string `protobuf:"bytes,2,opt,name=subtitle,proto3,oneof" json:"subtitle,omitempty"`
+	// Logo image asset reference. Like music_src, a relative path resolves
+	// against the scenario's own location (e.g. "./logo.png" next to
+	// steps.ts); an absolute URL passes through unchanged.
+	//
+	// Raster web formats only (png, jpg/jpeg, gif, webp, avif) — the
+	// packed-embed deploy contract deliberately excludes svg as active
+	// content, so inline SVG belongs in view components, not card assets.
+	LogoSrc *string `protobuf:"bytes,3,opt,name=logo_src,json=logoSrc,proto3,oneof" json:"logo_src,omitempty"`
+	// Call-to-action text rendered as a distinct pill (e.g. a product URL
+	// or "Get started"). Display-only — not a link. Typically used on the
+	// outro.
+	CtaText *string `protobuf:"bytes,4,opt,name=cta_text,json=ctaText,proto3,oneof" json:"cta_text,omitempty"`
+	// How long the card stays on screen, in milliseconds. When unset, the
+	// engine uses its built-in default (3000 — long enough to read a title
+	// and subtitle, short enough to not delay the content).
+	DurationMs    *int32 `protobuf:"varint,5,opt,name=duration_ms,json=durationMs,proto3,oneof" json:"duration_ms,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TitleCard) Reset() {
+	*x = TitleCard{}
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TitleCard) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TitleCard) ProtoMessage() {}
+
+func (x *TitleCard) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TitleCard.ProtoReflect.Descriptor instead.
+func (*TitleCard) Descriptor() ([]byte, []int) {
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *TitleCard) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *TitleCard) GetSubtitle() string {
+	if x != nil && x.Subtitle != nil {
+		return *x.Subtitle
+	}
+	return ""
+}
+
+func (x *TitleCard) GetLogoSrc() string {
+	if x != nil && x.LogoSrc != nil {
+		return *x.LogoSrc
+	}
+	return ""
+}
+
+func (x *TitleCard) GetCtaText() string {
+	if x != nil && x.CtaText != nil {
+		return *x.CtaText
+	}
+	return ""
+}
+
+func (x *TitleCard) GetDurationMs() int32 {
+	if x != nil && x.DurationMs != nil {
+		return *x.DurationMs
+	}
+	return 0
+}
+
 // Step represents a single point in the scenario timeline — a visual state
 // (which component renders) plus optional timed interactions (cursor actions,
 // typing, hovering, etc.) that occur while this step is active.
@@ -393,7 +595,7 @@ type Step struct {
 
 func (x *Step) Reset() {
 	*x = Step{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[3]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -405,7 +607,7 @@ func (x *Step) String() string {
 func (*Step) ProtoMessage() {}
 
 func (x *Step) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[3]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -418,7 +620,7 @@ func (x *Step) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Step.ProtoReflect.Descriptor instead.
 func (*Step) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{3}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Step) GetView() string {
@@ -514,7 +716,7 @@ type StepAction struct {
 
 func (x *StepAction) Reset() {
 	*x = StepAction{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[4]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -526,7 +728,7 @@ func (x *StepAction) String() string {
 func (*StepAction) ProtoMessage() {}
 
 func (x *StepAction) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[4]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -539,7 +741,7 @@ func (x *StepAction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StepAction.ProtoReflect.Descriptor instead.
 func (*StepAction) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{4}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *StepAction) GetAtPercent() float32 {
@@ -687,7 +889,7 @@ type ClickConfig struct {
 
 func (x *ClickConfig) Reset() {
 	*x = ClickConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[5]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -699,7 +901,7 @@ func (x *ClickConfig) String() string {
 func (*ClickConfig) ProtoMessage() {}
 
 func (x *ClickConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[5]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -712,7 +914,7 @@ func (x *ClickConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClickConfig.ProtoReflect.Descriptor instead.
 func (*ClickConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{5}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{7}
 }
 
 // TypeConfig holds configuration for type (text input) actions.
@@ -735,7 +937,7 @@ type TypeConfig struct {
 
 func (x *TypeConfig) Reset() {
 	*x = TypeConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[6]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -747,7 +949,7 @@ func (x *TypeConfig) String() string {
 func (*TypeConfig) ProtoMessage() {}
 
 func (x *TypeConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[6]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -760,7 +962,7 @@ func (x *TypeConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TypeConfig.ProtoReflect.Descriptor instead.
 func (*TypeConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{6}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *TypeConfig) GetText() string {
@@ -795,7 +997,7 @@ type HoverConfig struct {
 
 func (x *HoverConfig) Reset() {
 	*x = HoverConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[7]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -807,7 +1009,7 @@ func (x *HoverConfig) String() string {
 func (*HoverConfig) ProtoMessage() {}
 
 func (x *HoverConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[7]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -820,7 +1022,7 @@ func (x *HoverConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HoverConfig.ProtoReflect.Descriptor instead.
 func (*HoverConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{7}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *HoverConfig) GetHoverDurationMs() int32 {
@@ -847,7 +1049,7 @@ type DragConfig struct {
 
 func (x *DragConfig) Reset() {
 	*x = DragConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[8]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -859,7 +1061,7 @@ func (x *DragConfig) String() string {
 func (*DragConfig) ProtoMessage() {}
 
 func (x *DragConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[8]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -872,7 +1074,7 @@ func (x *DragConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DragConfig.ProtoReflect.Descriptor instead.
 func (*DragConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{8}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DragConfig) GetDragTarget() string {
@@ -896,7 +1098,7 @@ type ScrollToConfig struct {
 
 func (x *ScrollToConfig) Reset() {
 	*x = ScrollToConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[9]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -908,7 +1110,7 @@ func (x *ScrollToConfig) String() string {
 func (*ScrollToConfig) ProtoMessage() {}
 
 func (x *ScrollToConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[9]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -921,7 +1123,7 @@ func (x *ScrollToConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScrollToConfig.ProtoReflect.Descriptor instead.
 func (*ScrollToConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{9}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{11}
 }
 
 // ViewportTransitionConfig holds configuration for viewport zoom/pan
@@ -948,7 +1150,7 @@ type ViewportTransitionConfig struct {
 
 func (x *ViewportTransitionConfig) Reset() {
 	*x = ViewportTransitionConfig{}
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[10]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -960,7 +1162,7 @@ func (x *ViewportTransitionConfig) String() string {
 func (*ViewportTransitionConfig) ProtoMessage() {}
 
 func (x *ViewportTransitionConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[10]
+	mi := &file_ai_scenar_scenario_v1_spec_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -973,7 +1175,7 @@ func (x *ViewportTransitionConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ViewportTransitionConfig.ProtoReflect.Descriptor instead.
 func (*ViewportTransitionConfig) Descriptor() ([]byte, []int) {
-	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{10}
+	return file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ViewportTransitionConfig) GetViewportZoom() float32 {
@@ -994,13 +1196,15 @@ var File_ai_scenar_scenario_v1_spec_proto protoreflect.FileDescriptor
 
 const file_ai_scenar_scenario_v1_spec_proto_rawDesc = "" +
 	"\n" +
-	" ai/scenar/scenario/v1/spec.proto\x12\x15ai.scenar.scenario.v1\x1a ai/scenar/scenario/v1/enum.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xd7\x01\n" +
+	" ai/scenar/scenario/v1/spec.proto\x12\x15ai.scenar.scenario.v1\x1a ai/scenar/scenario/v1/enum.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xa1\x02\n" +
 	"\fScenarioSpec\x12A\n" +
 	"\bviewport\x18\x01 \x01(\v2%.ai.scenar.scenario.v1.ViewportConfigR\bviewport\x12;\n" +
 	"\x05steps\x18\x02 \x03(\v2\x1b.ai.scenar.scenario.v1.StepB\b\xbaH\x05\x92\x01\x02\b\x01R\x05steps\x12G\n" +
 	"\n" +
 	"soundtrack\x18\x03 \x01(\v2'.ai.scenar.scenario.v1.SoundtrackConfigR\n" +
-	"soundtrack\"P\n" +
+	"soundtrack\x12H\n" +
+	"\vtitle_cards\x18\x04 \x01(\v2'.ai.scenar.scenario.v1.TitleCardsConfigR\n" +
+	"titleCards\"P\n" +
 	"\x0eViewportConfig\x12\x1d\n" +
 	"\x05width\x18\x01 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00R\x05width\x12\x1f\n" +
 	"\x06height\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00R\x06height\"\x84\x02\n" +
@@ -1017,7 +1221,21 @@ const file_ai_scenar_scenario_v1_spec_proto_rawDesc = "" +
 	"_music_srcB\x0f\n" +
 	"\r_music_volumeB\x11\n" +
 	"\x0f_ducking_volumeB\x06\n" +
-	"\x04_sfx\"\xf3\x01\n" +
+	"\x04_sfx\"\x82\x01\n" +
+	"\x10TitleCardsConfig\x126\n" +
+	"\x05intro\x18\x01 \x01(\v2 .ai.scenar.scenario.v1.TitleCardR\x05intro\x126\n" +
+	"\x05outro\x18\x02 \x01(\v2 .ai.scenar.scenario.v1.TitleCardR\x05outro\"\x8c\x02\n" +
+	"\tTitleCard\x12\x1d\n" +
+	"\x05title\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x05title\x12(\n" +
+	"\bsubtitle\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01H\x00R\bsubtitle\x88\x01\x01\x12'\n" +
+	"\blogo_src\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x10\x01H\x01R\alogoSrc\x88\x01\x01\x12'\n" +
+	"\bcta_text\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01H\x02R\actaText\x88\x01\x01\x12-\n" +
+	"\vduration_ms\x18\x05 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00H\x03R\n" +
+	"durationMs\x88\x01\x01B\v\n" +
+	"\t_subtitleB\v\n" +
+	"\t_logo_srcB\v\n" +
+	"\t_cta_textB\x0e\n" +
+	"\f_duration_ms\"\xf3\x01\n" +
 	"\x04Step\x12\x1b\n" +
 	"\x04view\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04view\x12\"\n" +
 	"\bdelay_ms\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\adelayMs\x12%\n" +
@@ -1071,40 +1289,45 @@ func file_ai_scenar_scenario_v1_spec_proto_rawDescGZIP() []byte {
 	return file_ai_scenar_scenario_v1_spec_proto_rawDescData
 }
 
-var file_ai_scenar_scenario_v1_spec_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_ai_scenar_scenario_v1_spec_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_ai_scenar_scenario_v1_spec_proto_goTypes = []any{
 	(*ScenarioSpec)(nil),             // 0: ai.scenar.scenario.v1.ScenarioSpec
 	(*ViewportConfig)(nil),           // 1: ai.scenar.scenario.v1.ViewportConfig
 	(*SoundtrackConfig)(nil),         // 2: ai.scenar.scenario.v1.SoundtrackConfig
-	(*Step)(nil),                     // 3: ai.scenar.scenario.v1.Step
-	(*StepAction)(nil),               // 4: ai.scenar.scenario.v1.StepAction
-	(*ClickConfig)(nil),              // 5: ai.scenar.scenario.v1.ClickConfig
-	(*TypeConfig)(nil),               // 6: ai.scenar.scenario.v1.TypeConfig
-	(*HoverConfig)(nil),              // 7: ai.scenar.scenario.v1.HoverConfig
-	(*DragConfig)(nil),               // 8: ai.scenar.scenario.v1.DragConfig
-	(*ScrollToConfig)(nil),           // 9: ai.scenar.scenario.v1.ScrollToConfig
-	(*ViewportTransitionConfig)(nil), // 10: ai.scenar.scenario.v1.ViewportTransitionConfig
-	(*structpb.Struct)(nil),          // 11: google.protobuf.Struct
-	(ActionType)(0),                  // 12: ai.scenar.scenario.v1.ActionType
+	(*TitleCardsConfig)(nil),         // 3: ai.scenar.scenario.v1.TitleCardsConfig
+	(*TitleCard)(nil),                // 4: ai.scenar.scenario.v1.TitleCard
+	(*Step)(nil),                     // 5: ai.scenar.scenario.v1.Step
+	(*StepAction)(nil),               // 6: ai.scenar.scenario.v1.StepAction
+	(*ClickConfig)(nil),              // 7: ai.scenar.scenario.v1.ClickConfig
+	(*TypeConfig)(nil),               // 8: ai.scenar.scenario.v1.TypeConfig
+	(*HoverConfig)(nil),              // 9: ai.scenar.scenario.v1.HoverConfig
+	(*DragConfig)(nil),               // 10: ai.scenar.scenario.v1.DragConfig
+	(*ScrollToConfig)(nil),           // 11: ai.scenar.scenario.v1.ScrollToConfig
+	(*ViewportTransitionConfig)(nil), // 12: ai.scenar.scenario.v1.ViewportTransitionConfig
+	(*structpb.Struct)(nil),          // 13: google.protobuf.Struct
+	(ActionType)(0),                  // 14: ai.scenar.scenario.v1.ActionType
 }
 var file_ai_scenar_scenario_v1_spec_proto_depIdxs = []int32{
 	1,  // 0: ai.scenar.scenario.v1.ScenarioSpec.viewport:type_name -> ai.scenar.scenario.v1.ViewportConfig
-	3,  // 1: ai.scenar.scenario.v1.ScenarioSpec.steps:type_name -> ai.scenar.scenario.v1.Step
+	5,  // 1: ai.scenar.scenario.v1.ScenarioSpec.steps:type_name -> ai.scenar.scenario.v1.Step
 	2,  // 2: ai.scenar.scenario.v1.ScenarioSpec.soundtrack:type_name -> ai.scenar.scenario.v1.SoundtrackConfig
-	11, // 3: ai.scenar.scenario.v1.Step.props:type_name -> google.protobuf.Struct
-	4,  // 4: ai.scenar.scenario.v1.Step.interactions:type_name -> ai.scenar.scenario.v1.StepAction
-	12, // 5: ai.scenar.scenario.v1.StepAction.type:type_name -> ai.scenar.scenario.v1.ActionType
-	5,  // 6: ai.scenar.scenario.v1.StepAction.click_config:type_name -> ai.scenar.scenario.v1.ClickConfig
-	6,  // 7: ai.scenar.scenario.v1.StepAction.type_config:type_name -> ai.scenar.scenario.v1.TypeConfig
-	7,  // 8: ai.scenar.scenario.v1.StepAction.hover_config:type_name -> ai.scenar.scenario.v1.HoverConfig
-	8,  // 9: ai.scenar.scenario.v1.StepAction.drag_config:type_name -> ai.scenar.scenario.v1.DragConfig
-	9,  // 10: ai.scenar.scenario.v1.StepAction.scroll_to_config:type_name -> ai.scenar.scenario.v1.ScrollToConfig
-	10, // 11: ai.scenar.scenario.v1.StepAction.viewport_transition_config:type_name -> ai.scenar.scenario.v1.ViewportTransitionConfig
-	12, // [12:12] is the sub-list for method output_type
-	12, // [12:12] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	3,  // 3: ai.scenar.scenario.v1.ScenarioSpec.title_cards:type_name -> ai.scenar.scenario.v1.TitleCardsConfig
+	4,  // 4: ai.scenar.scenario.v1.TitleCardsConfig.intro:type_name -> ai.scenar.scenario.v1.TitleCard
+	4,  // 5: ai.scenar.scenario.v1.TitleCardsConfig.outro:type_name -> ai.scenar.scenario.v1.TitleCard
+	13, // 6: ai.scenar.scenario.v1.Step.props:type_name -> google.protobuf.Struct
+	6,  // 7: ai.scenar.scenario.v1.Step.interactions:type_name -> ai.scenar.scenario.v1.StepAction
+	14, // 8: ai.scenar.scenario.v1.StepAction.type:type_name -> ai.scenar.scenario.v1.ActionType
+	7,  // 9: ai.scenar.scenario.v1.StepAction.click_config:type_name -> ai.scenar.scenario.v1.ClickConfig
+	8,  // 10: ai.scenar.scenario.v1.StepAction.type_config:type_name -> ai.scenar.scenario.v1.TypeConfig
+	9,  // 11: ai.scenar.scenario.v1.StepAction.hover_config:type_name -> ai.scenar.scenario.v1.HoverConfig
+	10, // 12: ai.scenar.scenario.v1.StepAction.drag_config:type_name -> ai.scenar.scenario.v1.DragConfig
+	11, // 13: ai.scenar.scenario.v1.StepAction.scroll_to_config:type_name -> ai.scenar.scenario.v1.ScrollToConfig
+	12, // 14: ai.scenar.scenario.v1.StepAction.viewport_transition_config:type_name -> ai.scenar.scenario.v1.ViewportTransitionConfig
+	15, // [15:15] is the sub-list for method output_type
+	15, // [15:15] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_ai_scenar_scenario_v1_spec_proto_init() }
@@ -1114,7 +1337,8 @@ func file_ai_scenar_scenario_v1_spec_proto_init() {
 	}
 	file_ai_scenar_scenario_v1_enum_proto_init()
 	file_ai_scenar_scenario_v1_spec_proto_msgTypes[2].OneofWrappers = []any{}
-	file_ai_scenar_scenario_v1_spec_proto_msgTypes[4].OneofWrappers = []any{
+	file_ai_scenar_scenario_v1_spec_proto_msgTypes[4].OneofWrappers = []any{}
+	file_ai_scenar_scenario_v1_spec_proto_msgTypes[6].OneofWrappers = []any{
 		(*StepAction_ClickConfig)(nil),
 		(*StepAction_TypeConfig)(nil),
 		(*StepAction_HoverConfig)(nil),
@@ -1128,7 +1352,7 @@ func file_ai_scenar_scenario_v1_spec_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_scenar_scenario_v1_spec_proto_rawDesc), len(file_ai_scenar_scenario_v1_spec_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

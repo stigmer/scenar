@@ -127,6 +127,28 @@ export function ScenarioComposition<T>({
 
   const currentTimeMs = (frame / fps) * 1000;
 
+  // Synthesized card steps may carry a logo asset. Like every audio src,
+  // the authored path (e.g. "./logo.png") points at a file `scenar render`
+  // stages into the public dir, so it resolves through the same
+  // staticFile path before the player renders it.
+  const playerBundle = useMemo(() => {
+    if (!bundle.steps.some((step) => step.card?.logoSrc)) return bundle;
+    return {
+      ...bundle,
+      steps: bundle.steps.map((step) =>
+        step.card?.logoSrc
+          ? {
+              ...step,
+              card: {
+                ...step.card,
+                logoSrc: resolveAssetSrc(step.card.logoSrc, useStaticFileProp),
+              },
+            }
+          : step,
+      ),
+    };
+  }, [bundle, useStaticFileProp]);
+
   const soundtrack = bundle.soundtrack;
 
   // Music level per frame — the same pure @scenar/core envelope the
@@ -171,7 +193,7 @@ export function ScenarioComposition<T>({
         stepStartTimesMs={timeline.stepStartTimesMs}
       >
         <VideoExportProvider>
-          <ScenarioPlayer bundle={bundle} captions={captions}>
+          <ScenarioPlayer bundle={playerBundle} captions={captions}>
             {children}
           </ScenarioPlayer>
         </VideoExportProvider>
@@ -183,7 +205,7 @@ export function ScenarioComposition<T>({
           from={clip.startFrame}
           durationInFrames={clip.durationFrames}
         >
-          <Audio src={resolveAudioSrc(clip.src, useStaticFileProp)} />
+          <Audio src={resolveAssetSrc(clip.src, useStaticFileProp)} />
         </Sequence>
       ))}
 
@@ -193,7 +215,7 @@ export function ScenarioComposition<T>({
         // and the closing fade-out, so no trim math is needed here.
         <Audio
           loop
-          src={resolveAudioSrc(soundtrack.musicSrc, useStaticFileProp)}
+          src={resolveAssetSrc(soundtrack.musicSrc, useStaticFileProp)}
           volume={musicVolume}
         />
       )}
@@ -204,7 +226,7 @@ export function ScenarioComposition<T>({
           from={clip.startFrame}
           durationInFrames={msToFrames(SFX_WINDOW_MS, fps)}
         >
-          <Audio src={resolveAudioSrc(clip.src, useStaticFileProp)} />
+          <Audio src={resolveAssetSrc(clip.src, useStaticFileProp)} />
         </Sequence>
       ))}
     </>
@@ -212,13 +234,13 @@ export function ScenarioComposition<T>({
 }
 
 /**
- * Resolve an audio source URL.  When `useStaticFile` is true, paths are
- * resolved through Remotion's `staticFile()`, stripping a leading `/`
- * (Stigmer's original pattern) or `./` (the form `scenar narrate` and
- * soundtrack configs write) so the path lands inside the staged public
- * dir.
+ * Resolve a staged asset URL (audio clips, card logos).  When
+ * `useStaticFile` is true, paths are resolved through Remotion's
+ * `staticFile()`, stripping a leading `/` (Stigmer's original pattern)
+ * or `./` (the form `scenar narrate`, soundtrack, and title-card
+ * configs write) so the path lands inside the staged public dir.
  */
-function resolveAudioSrc(src: string, useStaticFileFn: boolean): string {
+function resolveAssetSrc(src: string, useStaticFileFn: boolean): string {
   if (useStaticFileFn) {
     return staticFile(src.replace(/^(\.\/|\/)/, ""));
   }

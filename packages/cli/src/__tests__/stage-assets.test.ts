@@ -3,13 +3,14 @@ import { mkdtemp, mkdir, readFile, writeFile, rm, access } from "node:fs/promise
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { stageRenderAudio } from "../render/stage-audio.js";
+import { stageRenderAssets } from "../render/stage-assets.js";
 import {
   SFX_DEST_PATHS,
   isRemoteUrl,
   resolveMusicAsset,
   resolveSfxAssetPaths,
 } from "../util/soundtrack-assets.js";
+import { resolveLogoAsset } from "../util/scenario-assets.js";
 
 let scenarioDir: string;
 let publicDir: string;
@@ -30,14 +31,14 @@ async function exists(path: string): Promise<boolean> {
   );
 }
 
-describe("stageRenderAudio", () => {
+describe("stageRenderAssets", () => {
   it("stages narration clips flat at the public root (srcs are ./step-N.mp3)", async () => {
     await mkdir(join(scenarioDir, "narration"), { recursive: true });
     await writeFile(join(scenarioDir, "narration", "step-0.mp3"), "audio-0");
     await writeFile(join(scenarioDir, "narration", "step-2.mp3"), "audio-2");
     await writeFile(join(scenarioDir, "narration", "manifest.json"), "{}");
 
-    const staged = await stageRenderAudio({
+    const staged = await stageRenderAssets({
       scenarioDir,
       publicDir,
       hasNarration: true,
@@ -54,7 +55,7 @@ describe("stageRenderAudio", () => {
     await mkdir(join(scenarioDir, "soundtrack"), { recursive: true });
     await writeFile(join(scenarioDir, "soundtrack", "music.mp3"), "music-bytes");
 
-    const staged = await stageRenderAudio({
+    const staged = await stageRenderAssets({
       scenarioDir,
       publicDir,
       hasNarration: false,
@@ -73,7 +74,7 @@ describe("stageRenderAudio", () => {
     await writeFile(clickSource, "click-bytes");
     await writeFile(keystrokeSource, "keystroke-bytes");
 
-    const staged = await stageRenderAudio({
+    const staged = await stageRenderAssets({
       scenarioDir,
       publicDir,
       hasNarration: false,
@@ -88,8 +89,38 @@ describe("stageRenderAudio", () => {
     );
   });
 
-  it("stages nothing (and reports zero) for a silent scenario", async () => {
-    const staged = await stageRenderAudio({
+  it("stages title-card logos at their scenario-relative paths", async () => {
+    await writeFile(join(scenarioDir, "logo.png"), "logo-bytes");
+
+    const staged = await stageRenderAssets({
+      scenarioDir,
+      publicDir,
+      hasNarration: false,
+      titleCards: { intro: { title: "Acme", logoSrc: "./logo.png" } },
+    });
+
+    expect(staged).toBe(1);
+    expect(await readFile(join(publicDir, "logo.png"), "utf-8")).toBe("logo-bytes");
+  });
+
+  it("stages a logo shared by intro and outro exactly once", async () => {
+    await writeFile(join(scenarioDir, "logo.png"), "logo-bytes");
+
+    const staged = await stageRenderAssets({
+      scenarioDir,
+      publicDir,
+      hasNarration: false,
+      titleCards: {
+        intro: { title: "Acme", logoSrc: "./logo.png" },
+        outro: { title: "Bye", logoSrc: "./logo.png" },
+      },
+    });
+
+    expect(staged).toBe(1);
+  });
+
+  it("stages nothing (and reports zero) for a silent, card-less scenario", async () => {
+    const staged = await stageRenderAssets({
       scenarioDir,
       publicDir,
       hasNarration: false,
@@ -99,7 +130,7 @@ describe("stageRenderAudio", () => {
   });
 
   it("skips remote music URLs — they are referenced, not copied", async () => {
-    const staged = await stageRenderAudio({
+    const staged = await stageRenderAssets({
       scenarioDir,
       publicDir,
       hasNarration: false,
@@ -110,11 +141,22 @@ describe("stageRenderAudio", () => {
 
   it("fails loudly when the music file is missing (a silent render otherwise)", async () => {
     await expect(
-      stageRenderAudio({
+      stageRenderAssets({
         scenarioDir,
         publicDir,
         hasNarration: false,
         soundtrack: { musicSrc: "./soundtrack/missing.mp3" },
+      }),
+    ).rejects.toThrow(/not found/);
+  });
+
+  it("fails loudly when a card's logo file is missing (a broken card otherwise)", async () => {
+    await expect(
+      stageRenderAssets({
+        scenarioDir,
+        publicDir,
+        hasNarration: false,
+        titleCards: { outro: { title: "Bye", logoSrc: "./missing.png" } },
       }),
     ).rejects.toThrow(/not found/);
   });
@@ -129,6 +171,43 @@ describe("resolveMusicAsset", () => {
 
   it("returns null for remote URLs", async () => {
     expect(await resolveMusicAsset(scenarioDir, "https://cdn.example.com/a.mp3")).toBeNull();
+  });
+});
+
+describe("resolveLogoAsset", () => {
+  it("rejects paths escaping the scenario directory", async () => {
+    await expect(
+      resolveLogoAsset(scenarioDir, "../outside.png", "titleCards.intro.logoSrc"),
+    ).rejects.toThrow(/outside the scenario directory/);
+  });
+
+  it("returns null for remote URLs", async () => {
+    expect(
+      await resolveLogoAsset(
+        scenarioDir,
+        "https://cdn.example.com/logo.png",
+        "titleCards.intro.logoSrc",
+      ),
+    ).toBeNull();
+  });
+
+  it("rejects extensions the deploy contract cannot serve — svg above all", async () => {
+    await writeFile(join(scenarioDir, "logo.svg"), "<svg/>");
+    await expect(
+      resolveLogoAsset(scenarioDir, "./logo.svg", "titleCards.intro.logoSrc"),
+    ).rejects.toThrow(/not a supported image format/);
+  });
+
+  it("accepts every allowlisted raster format", async () => {
+    for (const ext of ["png", "jpg", "jpeg", "gif", "webp", "avif"]) {
+      await writeFile(join(scenarioDir, `logo.${ext}`), "bytes");
+      const asset = await resolveLogoAsset(
+        scenarioDir,
+        `./logo.${ext}`,
+        "titleCards.intro.logoSrc",
+      );
+      expect(asset?.destRelPath).toBe(`logo.${ext}`);
+    }
   });
 });
 

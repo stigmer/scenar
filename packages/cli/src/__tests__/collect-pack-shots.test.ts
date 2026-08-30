@@ -44,6 +44,7 @@ describe("collectPackShots", () => {
       shots: ["opening", "detail-open"],
       authoredViewport: null,
       authoredSoundtrack: null,
+      authoredTitleCards: null,
     });
   });
 
@@ -57,6 +58,7 @@ describe("collectPackShots", () => {
       shots: ["detail-open"],
       authoredViewport: null,
       authoredSoundtrack: null,
+      authoredTitleCards: null,
     });
   });
 
@@ -67,6 +69,7 @@ describe("collectPackShots", () => {
       shots: [],
       authoredViewport: null,
       authoredSoundtrack: null,
+      authoredTitleCards: null,
     });
   });
 
@@ -80,6 +83,7 @@ describe("collectPackShots", () => {
       shots: ["opening"],
       authoredViewport: { width: 1440, height: 900 },
       authoredSoundtrack: null,
+      authoredTitleCards: null,
     });
   });
 

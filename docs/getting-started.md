@@ -183,7 +183,46 @@ mute control) and in rendered videos — same source, same result. Volumes are
 tunable with `musicVolume` (default 0.25) and `duckingVolume` (the level
 music ducks to while narration plays, default 0.08).
 
-## 7. Pack and preview
+## 7. Frame it with title cards (optional)
+
+Open and close the tour like a produced video. Export `titleCards` from
+`steps.ts`:
+
+```ts
+export const titleCards: TitleCards = {
+  intro: {
+    title: "Acme Cloud",
+    subtitle: "Your workspace, in one tour",
+    logoSrc: "./logo.png", // png/jpg/gif/webp/avif next to steps.ts (no SVG)
+  },
+  outro: {
+    title: "Start shipping today",
+    ctaText: "acme.cloud/start", // display-only pill
+    durationMs: 4000, // visible time; default 3000
+  },
+};
+```
+
+The engine injects the cards as real steps: they get chapter markers, they
+scrub, they lengthen the video, and the music's fade-in and fade-out play
+under them. The engine renders the cards itself — your render function is
+never called for them, so there is nothing to add to your components. Both
+sides are optional; each shows for `durationMs` (default 3 seconds).
+
+Embedding `ScenarioPlayer` directly instead of using `pack`/`render`? Apply
+the cards yourself between authoring and the player — it is one call:
+
+```ts
+import { applyTitleCards } from "@scenar/react";
+
+const { steps, narrationManifest } = applyTitleCards(
+  scenario.steps,
+  manifest,
+  scenario.titleCards,
+);
+```
+
+## 8. Pack and preview
 
 ```bash
 npx @scenar/cli pack ./onboarding-tour
@@ -193,7 +232,7 @@ npx @scenar/cli serve ./onboarding-tour-bundle   # → http://localhost:4173/
 Open the URL and watch it play. Iterate: adjust `delayMs` dwell times, refine
 narration, re-run `narrate`/`pack`/`serve`.
 
-## 8. Publish
+## 9. Publish
 
 ```bash
 npx @scenar/cli publish ./onboarding-tour-bundle

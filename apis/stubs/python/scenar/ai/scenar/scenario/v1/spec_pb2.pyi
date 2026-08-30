@@ -9,14 +9,16 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class ScenarioSpec(_message.Message):
-    __slots__ = ("viewport", "steps", "soundtrack")
+    __slots__ = ("viewport", "steps", "soundtrack", "title_cards")
     VIEWPORT_FIELD_NUMBER: _ClassVar[int]
     STEPS_FIELD_NUMBER: _ClassVar[int]
     SOUNDTRACK_FIELD_NUMBER: _ClassVar[int]
+    TITLE_CARDS_FIELD_NUMBER: _ClassVar[int]
     viewport: ViewportConfig
     steps: _containers.RepeatedCompositeFieldContainer[Step]
     soundtrack: SoundtrackConfig
-    def __init__(self, viewport: _Optional[_Union[ViewportConfig, _Mapping]] = ..., steps: _Optional[_Iterable[_Union[Step, _Mapping]]] = ..., soundtrack: _Optional[_Union[SoundtrackConfig, _Mapping]] = ...) -> None: ...
+    title_cards: TitleCardsConfig
+    def __init__(self, viewport: _Optional[_Union[ViewportConfig, _Mapping]] = ..., steps: _Optional[_Iterable[_Union[Step, _Mapping]]] = ..., soundtrack: _Optional[_Union[SoundtrackConfig, _Mapping]] = ..., title_cards: _Optional[_Union[TitleCardsConfig, _Mapping]] = ...) -> None: ...
 
 class ViewportConfig(_message.Message):
     __slots__ = ("width", "height")
@@ -37,6 +39,28 @@ class SoundtrackConfig(_message.Message):
     ducking_volume: float
     sfx: bool
     def __init__(self, music_src: _Optional[str] = ..., music_volume: _Optional[float] = ..., ducking_volume: _Optional[float] = ..., sfx: bool = ...) -> None: ...
+
+class TitleCardsConfig(_message.Message):
+    __slots__ = ("intro", "outro")
+    INTRO_FIELD_NUMBER: _ClassVar[int]
+    OUTRO_FIELD_NUMBER: _ClassVar[int]
+    intro: TitleCard
+    outro: TitleCard
+    def __init__(self, intro: _Optional[_Union[TitleCard, _Mapping]] = ..., outro: _Optional[_Union[TitleCard, _Mapping]] = ...) -> None: ...
+
+class TitleCard(_message.Message):
+    __slots__ = ("title", "subtitle", "logo_src", "cta_text", "duration_ms")
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    SUBTITLE_FIELD_NUMBER: _ClassVar[int]
+    LOGO_SRC_FIELD_NUMBER: _ClassVar[int]
+    CTA_TEXT_FIELD_NUMBER: _ClassVar[int]
+    DURATION_MS_FIELD_NUMBER: _ClassVar[int]
+    title: str
+    subtitle: str
+    logo_src: str
+    cta_text: str
+    duration_ms: int
+    def __init__(self, title: _Optional[str] = ..., subtitle: _Optional[str] = ..., logo_src: _Optional[str] = ..., cta_text: _Optional[str] = ..., duration_ms: _Optional[int] = ...) -> None: ...
 
 class Step(_message.Message):
     __slots__ = ("view", "delay_ms", "narration_text", "props", "interactions")

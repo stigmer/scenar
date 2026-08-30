@@ -1,7 +1,7 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, useReducedMotion } from "framer-motion";
-import { type NarrationManifest, type ScenarEmbedViewport, type ScenarioBundle, type ScenarioStep, type Soundtrack, computeStepTimeline, deriveStepFromTime } from "@scenar/core";
+import { type NarrationManifest, type ScenarEmbedViewport, type ScenarioBundle, type ScenarioStep, type Soundtrack, type StepCard, computeStepTimeline, deriveStepFromTime } from "@scenar/core";
 import { useVideoExport } from "../video/VideoExportContext.js";
 import { useViewportChromeTarget, useViewportHostScaleSetter } from "../viewport/ViewportChrome.js";
 import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
@@ -11,6 +11,7 @@ import { useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
 import { PlaybackBurst, ScenarioAudioNotice } from "./PlaybackFeedback.js";
 import { CaptionOverlay } from "./CaptionOverlay.js";
+import { TitleCardView } from "./TitleCardView.js";
 import { ScenarioControls } from "./ScenarioControls.js";
 import type { TimeDisplayMode } from "./format-playback-time.js";
 import { useScenarEmbedBridge } from "../embed/useScenarEmbedBridge.js";
@@ -32,8 +33,24 @@ interface ScenarioPlayerProps<T> {
   children: (data: T, stepIndex: number) => ReactNode;
   /** Additional CSS class names for the outer container. */
   className?: string;
-  /** Fires when the active step changes (after the step is rendered). */
+  /**
+   * Fires when the active step changes to an AUTHORED step (after the
+   * step is rendered). Synthesized card steps are excluded — their
+   * `data` is an engine placeholder, not the integrator's `T` — and
+   * announce themselves through {@link onCardStepChange} instead.
+   */
   onStepChange?: (data: T, index: number) => void;
+  /**
+   * Fires when the active step changes to a synthesized card step
+   * (`ScenarioStep.card`) — the card-step sibling of {@link onStepChange},
+   * delivering the card and the step index with honest types.
+   *
+   * Hosts that wire the interaction system themselves (the packed embed
+   * entry, `useStepInteractions` integrators) must track the index from
+   * BOTH callbacks so card-step interactions — the outro's cursor-clear
+   * and viewport-reset housekeeping — reach their scheduler.
+   */
+  onCardStepChange?: (card: StepCard, index: number) => void;
   /** Audio manifest produced by the narration build script. */
   narrationManifest?: NarrationManifest;
   /** Show a speed selector in the control bar. Defaults to true. */
@@ -102,6 +119,7 @@ export function ScenarioPlayer<T>({
   children,
   className,
   onStepChange,
+  onCardStepChange,
   narrationManifest: manifestProp,
   showSpeedControl = true,
   embed = false,
@@ -231,10 +249,15 @@ export function ScenarioPlayer<T>({
     [steps, muted, narrationManifest],
   );
 
-  // Step change callback
+  // Step change callbacks. Card steps announce through their own
+  // callback: their `data` is an engine placeholder, and fabricating a
+  // `T` for onStepChange would violate the integrator's type parameter
+  // (see ScenarioStep.card).
   useEffect(() => {
-    onStepChange?.(steps[stepIndex]!.data, stepIndex);
-  }, [stepIndex, steps, onStepChange]);
+    const step = steps[stepIndex]!;
+    if (step.card) onCardStepChange?.(step.card, stepIndex);
+    else onStepChange?.(step.data, stepIndex);
+  }, [stepIndex, steps, onStepChange, onCardStepChange]);
 
   // Controls auto-hide
   const [controlsVisible, setControlsVisible] = useState(true);
@@ -498,7 +521,17 @@ export function ScenarioPlayer<T>({
         onClick={handleContentClick}
         style={{ cursor: !isVideoExport ? "pointer" : undefined }}
       >
-        {children(steps[stepIndex]!.data, stepIndex)}
+        {/*
+         * Synthesized card steps (ScenarioStep.card) are engine content:
+         * the built-in card renders instead of the scenario's render
+         * function, which never sees them — cards need no view, no props,
+         * no registry entry.
+         */}
+        {steps[stepIndex]!.card ? (
+          <TitleCardView card={steps[stepIndex]!.card!} />
+        ) : (
+          children(steps[stepIndex]!.data, stepIndex)
+        )}
 
         <AnimatePresence>
           {showAudioNotice && <ScenarioAudioNotice onEnableAudio={handleEnableAudio} />}
