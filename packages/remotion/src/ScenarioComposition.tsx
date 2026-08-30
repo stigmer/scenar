@@ -1,6 +1,7 @@
 import { type ReactNode, useMemo } from "react";
 import {
   Audio,
+  OffthreadVideo,
   Sequence,
   staticFile,
   useCurrentFrame,
@@ -13,7 +14,12 @@ import {
   deriveSfxTimeline,
   musicGainAt,
 } from "@scenar/core";
-import { TimeSourceProvider, VideoExportProvider, ScenarioPlayer } from "@scenar/react";
+import {
+  type PresenterMediaRenderer,
+  TimeSourceProvider,
+  VideoExportProvider,
+  ScenarioPlayer,
+} from "@scenar/react";
 import { msToFrames, useScenarioTimeline } from "./useScenarioTimeline.js";
 
 const DEFAULT_FPS = 30;
@@ -169,6 +175,30 @@ export function ScenarioComposition<T>({
     [musicEnvelope, fps],
   );
 
+  // The presenter media slot for the export time domain (T02 decision
+  // G2-5): the player owns the PiP frame and its fade; this renderer
+  // fills the frame with a frame-locked clip. `layout="none"` nests the
+  // Sequence inside the player's DOM without an absolute-fill wrapper;
+  // `from` is composition-absolute because the player tree sits outside
+  // any other Sequence. Muted — narration remains the only audio.
+  const presenterMedia = useMemo<PresenterMediaRenderer | undefined>(() => {
+    if (!bundle.presenterManifest) return undefined;
+    const renderer: PresenterMediaRenderer = ({ src, window: clipWindow }) => (
+      <Sequence
+        layout="none"
+        from={msToFrames(clipWindow.startMs, fps)}
+        durationInFrames={Math.max(1, msToFrames(clipWindow.clipDurationMs, fps))}
+      >
+        <OffthreadVideo
+          muted
+          src={resolveAssetSrc(src, useStaticFileProp)}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </Sequence>
+    );
+    return renderer;
+  }, [bundle.presenterManifest, fps, useStaticFileProp]);
+
   // Derived SFX events converted from step-relative offsets to absolute
   // frames via the shared step starts — the export-side consumer of the
   // same `deriveSfxTimeline` the browser scheduler plays.
@@ -192,7 +222,7 @@ export function ScenarioComposition<T>({
         currentTimeMs={currentTimeMs}
         stepStartTimesMs={timeline.stepStartTimesMs}
       >
-        <VideoExportProvider>
+        <VideoExportProvider presenterMedia={presenterMedia}>
           <ScenarioPlayer bundle={playerBundle} captions={captions}>
             {children}
           </ScenarioPlayer>

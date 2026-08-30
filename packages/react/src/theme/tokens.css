@@ -38,6 +38,19 @@
     --scenar-caption-foreground: rgb(255 255 255 / 0.95);
 
     /*
+     * Presenter picture-in-picture frame (PresenterFrame.tsx). Width is
+     * a percentage of the player box so the PiP holds the same
+     * proportion in the interactive embed and the exported video —
+     * both coordinate spaces resolve it against their own box.
+     */
+    --scenar-presenter-width: 24%;
+    --scenar-presenter-radius: 10px;
+    --scenar-presenter-margin: 12px;
+    --scenar-presenter-shadow:
+      0 12px 32px -8px rgb(15 23 42 / 0.4),
+      0 2px 8px -2px rgb(15 23 42 / 0.25);
+
+    /*
      * Stage: the backdrop a framed window floats on, plus the window's
      * elevation and radius. The backdrop is a macOS-wallpaper-style mesh:
      * three soft radial glows over a diagonal base. The gradient geometry
@@ -82,6 +95,10 @@
     --scenar-chrome-raised: #35363a;
     --scenar-chrome-foreground: #bdc1c6;
     --scenar-cursor-stroke: #ffffff;
+
+    --scenar-presenter-shadow:
+      0 12px 32px -8px rgb(0 0 0 / 0.65),
+      0 2px 8px -2px rgb(0 0 0 / 0.4);
 
     /* Dark wallpaper palette — the mesh geometry above re-resolves with these. */
     --scenar-backdrop-glow-1: #1c3a63;
