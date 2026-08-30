@@ -15,6 +15,8 @@ export interface EntryGeneratorInput {
   scenarioId: string;
   /** Whether the scenario has a narration manifest. */
   hasNarration: boolean;
+  /** Whether the scenario has a presenter manifest (+ clips). */
+  hasPresenter: boolean;
   /** Absolute path to the providers file, or null if none found. */
   providersPath: string | null;
   fps: number;
@@ -56,6 +58,16 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   lines.push(
     `import { ScenarioComposition, applyTitleCards, calculateScenarioTimeline } from "@scenar/remotion";`,
   );
+  lines.push(`import { SCENAR_CLASS } from "@scenar/react";`);
+  // The same stylesheet pair the packed embed entry loads: without them,
+  // authored step content built on @scenar/react (shells, page templates)
+  // renders unstyled — black frames in the MP4 (scenar#23). Remotion's
+  // bundler handles plain CSS imports natively; styles.css is the
+  // self-contained build, so no Tailwind processing is needed. The
+  // composition root carries SCENAR_CLASS (below) so the `.scenar`-scoped
+  // theme tokens resolve, exactly as the embed entry scopes its tree.
+  lines.push(`import "@scenar/react/theme.css";`);
+  lines.push(`import "@scenar/react/styles.css";`);
   lines.push(`import { renderStep } from ${JSON.stringify(renderImport)};`);
   lines.push(`import * as _stepsModule from ${JSON.stringify(stepsImport)};`);
 
@@ -64,6 +76,13 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
     lines.push(`import _manifest from ${JSON.stringify(manifestPath)};`);
   } else {
     lines.push(`const _manifest = undefined;`);
+  }
+
+  if (input.hasPresenter) {
+    const presenterManifestPath = `${scenarioPath}/presenter/manifest.json`;
+    lines.push(`import _presenterManifest from ${JSON.stringify(presenterManifestPath)};`);
+  } else {
+    lines.push(`const _presenterManifest = undefined;`);
   }
 
   if (input.providersPath) {
@@ -140,12 +159,13 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   // outro card lengthens durationInFrames exactly like an authored step.
 
   lines.push(``);
-  lines.push(`const _applied = applyTitleCards(_steps, _manifest, _titleCards);`);
+  lines.push(`const _applied = applyTitleCards(_steps, _manifest, _titleCards, _presenterManifest);`);
   lines.push(`const _bundle = {`);
   lines.push(`  id: ${JSON.stringify(input.scenarioId)},`);
   lines.push(`  steps: _applied.steps as any,`);
   lines.push(`  narrationManifest: _applied.narrationManifest,`);
   lines.push(`  soundtrack: _soundtrack,`);
+  lines.push(`  presenterManifest: _applied.presenterManifest,`);
   lines.push(`};`);
   lines.push(``);
   lines.push(
@@ -166,7 +186,7 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
 
   if (input.providersPath) {
     lines.push(`  return (`);
-    lines.push(`    <AbsoluteFill>`);
+    lines.push(`    <AbsoluteFill className={SCENAR_CLASS}>`);
     lines.push(`      <_Providers>`);
     lines.push(`        ${compositionOpen}`);
     lines.push(`          {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
@@ -176,7 +196,7 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
     lines.push(`  );`);
   } else {
     lines.push(`  return (`);
-    lines.push(`    <AbsoluteFill>`);
+    lines.push(`    <AbsoluteFill className={SCENAR_CLASS}>`);
     lines.push(`      ${compositionOpen}`);
     lines.push(`        {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
     lines.push(`      </ScenarioComposition>`);

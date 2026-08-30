@@ -53,6 +53,32 @@ describe("createScenario", () => {
     expect(scenario.steps[1]!.interactions![0]!.text).toBe("quickstart");
   });
 
+  it("carries presenter through to the built step", () => {
+    const scenario = createScenario({
+      views: { settings: SettingsView },
+      steps: [
+        {
+          view: "settings",
+          delayMs: 0,
+          narrationText: "Welcome.",
+          props: { org: "acme" },
+          presenter: true,
+        },
+      ],
+    });
+
+    expect(scenario.steps[0]!.presenter).toBe(true);
+  });
+
+  it("leaves presenter undefined when not authored", () => {
+    const scenario = createScenario({
+      views: { settings: SettingsView },
+      steps: [{ view: "settings", delayMs: 0, props: { org: "a" } }],
+    });
+
+    expect(scenario.steps[0]!.presenter).toBeUndefined();
+  });
+
   it("preserves view registry on the output", () => {
     const views = { settings: SettingsView };
     const scenario = createScenario({

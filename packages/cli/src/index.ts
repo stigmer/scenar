@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { registerValidateCommand } from "./commands/validate.js";
 import { registerNarrateCommand } from "./commands/narrate.js";
+import { registerPresenterCommand } from "./commands/presenter.js";
 import { registerInstallCommand } from "./commands/install.js";
 import { registerRenderCommand } from "./commands/render.js";
 import { registerPackCommand } from "./commands/pack.js";
@@ -19,6 +20,7 @@ export function createProgram(): Command {
 
   registerValidateCommand(program);
   registerNarrateCommand(program);
+  registerPresenterCommand(program);
   registerRenderCommand(program);
   registerInstallCommand(program);
   registerPackCommand(program);

@@ -15,6 +15,8 @@ export interface EmbedEntryInput {
   scenarioId: string;
   /** Whether the scenario has a narration manifest (+ audio). */
   hasNarration: boolean;
+  /** Whether the scenario has a presenter manifest (+ clips). */
+  hasPresenter: boolean;
   /** Absolute path to .scenar/providers.tsx, or null if none. */
   providersPath: string | null;
   /** Canonical viewport width in px (children render at this width). */
@@ -104,6 +106,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   ];
   if (input.stage) reactImports.push("ScenarioStage");
   if (input.hasNarration) reactImports.push("useNarrationManifest");
+  if (input.hasPresenter) reactImports.push("usePresenterManifest");
   lines.push(`import { ${reactImports.join(", ")} } from "@scenar/react";`);
   lines.push(`import "@scenar/react/theme.css";`);
   lines.push(`import "@scenar/react/styles.css";`);
@@ -191,6 +194,14 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
     lines.push(`const _resolveManifestUrl = () => "./narration/manifest.json";`);
   }
 
+  // --- Presenter manifest URL resolver (same contract as narration) ---
+  // The clips live under ./presenter/; usePresenterManifest resolves each
+  // clip's relative src against the manifest's own location.
+  if (input.hasPresenter) {
+    lines.push(``);
+    lines.push(`const _resolvePresenterManifestUrl = () => "./presenter/manifest.json";`);
+  }
+
   // --- Theme: opt-in dark via ?theme=dark (default light; backward-compatible) ---
   // Read once at module load from the embed's own URL. `theme=dark` adds the
   // `dark` class next to SCENAR_CLASS so the `.scenar.dark` tokens apply; any
@@ -260,10 +271,14 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   // `useStepInteractions` reads the current step's `interactions` and drives the
   // cursor / ripple / drag / viewport state, synced to narration duration.
   const manifestExpr = input.hasNarration ? "_manifest" : "undefined";
+  const presenterExpr = input.hasPresenter ? "_presenterManifest" : "undefined";
   lines.push(``);
   lines.push(`function _App() {`);
   if (input.hasNarration) {
     lines.push(`  const _manifest = useNarrationManifest(${JSON.stringify(input.scenarioId)}, _resolveManifestUrl);`);
+  }
+  if (input.hasPresenter) {
+    lines.push(`  const _presenterManifest = usePresenterManifest(${JSON.stringify(input.scenarioId)}, _resolvePresenterManifestUrl);`);
   }
   lines.push(`  const _containerRef = useRef<HTMLDivElement>(null);`);
   lines.push(`  const _cameraRef = useRef<HTMLDivElement>(null);`);
@@ -285,11 +300,14 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`  }, []);`);
   lines.push(``);
   // Card synthesis: bundle assembly is THE one expansion point. Memoized
-  // on the manifest (the only async input) so the steps identity stays
+  // on the manifests (the only async inputs) so the steps identity stays
   // stable across renders and the interaction scheduler is not re-armed.
+  const appliedDeps = [manifestExpr, presenterExpr]
+    .filter((expr) => expr !== "undefined")
+    .join(", ");
   lines.push(`  const _applied = useMemo(`);
-  lines.push(`    () => applyTitleCards(_steps as any, ${manifestExpr}, _titleCards),`);
-  lines.push(`    [${manifestExpr}],`);
+  lines.push(`    () => applyTitleCards(_steps as any, ${manifestExpr}, _titleCards, ${presenterExpr}),`);
+  lines.push(`    [${appliedDeps}],`);
   lines.push(`  );`);
   lines.push(``);
   lines.push(`  useStepInteractions({`);
@@ -309,6 +327,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`    steps: _applied.steps as any,`);
   lines.push(`    narrationManifest: _applied.narrationManifest,`);
   lines.push(`    soundtrack: _soundtrack,`);
+  lines.push(`    presenterManifest: _applied.presenterManifest,`);
   lines.push(`  };`);
   const open = input.providersPath ? `<_Providers>` : ``;
   const close = input.providersPath ? `</_Providers>` : ``;

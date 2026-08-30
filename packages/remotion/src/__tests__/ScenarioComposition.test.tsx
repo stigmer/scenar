@@ -2,13 +2,16 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
 
 /** Props of every rendered Remotion `Audio`, in render order — lets tests
- * inspect the `volume` function and `loop` flag the DOM cannot carry. */
+ * inspect the `volume` function and `loop` flag the DOM cannot carry.
+ * `frame` drives the mocked `useCurrentFrame` so tests can position the
+ * composition mid-timeline. */
 const captured = vi.hoisted(() => ({
   audios: [] as Array<{ src: string; loop?: boolean; volume?: (f: number) => number }>,
+  frame: 0,
 }));
 
 vi.mock("remotion", () => ({
-  useCurrentFrame: () => 0,
+  useCurrentFrame: () => captured.frame,
   useVideoConfig: () => ({ fps: 30, width: 1920, height: 1080, durationInFrames: 300 }),
   AbsoluteFill: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Audio: (props: { src: string; loop?: boolean; volume?: (f: number) => number }) => {
@@ -39,6 +42,13 @@ vi.mock("remotion", () => ({
       {children}
     </div>
   ),
+  OffthreadVideo: (props: { src: string; muted?: boolean }) => (
+    <div
+      data-testid="remotion-offthread-video"
+      data-muted={props.muted ? "true" : undefined}
+      data-src={props.src}
+    />
+  ),
   staticFile: (path: string) => `/static/${path}`,
 }));
 
@@ -53,6 +63,7 @@ import { ScenarioComposition } from "../ScenarioComposition.js";
 
 beforeEach(() => {
   captured.audios = [];
+  captured.frame = 0;
 });
 
 type StepData = { view: string };
@@ -252,5 +263,107 @@ describe("ScenarioComposition soundtrack", () => {
     );
     expect(captured.audios.some((a) => a.loop)).toBe(false);
     expect(captured.audios.some((a) => a.src.includes("sfx"))).toBe(false);
+  });
+});
+
+// --- Presenter track ---
+
+// Clip on step 0 (2000ms) — active at frame 0. Duration mirrors the
+// narration entry, as `scenar presenter` writes it.
+const bundleWithPresenter: ScenarioBundle<StepData> = {
+  ...bundle,
+  narrationManifest: {
+    steps: [{ src: "/audio/step-0.mp3", durationMs: 2000 }, null, null],
+  },
+  presenterManifest: {
+    steps: [{ src: "./step-0.mp4", durationMs: 2000 }, null, null],
+  },
+};
+
+function renderPresenterComposition() {
+  return render(
+    <ScenarioComposition bundle={bundleWithPresenter}>
+      {(data: StepData) => <div>{data.view}</div>}
+    </ScenarioComposition>,
+  );
+}
+
+describe("ScenarioComposition presenter", () => {
+  it("fills the presenter frame with a muted frame-locked clip via staticFile", () => {
+    const { container } = renderPresenterComposition();
+
+    const media = container.querySelector("[data-testid='remotion-offthread-video']")!;
+    expect(media).not.toBeNull();
+    expect(media.getAttribute("data-muted")).toBe("true");
+    // "./step-0.mp4" strips its leading "./" before staticFile.
+    expect(media.getAttribute("data-src")).toBe("/static/step-0.mp4");
+    // The export path renders no browser <video>.
+    expect(container.querySelector("video")).toBeNull();
+  });
+
+  it("places the clip Sequence at the window's frame offsets", () => {
+    const { container } = renderPresenterComposition();
+
+    const frame = container.querySelector("[data-scenar-presenter]")!;
+    const sequence = frame.querySelector("[data-testid='remotion-sequence']")!;
+    // Window: step 0 starts at 0ms, clip 2000ms → 60 frames at 30fps.
+    expect(sequence.getAttribute("data-from")).toBe("0");
+    expect(sequence.getAttribute("data-duration")).toBe("60");
+  });
+
+  it("renders the fade from frame time through the shared pure function", () => {
+    // Frame 30 = 1000ms: mid-clip, fully opaque.
+    captured.frame = 30;
+    const mid = renderPresenterComposition();
+    const midFrame = mid.container.querySelector("[data-scenar-presenter]") as HTMLElement;
+    expect(Number(midFrame.style.opacity)).toBe(1);
+    mid.unmount();
+
+    // Frame 3 = 100ms: half-way through the 200ms fade-in.
+    captured.frame = 3;
+    const fading = renderPresenterComposition();
+    const fadingFrame = fading.container.querySelector(
+      "[data-scenar-presenter]",
+    ) as HTMLElement;
+    expect(Number(fadingFrame.style.opacity)).toBeCloseTo(0.5, 5);
+  });
+
+  it("is deterministic: the same bundle at the same frame renders identical presenter state, twice", () => {
+    captured.frame = 30;
+
+    const first = renderPresenterComposition();
+    const firstFrame = first.container.querySelector("[data-scenar-presenter]") as HTMLElement;
+    const firstState = {
+      opacity: firstFrame.style.opacity,
+      src: first.container
+        .querySelector("[data-testid='remotion-offthread-video']")!
+        .getAttribute("data-src"),
+      from: firstFrame
+        .querySelector("[data-testid='remotion-sequence']")!
+        .getAttribute("data-from"),
+    };
+    first.unmount();
+
+    const second = renderPresenterComposition();
+    const secondFrame = second.container.querySelector("[data-scenar-presenter]") as HTMLElement;
+    expect({
+      opacity: secondFrame.style.opacity,
+      src: second.container
+        .querySelector("[data-testid='remotion-offthread-video']")!
+        .getAttribute("data-src"),
+      from: secondFrame
+        .querySelector("[data-testid='remotion-sequence']")!
+        .getAttribute("data-from"),
+    }).toEqual(firstState);
+  });
+
+  it("renders no presenter DOM when the bundle has no presenter manifest", () => {
+    const { container } = render(
+      <ScenarioComposition bundle={bundleWithNarration}>
+        {(data: StepData) => <div>{data.view}</div>}
+      </ScenarioComposition>,
+    );
+    expect(container.querySelector("[data-scenar-presenter]")).toBeNull();
+    expect(container.querySelector("[data-testid='remotion-offthread-video']")).toBeNull();
   });
 });

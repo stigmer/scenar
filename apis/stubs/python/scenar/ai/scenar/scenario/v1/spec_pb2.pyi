@@ -63,18 +63,20 @@ class TitleCard(_message.Message):
     def __init__(self, title: _Optional[str] = ..., subtitle: _Optional[str] = ..., logo_src: _Optional[str] = ..., cta_text: _Optional[str] = ..., duration_ms: _Optional[int] = ...) -> None: ...
 
 class Step(_message.Message):
-    __slots__ = ("view", "delay_ms", "narration_text", "props", "interactions")
+    __slots__ = ("view", "delay_ms", "narration_text", "props", "interactions", "presenter")
     VIEW_FIELD_NUMBER: _ClassVar[int]
     DELAY_MS_FIELD_NUMBER: _ClassVar[int]
     NARRATION_TEXT_FIELD_NUMBER: _ClassVar[int]
     PROPS_FIELD_NUMBER: _ClassVar[int]
     INTERACTIONS_FIELD_NUMBER: _ClassVar[int]
+    PRESENTER_FIELD_NUMBER: _ClassVar[int]
     view: str
     delay_ms: int
     narration_text: str
     props: _struct_pb2.Struct
     interactions: _containers.RepeatedCompositeFieldContainer[StepAction]
-    def __init__(self, view: _Optional[str] = ..., delay_ms: _Optional[int] = ..., narration_text: _Optional[str] = ..., props: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., interactions: _Optional[_Iterable[_Union[StepAction, _Mapping]]] = ...) -> None: ...
+    presenter: bool
+    def __init__(self, view: _Optional[str] = ..., delay_ms: _Optional[int] = ..., narration_text: _Optional[str] = ..., props: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., interactions: _Optional[_Iterable[_Union[StepAction, _Mapping]]] = ..., presenter: bool = ...) -> None: ...
 
 class StepAction(_message.Message):
     __slots__ = ("at_percent", "type", "target", "click_config", "type_config", "hover_config", "drag_config", "scroll_to_config", "viewport_transition_config")

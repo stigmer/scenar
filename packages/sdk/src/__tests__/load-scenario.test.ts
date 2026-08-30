@@ -284,4 +284,47 @@ describe("loadScenarioFromProto", () => {
       expect(err.path).toBe("titleCards.intro.title");
     }
   });
+
+  it("maps presenter through on a narrated step", () => {
+    const proto = makeValidScenario();
+    const modified: ProtoScenarioSpec = {
+      ...proto,
+      steps: [{ ...proto.steps[0]!, presenter: true }, proto.steps[1]!],
+    };
+
+    const scenario = loadScenarioFromProto(modified, { views });
+    expect(scenario.steps[0]!.presenter).toBe(true);
+    expect(scenario.steps[1]!.presenter).toBeUndefined();
+  });
+
+  it("normalizes presenter: false to undefined (absence and false mean the same)", () => {
+    const proto = makeValidScenario();
+    const modified: ProtoScenarioSpec = {
+      ...proto,
+      steps: [{ ...proto.steps[0]!, presenter: false }, proto.steps[1]!],
+    };
+
+    const scenario = loadScenarioFromProto(modified, { views });
+    expect(scenario.steps[0]!.presenter).toBeUndefined();
+  });
+
+  it("throws when presenter is set on a step without narration", () => {
+    const proto = makeValidScenario();
+    // Step 1 has narrationText: "" — opting it in is the contradiction.
+    const modified: ProtoScenarioSpec = {
+      ...proto,
+      steps: [proto.steps[0]!, { ...proto.steps[1]!, presenter: true }],
+    };
+
+    try {
+      loadScenarioFromProto(modified, { views });
+      expect.fail("should have thrown");
+    } catch (e) {
+      const err = e as InvalidScenarioError;
+      expect(err.path).toBe("steps[1].presenter");
+      expect(err.reason).toBe(
+        "presenter requires narration_text — a presenter clip is derived from the step's narration audio.",
+      );
+    }
+  });
 });

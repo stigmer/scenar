@@ -89,9 +89,15 @@ function buildRuntimeManifest(
   return { steps };
 }
 
-async function loadStepsFromFile(
+/**
+ * Load authored steps from a scenario file — the shared entry point of
+ * the compile commands (`scenar narrate`, `scenar presenter`): a
+ * TypeScript steps file loads as-is; a YAML scenario is validated and
+ * its (camelized) steps returned.
+ */
+export async function loadStepsFromFile(
   filePath: string,
-): Promise<{ steps: Array<{ narration?: string; narrationText?: string }>; totalSteps: number }> {
+): Promise<{ steps: Array<{ narration?: string; narrationText?: string; presenter?: boolean }>; totalSteps: number }> {
   const ext = extname(filePath).toLowerCase();
 
   if (ext === ".ts" || ext === ".tsx") {

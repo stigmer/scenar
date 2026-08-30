@@ -1,16 +1,18 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, useReducedMotion } from "framer-motion";
-import { type NarrationManifest, type ScenarEmbedViewport, type ScenarioBundle, type ScenarioStep, type Soundtrack, type StepCard, computeStepTimeline, deriveStepFromTime } from "@scenar/core";
+import { type NarrationManifest, type PresenterManifest, type ScenarEmbedViewport, type ScenarioBundle, type ScenarioStep, type Soundtrack, type StepCard, computeStepTimeline, derivePresenterTimeline, deriveStepFromTime } from "@scenar/core";
 import { useVideoExport } from "../video/VideoExportContext.js";
 import { useViewportChromeTarget, useViewportHostScaleSetter } from "../viewport/ViewportChrome.js";
 import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
+import { usePresenterPlayback } from "../presenter/usePresenterPlayback.js";
 import { useSoundtrackPlayback, type SoundtrackSources } from "../soundtrack/useSoundtrackPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
 import { useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
 import { PlaybackBurst, ScenarioAudioNotice } from "./PlaybackFeedback.js";
 import { CaptionOverlay } from "./CaptionOverlay.js";
+import { PresenterFrame } from "./PresenterFrame.js";
 import { TitleCardView } from "./TitleCardView.js";
 import { ScenarioControls } from "./ScenarioControls.js";
 import type { TimeDisplayMode } from "./format-playback-time.js";
@@ -92,6 +94,15 @@ interface ScenarioPlayerProps<T> {
    * for the defaults. The packed embed passes bundle-relative URLs.
    */
   soundtrackSources?: SoundtrackSources;
+  /**
+   * Presenter clip manifest produced by `scenar presenter` (fetched
+   * with `usePresenterManifest` for direct embeds). When provided,
+   * takes precedence over `bundle.presenterManifest`. Steps with a
+   * clip show it picture-in-picture, muted — narration remains the
+   * single audio source. Absent means no presenter: zero presenter
+   * DOM and zero fetched bytes, exactly as before the feature.
+   */
+  presenterManifest?: PresenterManifest;
 }
 
 /**
@@ -127,10 +138,12 @@ export function ScenarioPlayer<T>({
   captions = false,
   soundtrack: soundtrackProp,
   soundtrackSources,
+  presenterManifest: presenterManifestProp,
 }: ScenarioPlayerProps<T>) {
   const steps = stepsProp ?? bundle?.steps;
   const narrationManifest = manifestProp ?? bundle?.narrationManifest;
   const soundtrack = soundtrackProp ?? bundle?.soundtrack;
+  const presenterManifest = presenterManifestProp ?? bundle?.presenterManifest;
 
   if (!steps || steps.length === 0) {
     throw new Error(
@@ -139,7 +152,7 @@ export function ScenarioPlayer<T>({
   }
 
   const prefersReducedMotion = useReducedMotion();
-  const { isVideoExport, hideControls, initialMuted: videoExportMuted } = useVideoExport();
+  const { isVideoExport, hideControls, initialMuted: videoExportMuted, presenterMedia } = useVideoExport();
   // Chrome layer (ViewportChrome.tsx): when a DemoViewport provides an
   // unscaled overlay, the control bar portals there so it renders at native
   // pixel size regardless of viewport zoom and camera transforms. `null`
@@ -172,6 +185,7 @@ export function ScenarioPlayer<T>({
   const progression = useStepProgression({
     steps,
     narrationManifest,
+    presenterManifest,
     muted: progressionMuted,
     playbackRate,
     isVideoExport,
@@ -244,10 +258,38 @@ export function ScenarioPlayer<T>({
   const hasAudibleSoundtrack =
     !isVideoExport && !!soundtrack && (!!soundtrack.musicSrc || soundtrack.sfx === true);
 
+  // While muted, presenter clip durations stand in for narration's in
+  // the timeline (they are equal by construction — the clip is derived
+  // from the narration audio), so the progress bar, scrubbing, the
+  // embed bridge, and the muted step scheduler all read one clock and
+  // muted timing converges on the export timeline for presenter steps.
   const stepTimeline = useMemo(
-    () => computeStepTimeline(steps, muted ? null : narrationManifest),
-    [steps, muted, narrationManifest],
+    () => computeStepTimeline(steps, muted ? (presenterManifest ?? null) : narrationManifest),
+    [steps, muted, narrationManifest, presenterManifest],
   );
+
+  const presenterWindows = useMemo(
+    () => derivePresenterTimeline(presenterManifest, stepTimeline),
+    [presenterManifest, stepTimeline],
+  );
+
+  // The presenter is pure motion with no text channel of its own, so a
+  // reduced-motion viewer gets no presenter at all (the player already
+  // jumps to the last step for them).
+  const presenterEnabled = !!presenterManifest && !prefersReducedMotion;
+
+  const presenter = usePresenterPlayback({
+    manifest: presenterManifest,
+    stepIndex,
+    playing,
+    idle: playbackState === "idle",
+    muted,
+    playbackRate,
+    audioRef,
+    currentTimeMsRef,
+    stepTimeline,
+    enabled: presenterEnabled && !isVideoExport,
+  });
 
   // Step change callbacks. Card steps announce through their own
   // callback: their `data` is an engine placeholder, and fabricating a
@@ -303,6 +345,7 @@ export function ScenarioPlayer<T>({
       const targetIndex = deriveStepFromTime(clamped, stepTimeline.stepStartTimesMs, lastIndex);
       const stepStart = stepTimeline.stepStartTimesMs[targetIndex] ?? 0;
       seekToStep(targetIndex, Math.max(0, clamped - stepStart));
+      presenter.seekToStep(targetIndex, Math.max(0, clamped - stepStart));
       seekToTime(clamped, stepTimeline);
       soundtrackAudio.seekTo(clamped);
 
@@ -313,7 +356,7 @@ export function ScenarioPlayer<T>({
         PlaybackCoordinator.notifyPlaying(coordinatorRef.current.id);
       }
     },
-    [seekToTime, seekToStep, stepTimeline, lastIndex, playing, soundtrackAudio],
+    [seekToTime, seekToStep, presenter.seekToStep, stepTimeline, lastIndex, playing, soundtrackAudio],
   );
 
   // The ±10s transport skips. Each click is one deliberate, absolute seek
@@ -466,6 +509,30 @@ export function ScenarioPlayer<T>({
   // steps without a script simply play uncaptioned.
   const captionText = captions && captionsVisible ? steps[stepIndex]!.narration : undefined;
 
+  // The presenter frame mounts only while the active step has a clip
+  // (steps without one render zero presenter DOM). Its media slot is
+  // per time domain: the injected frame-locked renderer in export, the
+  // hook-driven muted <video> in the browser.
+  const activePresenterEntry = presenterEnabled
+    ? (presenterManifest!.steps[stepIndex] ?? null)
+    : null;
+  const activePresenterWindow = activePresenterEntry
+    ? presenterWindows.find((w) => w.stepIndex === stepIndex)
+    : undefined;
+
+  const presenterFrame = activePresenterEntry && activePresenterWindow && (
+    <PresenterFrame
+      entry={activePresenterEntry}
+      window={activePresenterWindow}
+      // Export renders inline in the canonical content box; every other
+      // surface renders in native CSS pixels (the caption convention).
+      sizeVariant={isVideoExport ? "canonical" : "chrome"}
+      videoRef={presenter.videoRef}
+      frameRef={presenter.frameRef}
+      presenterMedia={isVideoExport ? presenterMedia : undefined}
+    />
+  );
+
   const captionOverlay = !!captionText && (
     <CaptionOverlay
       text={captionText}
@@ -556,10 +623,15 @@ export function ScenarioPlayer<T>({
          * is player chrome that must hold native pixel size under viewport
          * zoom and camera moves. Rendered before the bar so its z-10 sits
          * beneath the bar's z-20 in source order too.
+         *
+         * The presenter frame is chrome for the same reason — a presenter
+         * must not magnify with camera zooms — and renders first so the
+         * caption (z-10) and the bar (z-20) stack above it (z-[5]).
          */}
         {chromeTarget ? (
           createPortal(
             <>
+              {presenterFrame}
               {captionOverlay}
               {controlBar}
             </>,
@@ -567,6 +639,7 @@ export function ScenarioPlayer<T>({
           )
         ) : (
           <>
+            {presenterFrame}
             {captionOverlay}
             {controlBar}
           </>

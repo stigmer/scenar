@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
-import { type ScenarioStep, computeStepTimeline } from "@scenar/core";
+import { type PresenterManifest, type ScenarioStep, computeStepTimeline } from "@scenar/core";
 import { useStepProgression } from "./useStepProgression.js";
 
 // Three steps at [0, 4000, 8000]ms, 12s total (delayMs is the wait before
@@ -13,11 +13,12 @@ const STEPS = [
 
 const TIMELINE = computeStepTimeline(STEPS, null);
 
-function renderProgression() {
+function renderProgression(presenterManifest?: PresenterManifest) {
   return renderHook(() =>
     useStepProgression({
       steps: STEPS,
       narrationManifest: undefined,
+      presenterManifest,
       muted: true,
       playbackRate: 1,
       isVideoExport: false,
@@ -81,5 +82,81 @@ describe("useStepProgression seek semantics", () => {
     expect(result.current.seekOffsetRef.current).toBe(
       TIMELINE.totalDurationMs - TIMELINE.stepStartTimesMs[STEPS.length - 1]!,
     );
+  });
+});
+
+describe("useStepProgression muted presenter timing (G2-2)", () => {
+  // Clip on step 1 (6s — longer than the 4s advance delay) and on the
+  // final step 2 (5s — the muted closing hold).
+  const PRESENTER: PresenterManifest = {
+    steps: [
+      null,
+      { src: "./step-1.mp4", durationMs: 6_000 },
+      { src: "./step-2.mp4", durationMs: 5_000 },
+    ],
+  };
+
+  it("waits max(delayMs, clipDurationMs) before leaving a muted presenter step", () => {
+    const { result } = renderProgression(PRESENTER);
+    act(() => result.current.play());
+
+    // Step 0 has no clip: plain delay (4000ms) advances to step 1.
+    act(() => vi.advanceTimersByTime(4_000));
+    expect(result.current.stepIndex).toBe(1);
+
+    // Step 1's clip runs 6000ms — at the plain 4000ms delay the clip is
+    // still talking; the step must hold.
+    act(() => vi.advanceTimersByTime(4_000));
+    expect(result.current.stepIndex).toBe(1);
+
+    // At the clip's end the step advances.
+    act(() => vi.advanceTimersByTime(2_000));
+    expect(result.current.stepIndex).toBe(2);
+  });
+
+  it("holds the final muted step for its clip before pausing", () => {
+    const { result } = renderProgression(PRESENTER);
+    act(() => result.current.play());
+    act(() => vi.advanceTimersByTime(4_000)); // -> step 1
+    act(() => vi.advanceTimersByTime(6_000)); // -> step 2 (final, 5s clip)
+    expect(result.current.stepIndex).toBe(2);
+    expect(result.current.playbackState).toBe("playing");
+
+    act(() => vi.advanceTimersByTime(4_999));
+    expect(result.current.playbackState).toBe("playing");
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(result.current.playbackState).toBe("paused");
+  });
+
+  it("matches the export timeline: muted advancement equals computeStepTimeline with the presenter manifest", () => {
+    // Delta-1 invariant: the muted player computes its progress-bar
+    // timeline from the presenter manifest, and the muted scheduler must
+    // land step boundaries on exactly those times.
+    const timeline = computeStepTimeline(STEPS, PRESENTER);
+    const { result } = renderProgression(PRESENTER);
+    act(() => result.current.play());
+
+    act(() => vi.advanceTimersByTime(timeline.stepStartTimesMs[1]!));
+    expect(result.current.stepIndex).toBe(1);
+
+    act(() =>
+      vi.advanceTimersByTime(
+        timeline.stepStartTimesMs[2]! - timeline.stepStartTimesMs[1]!,
+      ),
+    );
+    expect(result.current.stepIndex).toBe(2);
+  });
+
+  it("leaves scenarios without a presenter untouched (byte-identical timing)", () => {
+    const { result } = renderProgression(undefined);
+    act(() => result.current.play());
+
+    act(() => vi.advanceTimersByTime(4_000));
+    expect(result.current.stepIndex).toBe(1);
+    act(() => vi.advanceTimersByTime(4_000));
+    expect(result.current.stepIndex).toBe(2);
+    // Final step without narration or clip pauses immediately.
+    expect(result.current.playbackState).toBe("paused");
   });
 });

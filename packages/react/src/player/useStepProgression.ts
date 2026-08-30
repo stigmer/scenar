@@ -1,5 +1,5 @@
 import { type MutableRefObject, useCallback, useEffect, useRef, useState } from "react";
-import { type NarrationManifest, type ScenarioStep, type StepTimeline, deriveStepFromTime } from "@scenar/core";
+import { type NarrationManifest, type PresenterManifest, type ScenarioStep, type StepTimeline, deriveStepFromTime } from "@scenar/core";
 import { useTimeSource } from "../time/TimeSource.js";
 
 type PlaybackState = "idle" | "playing" | "paused";
@@ -7,6 +7,15 @@ type PlaybackState = "idle" | "playing" | "paused";
 interface UseStepProgressionOptions<T> {
   steps: ScenarioStep<T>[];
   narrationManifest: NarrationManifest | undefined;
+  /**
+   * Presenter manifest in the same (expanded) step domain. While muted,
+   * a presenter step's timer waits `max(delayMs, clipDurationMs)` — the
+   * formula the unmuted path already applies to narration — so a muted
+   * embed never cuts a presenter clip mid-sentence. Scenarios without a
+   * presenter are untouched, and clip durations equal narration
+   * durations, so muted presenter steps match the export timeline.
+   */
+  presenterManifest: PresenterManifest | undefined;
   muted: boolean;
   playbackRate: number;
   isVideoExport: boolean;
@@ -59,6 +68,7 @@ interface UseStepProgressionResult {
 export function useStepProgression<T>({
   steps,
   narrationManifest,
+  presenterManifest,
   muted,
   playbackRate,
   isVideoExport,
@@ -97,6 +107,16 @@ export function useStepProgression<T>({
 
     const r = rateRef.current;
 
+    // While muted, the presenter clip's duration replaces narration's
+    // in the timer math: without it a muted embed would advance on
+    // delayMs alone and cut a silently talking presenter mid-word.
+    // (Unmuted, clip duration equals narration duration by
+    // construction, so the narration path already covers it.)
+    const presenterHoldMs =
+      muted && presenterManifest
+        ? (presenterManifest.steps[stepIndex]?.durationMs ?? 0)
+        : 0;
+
     if (stepIndex >= lastIndex) {
       const finalNarrationMs =
         !muted && narrationManifest
@@ -113,6 +133,14 @@ export function useStepProgression<T>({
           clearTimeout(safety);
           pendingAdvanceRef.current = null;
         };
+      }
+
+      if (presenterHoldMs > 0) {
+        const timer = setTimeout(
+          () => setPlaybackState("paused"),
+          presenterHoldMs / r,
+        );
+        return () => clearTimeout(timer);
       }
 
       setPlaybackState("paused");
@@ -164,9 +192,12 @@ export function useStepProgression<T>({
       };
     }
 
-    const timer = setTimeout(() => setStepIndex(nextIndex), baseDelay);
+    const timer = setTimeout(
+      () => setStepIndex(nextIndex),
+      Math.max(baseDelay, presenterHoldMs / r),
+    );
     return () => clearTimeout(timer);
-  }, [timeSource, playing, stepIndex, steps, lastIndex, prefersReducedMotion, muted, narrationManifest]);
+  }, [timeSource, playing, stepIndex, steps, lastIndex, prefersReducedMotion, muted, narrationManifest, presenterManifest]);
 
   const goTo = useCallback(
     (index: number) => {

@@ -83,6 +83,7 @@ export interface ProtoStep {
   readonly narrationText: string;
   readonly props?: Record<string, unknown>;
   readonly interactions: readonly ProtoStepAction[];
+  readonly presenter?: boolean;
 }
 
 /**

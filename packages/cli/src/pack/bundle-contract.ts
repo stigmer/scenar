@@ -27,6 +27,9 @@ export const CONTENT_TYPE_BY_EXTENSION = {
   css: "text/css",
   json: "application/json",
   mp3: "audio/mpeg",
+  // Presenter clips (`scenar presenter`). mp4 only — no webm until the
+  // alpha-cutout follow-up earns it (Safari renders VP9 alpha opaque).
+  mp4: "video/mp4",
   // Raster web images.
   png: "image/png",
   jpg: "image/jpeg",

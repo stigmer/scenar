@@ -203,6 +203,23 @@ function validateStep(
     }
   }
 
+  if (s["presenter"] !== undefined) {
+    if (typeof s["presenter"] !== "boolean") {
+      errors.push({ path: `${path}.presenter`, reason: "presenter must be a boolean." });
+    } else if (
+      s["presenter"] === true &&
+      (typeof s["narrationText"] !== "string" || s["narrationText"].length === 0)
+    ) {
+      // Cross-field rule (see the Step.presenter proto doc comment):
+      // caught here so `scenar validate` flags the contradiction before
+      // the paid `scenar presenter` command runs.
+      errors.push({
+        path: `${path}.presenter`,
+        reason: "presenter requires narration_text — a presenter clip is derived from the step's narration audio.",
+      });
+    }
+  }
+
   if (s["interactions"] !== undefined) {
     if (!Array.isArray(s["interactions"])) {
       errors.push({ path: `${path}.interactions`, reason: "interactions must be an array." });

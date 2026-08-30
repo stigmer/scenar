@@ -48,6 +48,12 @@ export const steps: ScenarioStep<TourStepData>[] = [
     delayMs: 2400,
     data: { url: "app.acme.cloud/home", screen: "dashboard" },
     narration: "The dashboard shows your deployments and activity at a glance.",
+    // `presenter: true` marks this step for the presenter track: `scenar
+    // presenter` generates an avatar clip lip-synced to the step's
+    // narration audio (requires narration + a HeyGen key; the command
+    // prints its cost estimate and asks before spending), and both
+    // outputs show it picture-in-picture while the step is active.
+    presenter: true,
   },
   {
     delayMs: 2600,
@@ -59,6 +65,7 @@ export const steps: ScenarioStep<TourStepData>[] = [
     data: { url: "app.acme.cloud/settings", screen: "settings" },
     narration: "And settings is where you manage keys, members, and billing.",
     shot: "settings-screen",
+    presenter: true,
   },
 ];
 

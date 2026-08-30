@@ -588,7 +588,24 @@ type Step struct {
 	// To position the cursor when a step starts, add a set_cursor
 	// interaction at at_percent: 0.0 — this keeps all cursor choreography
 	// declarative and in one place.
-	Interactions  []*StepAction `protobuf:"bytes,6,rep,name=interactions,proto3" json:"interactions,omitempty"`
+	Interactions []*StepAction `protobuf:"bytes,6,rep,name=interactions,proto3" json:"interactions,omitempty"`
+	// Marks this step for the presenter track. When true, `scenar presenter`
+	// generates an avatar clip lip-synced to this step's narration audio,
+	// and both outputs show the clip picture-in-picture while the step is
+	// active — the interactive embed and the exported video alike.
+	//
+	// Requires narration_text: the presenter clip is derived from the
+	// step's narration audio by definition, so a step without narration
+	// cannot opt in (validated at load time).
+	//
+	// Playback never calls an AI service. Like narration audio, presenter
+	// clips are generated at compile time by the CLI and consumed as fixed
+	// assets through a positional manifest; a scenario whose clips have not
+	// been generated yet simply plays without the presenter. Which avatar
+	// performs, and at what quality tier, are inputs to `scenar presenter`
+	// (like the narration voice is an input to `scenar narrate`) — not
+	// scenario data.
+	Presenter     bool `protobuf:"varint,7,opt,name=presenter,proto3" json:"presenter,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -656,6 +673,13 @@ func (x *Step) GetInteractions() []*StepAction {
 		return x.Interactions
 	}
 	return nil
+}
+
+func (x *Step) GetPresenter() bool {
+	if x != nil {
+		return x.Presenter
+	}
+	return false
 }
 
 // StepAction defines a single timed interaction within a step — what the
@@ -1235,13 +1259,14 @@ const file_ai_scenar_scenario_v1_spec_proto_rawDesc = "" +
 	"\t_subtitleB\v\n" +
 	"\t_logo_srcB\v\n" +
 	"\t_cta_textB\x0e\n" +
-	"\f_duration_ms\"\xf3\x01\n" +
+	"\f_duration_ms\"\x91\x02\n" +
 	"\x04Step\x12\x1b\n" +
 	"\x04view\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04view\x12\"\n" +
 	"\bdelay_ms\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\adelayMs\x12%\n" +
 	"\x0enarration_text\x18\x04 \x01(\tR\rnarrationText\x12-\n" +
 	"\x05props\x18\x05 \x01(\v2\x17.google.protobuf.StructR\x05props\x12E\n" +
-	"\finteractions\x18\x06 \x03(\v2!.ai.scenar.scenario.v1.StepActionR\finteractionsJ\x04\b\x03\x10\x04R\acaption\"\x81\x05\n" +
+	"\finteractions\x18\x06 \x03(\v2!.ai.scenar.scenario.v1.StepActionR\finteractions\x12\x1c\n" +
+	"\tpresenter\x18\a \x01(\bR\tpresenterJ\x04\b\x03\x10\x04R\acaption\"\x81\x05\n" +
 	"\n" +
 	"StepAction\x12.\n" +
 	"\n" +

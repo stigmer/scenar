@@ -62,6 +62,7 @@ export interface PackResult {
   readonly renderFilePath: string;
   readonly providersPath: string | null;
   readonly hasNarration: boolean;
+  readonly hasPresenter: boolean;
   /**
    * The declared shot names recorded in scenario.json (empty = the scenario
    * authoritatively declares none), or undefined when the steps module could
@@ -104,11 +105,13 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
     const renderFilePath = await detectRenderExport(scenarioDir);
     const providersPath = await resolveProvidersPath(scenarioDir);
     const hasNarration = await fileExists(join(scenarioDir, "narration", "manifest.json"));
+    const hasPresenter = await fileExists(join(scenarioDir, "presenter", "manifest.json"));
 
     onLog(`Scenario:  ${scenarioId}`);
     onLog(`Render:    ${renderFilePath}`);
     onLog(`Providers: ${providersPath ?? "none"}`);
     onLog(`Narration: ${hasNarration ? "yes (manifest found)" : "none"}`);
+    onLog(`Presenter: ${hasPresenter ? "yes (manifest found)" : "none"}`);
     onLog(`Output:    ${outDir}`);
 
     // 1. Discover the declared shots — and the authored viewport — by
@@ -144,6 +147,7 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
       renderFilePath,
       scenarioId,
       hasNarration,
+      hasPresenter,
       providersPath,
       canonicalWidth: width,
       shellHeight,
@@ -163,7 +167,15 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
     //    ./narration/manifest.json at runtime and resolves each clip's
     //    relative src against it, so both must ship in the bundle.
     if (hasNarration) {
-      await copyNarration(scenarioDir, outDir);
+      await copyClipTrack(scenarioDir, outDir, "narration", ".mp3");
+    }
+
+    // 4a. Copy the presenter manifest + clips — the same runtime contract
+    //     as narration: the embed fetches ./presenter/manifest.json and
+    //     resolves each clip's relative src against it. CSP is
+    //     `media-src 'self'`, so the clips must ship in the bundle.
+    if (hasPresenter) {
+      await copyClipTrack(scenarioDir, outDir, "presenter", ".mp4");
     }
 
     // 4b. Copy the soundtrack's assets: the authored music file (at its
@@ -231,6 +243,7 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
       renderFilePath,
       providersPath,
       hasNarration,
+      hasPresenter,
       shots: collectedShots.recorded ? collectedShots.shots : undefined,
       manifest,
       totalBytes,
@@ -243,19 +256,25 @@ export async function runPack(options: RunPackOptions): Promise<PackResult> {
 }
 
 /**
- * Copy the narration manifest and every *.mp3 from <scenarioDir>/narration into
- * <outDir>/narration. The manifest is the runtime index the embed fetches; the
- * mp3s are the clips it references by relative src.
+ * Copy one clip track's manifest and media (narration mp3s, presenter
+ * mp4s) from <scenarioDir>/<trackDir> into <outDir>/<trackDir>. The
+ * manifest is the runtime index the embed fetches; the clips are what it
+ * references by relative src. Cache files never ship.
  */
-async function copyNarration(scenarioDir: string, outDir: string): Promise<void> {
-  const srcDir = join(scenarioDir, "narration");
-  const destDir = join(outDir, "narration");
+async function copyClipTrack(
+  scenarioDir: string,
+  outDir: string,
+  trackDir: string,
+  extension: string,
+): Promise<void> {
+  const srcDir = join(scenarioDir, trackDir);
+  const destDir = join(outDir, trackDir);
   await mkdir(destDir, { recursive: true });
   const entries = await readdir(srcDir, { withFileTypes: true });
   for (const entry of entries) {
     if (!entry.isFile()) continue;
     const name = entry.name.toLowerCase();
-    if (name === "manifest.json" || name.endsWith(".mp3")) {
+    if (name === "manifest.json" || name.endsWith(extension)) {
       await copyFile(join(srcDir, entry.name), join(destDir, entry.name));
     }
   }

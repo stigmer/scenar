@@ -54,6 +54,32 @@ describe("loadBundle", () => {
     expect(bundle.narrationManifest).toBeUndefined();
   });
 
+  it("loads the presenter manifest when one exists", async () => {
+    const presenterManifest = {
+      steps: [{ src: "./step-0.mp4", durationMs: 3000 }, null, null],
+    };
+    vi.mocked(loadTs.loadStepsFromTs).mockResolvedValue(mockSteps);
+    // Only the presenter manifest exists for this scenario.
+    vi.mocked(fs.access).mockImplementation((path) =>
+      String(path).includes(join("presenter", "manifest.json"))
+        ? Promise.resolve()
+        : Promise.reject(new Error("ENOENT")),
+    );
+    vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(presenterManifest) as never);
+
+    const bundle = await loadBundle("/fake/scenarios/presented-demo");
+    expect(bundle.presenterManifest).toEqual(presenterManifest);
+    expect(bundle.narrationManifest).toBeUndefined();
+  });
+
+  it("leaves the presenter manifest undefined when none exists", async () => {
+    vi.mocked(loadTs.loadStepsFromTs).mockResolvedValue(mockSteps);
+    vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
+
+    const bundle = await loadBundle("/fake/scenarios/plain-demo");
+    expect(bundle.presenterManifest).toBeUndefined();
+  });
+
   it("carries the authored soundtrack from the steps module", async () => {
     const soundtrack = { musicSrc: "./soundtrack/music.mp3", sfx: true };
     vi.mocked(loadTs.loadStepsFromTs).mockResolvedValue(mockSteps);

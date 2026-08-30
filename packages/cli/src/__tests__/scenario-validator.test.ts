@@ -44,6 +44,66 @@ describe("validateScenario", () => {
     expect(validateScenario(s).valid).toBe(true);
   });
 
+  // --- Presenter (per-step opt-in, requires narration) ---
+
+  it("accepts presenter: true on a narrated step", () => {
+    const s = validScenario();
+    s.steps[0] = { ...s.steps[0]!, presenter: true } as typeof s.steps[0];
+    expect(validateScenario(s).valid).toBe(true);
+  });
+
+  it("accepts presenter: false on a step without narration", () => {
+    const s = validScenario();
+    s.steps[0] = {
+      view: "intro",
+      delayMs: 0,
+      presenter: false,
+    } as unknown as typeof s.steps[0];
+    expect(validateScenario(s).valid).toBe(true);
+  });
+
+  it("rejects presenter: true on a step without narration, naming step, field, and rule", () => {
+    const s = validScenario();
+    s.steps[0] = {
+      view: "intro",
+      delayMs: 0,
+      presenter: true,
+    } as unknown as typeof s.steps[0];
+
+    const result = validateScenario(s);
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]!.path).toBe("steps[0].presenter");
+    expect(result.errors[0]!.reason).toBe(
+      "presenter requires narration_text — a presenter clip is derived from the step's narration audio.",
+    );
+  });
+
+  it("rejects presenter: true when narrationText is empty", () => {
+    const s = validScenario();
+    s.steps[0] = {
+      ...s.steps[0]!,
+      narrationText: "",
+      presenter: true,
+    } as typeof s.steps[0];
+
+    const result = validateScenario(s);
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]!.path).toBe("steps[0].presenter");
+  });
+
+  it("rejects a non-boolean presenter", () => {
+    const s = validScenario();
+    s.steps[0] = {
+      ...s.steps[0]!,
+      presenter: "yes",
+    } as unknown as typeof s.steps[0];
+
+    const result = validateScenario(s);
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]!.path).toBe("steps[0].presenter");
+    expect(result.errors[0]!.reason).toBe("presenter must be a boolean.");
+  });
+
   // --- Root-level errors ---
 
   it("rejects null", () => {

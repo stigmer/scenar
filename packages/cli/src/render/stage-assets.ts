@@ -15,6 +15,8 @@ export interface StageRenderAssetsInput {
   readonly publicDir: string;
   /** Whether the scenario has a narration manifest (+ clips to stage). */
   readonly hasNarration: boolean;
+  /** Whether the scenario has a presenter manifest (+ clips to stage). */
+  readonly hasPresenter?: boolean;
   /** The scenario's authored soundtrack, if any. */
   readonly soundtrack?: AuthoredSoundtrack;
   /**
@@ -34,6 +36,8 @@ export interface StageRenderAssetsInput {
  * The layout mirrors how each src is written:
  * - Narration clips: manifest srcs are manifest-relative (`./step-N.mp3`),
  *   so the clips stage flat at the public root.
+ * - Presenter clips: same convention (`./step-N.mp4`), staged flat at the
+ *   public root beside the narration clips — the extensions never collide.
  * - Music: `musicSrc` is scenario-relative (`./soundtrack/music.mp3`), so
  *   the file stages at that same relative path. Remote URLs stage nothing.
  * - Built-in SFX: staged at {@link SFX_DEST_PATHS}, the composition's
@@ -49,7 +53,11 @@ export async function stageRenderAssets(input: StageRenderAssetsInput): Promise<
   let staged = 0;
 
   if (input.hasNarration) {
-    staged += await stageNarrationClips(input.scenarioDir, input.publicDir);
+    staged += await stageClipDirectory(input.scenarioDir, "narration", ".mp3", input.publicDir);
+  }
+
+  if (input.hasPresenter) {
+    staged += await stageClipDirectory(input.scenarioDir, "presenter", ".mp4", input.publicDir);
   }
 
   const musicSrc = input.soundtrack?.musicSrc;
@@ -92,12 +100,21 @@ export async function stageRenderAssets(input: StageRenderAssetsInput): Promise<
   return staged;
 }
 
-/** Copy every narration mp3 flat into the public root (srcs are `./step-N.mp3`). */
-async function stageNarrationClips(scenarioDir: string, publicDir: string): Promise<number> {
-  const narrationDir = join(scenarioDir, "narration");
+/**
+ * Copy every clip of one track (narration mp3s, presenter mp4s) flat into
+ * the public root — manifest srcs are manifest-relative (`./step-N.<ext>`),
+ * which `staticFile()` resolves at the root.
+ */
+async function stageClipDirectory(
+  scenarioDir: string,
+  trackDir: string,
+  extension: string,
+  publicDir: string,
+): Promise<number> {
+  const sourceDir = join(scenarioDir, trackDir);
   let entries;
   try {
-    entries = await readdir(narrationDir, { withFileTypes: true });
+    entries = await readdir(sourceDir, { withFileTypes: true });
   } catch {
     return 0;
   }
@@ -105,8 +122,8 @@ async function stageNarrationClips(scenarioDir: string, publicDir: string): Prom
   let staged = 0;
   await mkdir(publicDir, { recursive: true });
   for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.toLowerCase().endsWith(".mp3")) continue;
-    await copyFile(join(narrationDir, entry.name), join(publicDir, entry.name));
+    if (!entry.isFile() || !entry.name.toLowerCase().endsWith(extension)) continue;
+    await copyFile(join(sourceDir, entry.name), join(publicDir, entry.name));
     staged += 1;
   }
   return staged;
