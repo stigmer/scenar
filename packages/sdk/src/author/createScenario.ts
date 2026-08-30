@@ -52,6 +52,7 @@ export function createScenario<Views extends ViewRegistry>(
       data: { view: step.view, props: step.props } as AuthoredStepData<Views>,
       narration: step.narrationText,
       interactions: step.interactions,
+      presenter: step.presenter,
     });
   }
 

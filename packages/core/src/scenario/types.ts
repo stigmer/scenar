@@ -37,6 +37,22 @@ export interface ScenarioStep<T> {
    */
   readonly interactions?: readonly StepAction[];
   /**
+   * Marks this step for the presenter track. When true, `scenar presenter`
+   * generates an avatar clip lip-synced to this step's narration audio,
+   * and both outputs show the clip picture-in-picture while the step is
+   * active — the interactive embed and the exported video alike.
+   *
+   * Requires `narration`: the presenter clip is derived from the step's
+   * narration audio by definition, so a step without narration cannot
+   * opt in (validated at load time).
+   *
+   * Playback never calls an AI service. Like narration audio, presenter
+   * clips are generated at compile time by the CLI and consumed as fixed
+   * assets through a positional manifest; a scenario whose clips have
+   * not been generated yet simply plays without the presenter.
+   */
+  readonly presenter?: boolean;
+  /**
    * Names this step as a still-capture point for `scenar shoot`.
    *
    * The capture happens at the step's settled *end* — after every

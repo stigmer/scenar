@@ -63,6 +63,17 @@ export function loadScenarioFromProto<Views extends ViewRegistry>(
       mapProtoAction(protoAction, `${stepPath}.interactions[${j}]`),
     );
 
+    // Cross-field rule from the proto doc contract: a presenter clip is
+    // derived from the step's narration audio, so opting in without a
+    // script is an authoring contradiction — caught here, before the
+    // paid `scenar presenter` command ever runs.
+    if (protoStep.presenter && !protoStep.narrationText) {
+      throw new InvalidScenarioError(
+        `${stepPath}.presenter`,
+        "presenter requires narration_text — a presenter clip is derived from the step's narration audio.",
+      );
+    }
+
     steps.push({
       delayMs: protoStep.delayMs,
       data: {
@@ -71,6 +82,7 @@ export function loadScenarioFromProto<Views extends ViewRegistry>(
       } as AuthoredStepData<Views>,
       narration: protoStep.narrationText || undefined,
       interactions: interactions.length > 0 ? interactions : undefined,
+      presenter: protoStep.presenter || undefined,
     });
   }
 

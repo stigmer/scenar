@@ -49,6 +49,12 @@ export type StepInput<Views extends ViewRegistry> = {
     readonly narrationText?: string;
     readonly props: PropsOf<Views[K]>;
     readonly interactions?: readonly StepAction[];
+    /**
+     * Marks this step for the presenter track: `scenar presenter`
+     * generates an avatar clip from the step's narration audio, shown
+     * picture-in-picture in both outputs. Requires `narrationText`.
+     */
+    readonly presenter?: boolean;
   };
 }[keyof Views & string];
 
