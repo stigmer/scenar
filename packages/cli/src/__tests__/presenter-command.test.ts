@@ -9,6 +9,7 @@ vi.mock("../util/load-ts.js", () => ({
 
 import { loadStepsFromTs } from "../util/load-ts.js";
 import { runPresenter } from "../presenter/run-presenter.js";
+import { videoMp4 } from "./synth-mp4.js";
 
 const mockLoadTs = vi.mocked(loadStepsFromTs);
 
@@ -145,7 +146,9 @@ describe("scenar presenter", () => {
       readFileSync(join(scenarioDir, "presenter", "manifest.json"), "utf-8"),
     );
     // Positional, keyed to AUTHORED steps; durationMs from the narration
-    // manifest (B-2) — no media probe anywhere.
+    // manifest (B-2), never a duration probe. The fake clip bytes are
+    // not parseable MP4, so the dimension probe (scenar#30) degrades:
+    // entry written, no width/height — exactly the graceful path.
     expect(manifest).toEqual({
       steps: [{ src: "./step-0.mp4", durationMs: 4100 }, null],
     });
@@ -353,6 +356,57 @@ describe("scenar presenter", () => {
       const result = await run({ pollTimeoutMs: 5, pollIntervalMs: 1, sleep: instantSleep });
       expect(result.totalFailed).toBe(1);
       expect(logs.join("\n")).toContain("check video 63a1b2c3d4e5 in the HeyGen dashboard");
+    });
+  });
+
+  describe("clip dimensions (scenar#30)", () => {
+    const NEAR_SQUARE_CLIP = Buffer.from(videoMp4(788, 720));
+
+    function realClipFetchMock() {
+      const base = heygenFetchMock();
+      return vi.fn(async (url: string | URL, init?: { method?: string }) => {
+        if (String(url).startsWith("https://cdn.heygen.test/")) {
+          return fakeResponse({ bytes: NEAR_SQUARE_CLIP });
+        }
+        return base(url, init);
+      });
+    }
+
+    beforeEach(() => {
+      writeNarrationFixture();
+      vi.stubGlobal("fetch", realClipFetchMock());
+    });
+
+    it("probes the downloaded clip and writes its dimensions into the manifest", async () => {
+      await run();
+
+      const manifest = JSON.parse(
+        readFileSync(join(scenarioDir, "presenter", "manifest.json"), "utf-8"),
+      );
+      expect(manifest.steps[0]).toEqual({
+        src: "./step-0.mp4",
+        durationMs: 4100,
+        width: 788,
+        height: 720,
+      });
+    });
+
+    it("a cached rewrite re-probes the clip on disk — dimensions never depend on the download path", async () => {
+      await run();
+      rmSync(join(scenarioDir, "presenter", "manifest.json"));
+      vi.stubGlobal("fetch", realClipFetchMock());
+
+      await run();
+      expect(fetch).not.toHaveBeenCalled();
+      const manifest = JSON.parse(
+        readFileSync(join(scenarioDir, "presenter", "manifest.json"), "utf-8"),
+      );
+      expect(manifest.steps[0]).toEqual({
+        src: "./step-0.mp4",
+        durationMs: 4100,
+        width: 788,
+        height: 720,
+      });
     });
   });
 

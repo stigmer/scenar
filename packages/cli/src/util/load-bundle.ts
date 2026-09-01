@@ -27,7 +27,13 @@ export interface CliBundle {
     steps: Array<{ src: string; durationMs: number } | null>;
   };
   presenterManifest?: {
-    steps: Array<{ src: string; durationMs: number } | null>;
+    steps: Array<{
+      src: string;
+      durationMs: number;
+      /** Probed clip pixel dimensions (scenar#30); absent on old manifests. */
+      width?: number;
+      height?: number;
+    } | null>;
   };
   soundtrack?: AuthoredSoundtrack;
   titleCards?: AuthoredTitleCards;

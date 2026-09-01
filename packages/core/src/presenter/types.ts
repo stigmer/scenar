@@ -27,6 +27,19 @@ export interface PresenterEntry {
    * narration timing can never disagree.
    */
   readonly durationMs: number;
+  /**
+   * Source pixel dimensions, probed from the downloaded MP4 at
+   * generation time (HeyGen's API reports no geometry, and clip aspect
+   * is avatar-dependent — scenar#30). The PiP frame adapts its aspect
+   * to these so no clip is ever cover-cropped.
+   *
+   * Optional: absent on manifests written before the probe existed and
+   * on clips the probe could not parse — playback then falls back to
+   * the fixed 16:9 frame. A `scenar presenter` rerun on cached clips
+   * rewrites the manifest with dimensions at no generation cost.
+   */
+  readonly width?: number;
+  readonly height?: number;
 }
 
 /**
