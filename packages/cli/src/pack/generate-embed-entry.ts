@@ -108,6 +108,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   if (input.hasNarration) reactImports.push("useNarrationManifest");
   if (input.hasPresenter) reactImports.push("usePresenterManifest");
   lines.push(`import { ${reactImports.join(", ")} } from "@scenar/react";`);
+  lines.push(`import type { ScenarioPlaybackState } from "@scenar/react";`);
   lines.push(`import "@scenar/react/theme.css";`);
   lines.push(`import "@scenar/react/styles.css";`);
   lines.push(`import { renderStep } from ${JSON.stringify(renderImport)};`);
@@ -283,6 +284,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`  const _containerRef = useRef<HTMLDivElement>(null);`);
   lines.push(`  const _cameraRef = useRef<HTMLDivElement>(null);`);
   lines.push(`  const [_stepIndex, _setStepIndex] = useState(0);`);
+  lines.push(`  const [_playing, _setPlaying] = useState(false);`);
   lines.push(`  const [_cursorTarget, _setCursorTarget] = useState<string | undefined>(undefined);`);
   lines.push(`  const [_showRipple, _setShowRipple] = useState(true);`);
   lines.push(`  const [_dragging, _setDragging] = useState(false);`);
@@ -297,6 +299,13 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`  const _handleStepChange = useCallback((_dataOrCard: any, index: number) => {`);
   lines.push(`    _setStepIndex(index);`);
   lines.push(`    _setCursorTarget(undefined);`);
+  lines.push(`  }, []);`);
+  lines.push(``);
+  // Transport tracking: the scheduler's `playing` option is what makes a
+  // paused player actually freeze — without it, mid-step interaction
+  // timers keep firing behind the paused frame.
+  lines.push(`  const _handlePlaybackStateChange = useCallback((state: ScenarioPlaybackState) => {`);
+  lines.push(`    _setPlaying(state === "playing");`);
   lines.push(`  }, []);`);
   lines.push(``);
   // Card synthesis: bundle assembly is THE one expansion point. Memoized
@@ -320,6 +329,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   lines.push(`    setDragging: _setDragging,`);
   lines.push(`    setViewportTransform: _setViewport,`);
   lines.push(`    steps: _applied.steps,`);
+  lines.push(`    playing: _playing,`);
   lines.push(`  });`);
   lines.push(``);
   lines.push(`  const _bundle = {`);
@@ -345,7 +355,7 @@ export function generateEmbedEntry(input: EmbedEntryInput): string {
   // embedViewport mirrors DemoViewport's numbers on purpose: the bundle
   // announces the exact canonical size it lays out at, so a host can adopt
   // iframe-as-screen scaling (see @scenar/embed's mount).
-  lines.push(`          <ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: ${input.canonicalWidth}, heightPx: ${input.shellHeight} }} captions={_captions} soundtrackSources={_soundtrackSources} onStepChange={_handleStepChange} onCardStepChange={_handleStepChange}>`);
+  lines.push(`          <ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: ${input.canonicalWidth}, heightPx: ${input.shellHeight} }} captions={_captions} soundtrackSources={_soundtrackSources} onStepChange={_handleStepChange} onCardStepChange={_handleStepChange} onPlaybackStateChange={_handlePlaybackStateChange}>`);
   lines.push(`            ${stepRender}`);
   lines.push(`          </ScenarioPlayer>`);
   lines.push(`          <Cursor target={_cursorTarget} containerRef={_cameraRef} showRipple={_showRipple} isDragging={_dragging} />`);

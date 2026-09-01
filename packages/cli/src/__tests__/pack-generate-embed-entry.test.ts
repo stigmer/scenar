@@ -53,7 +53,7 @@ describe("generateEmbedEntry", () => {
     // embedViewport mirrors the DemoViewport numbers so the ready handshake
     // announces the exact canonical size the bundle lays out at.
     expect(src).toContain(
-      "<ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: 896, heightPx: 480 }} captions={_captions} soundtrackSources={_soundtrackSources} onStepChange={_handleStepChange} onCardStepChange={_handleStepChange}>",
+      "<ScenarioPlayer bundle={_bundle} embed embedViewport={{ widthPx: 896, heightPx: 480 }} captions={_captions} soundtrackSources={_soundtrackSources} onStepChange={_handleStepChange} onCardStepChange={_handleStepChange} onPlaybackStateChange={_handlePlaybackStateChange}>",
     );
     expect(src).toContain("renderStep(data, stepIndex)");
     expect(src).toContain('getElementById("root")');
@@ -100,6 +100,10 @@ describe("generateEmbedEntry", () => {
     expect(src).toContain("onStepChange={_handleStepChange}");
     expect(src).toContain("onCardStepChange={_handleStepChange}");
     expect(src).toContain("useStepInteractions({");
+    // Transport wiring: the scheduler's `playing` option is what makes a
+    // paused embed actually freeze its mid-step interactions (#6).
+    expect(src).toContain("onPlaybackStateChange={_handlePlaybackStateChange}");
+    expect(src).toContain("playing: _playing,");
     expect(src).toContain("setCursorTarget: _setCursorTarget,");
     expect(src).toContain("setViewportTransform: _setViewport,");
     expect(src).toContain("cameraRef: _cameraRef,");

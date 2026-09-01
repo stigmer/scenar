@@ -8,7 +8,8 @@ import { useNarrationPlayback } from "../narration/useNarrationPlayback.js";
 import { usePresenterPlayback } from "../presenter/usePresenterPlayback.js";
 import { useSoundtrackPlayback, type SoundtrackSources } from "../soundtrack/useSoundtrackPlayback.js";
 import * as PlaybackCoordinator from "../playback/PlaybackCoordinator.js";
-import { useStepProgression } from "./useStepProgression.js";
+import { isEngineClickInProgress } from "../interactions/engine-click-guard.js";
+import { type ScenarioPlaybackState, useStepProgression } from "./useStepProgression.js";
 import { usePlaybackProgress } from "./usePlaybackProgress.js";
 import { PlaybackBurst, ScenarioAudioNotice } from "./PlaybackFeedback.js";
 import { CaptionOverlay } from "./CaptionOverlay.js";
@@ -53,6 +54,14 @@ interface ScenarioPlayerProps<T> {
    * and viewport-reset housekeeping — reach their scheduler.
    */
   onCardStepChange?: (card: StepCard, index: number) => void;
+  /**
+   * Fires when the player's transport state changes — the transport
+   * sibling of {@link onStepChange}. Hosts that wire the interaction
+   * system themselves (the packed embed entry, `useStepInteractions`
+   * integrators) feed this into the scheduler's `playing` option so a
+   * paused player suspends its pending mid-step interactions.
+   */
+  onPlaybackStateChange?: (state: ScenarioPlaybackState) => void;
   /** Audio manifest produced by the narration build script. */
   narrationManifest?: NarrationManifest;
   /** Show a speed selector in the control bar. Defaults to true. */
@@ -131,6 +140,7 @@ export function ScenarioPlayer<T>({
   className,
   onStepChange,
   onCardStepChange,
+  onPlaybackStateChange,
   narrationManifest: manifestProp,
   showSpeedControl = true,
   embed = false,
@@ -194,9 +204,21 @@ export function ScenarioPlayer<T>({
   });
 
   const {
-    stepIndex, playbackState, playing, play, pause,
+    stepIndex, playbackState, playing, play, resume, pause,
     seekToTime, seekOffsetRef, seekGeneration, handleClipEnded,
   } = progression;
+
+  // True while the CURRENT pause is the visibility observer's own doing.
+  // Only that pause auto-resumes when the player scrolls back into view;
+  // a deliberate pause — viewer click, host command, another player
+  // claiming the page — clears the tag and stays paused.
+  const visibilityPausedRef = useRef(false);
+
+  /** A viewer/host-initiated pause: never auto-resumed. */
+  const userPause = useCallback(() => {
+    visibilityPausedRef.current = false;
+    pause();
+  }, [pause]);
 
   // Coordinator: single-active-player
   const coordinatorRef = useRef<{ id: string; unregister: () => void } | null>(null);
@@ -204,24 +226,50 @@ export function ScenarioPlayer<T>({
   useEffect(() => {
     if (isVideoExport) return;
     coordinatorRef.current = PlaybackCoordinator.register(() => {
+      // Another player claimed the page — a handoff, not a visibility
+      // pause. It must not undo itself when this player scrolls back
+      // into view.
+      visibilityPausedRef.current = false;
       pause();
     });
     return () => coordinatorRef.current?.unregister();
   }, [isVideoExport, pause]);
 
-  // Viewport auto-pause
+  // Viewport auto-pause / auto-resume: don't advance a tour nobody is
+  // watching, and undo exactly that pause when visibility returns. The
+  // playing flag is read through a ref so ONE observer spans the mount —
+  // re-registering on every state flip would replay the browser's
+  // initial-observation callback each time.
+  const playingRef = useRef(playing);
+  playingRef.current = playing;
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el || isVideoExport) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry?.isIntersecting && playing) pause();
+        if (!entry) return;
+        if (!entry.isIntersecting && playingRef.current) {
+          visibilityPausedRef.current = true;
+          pause();
+        } else if (entry.isIntersecting && visibilityPausedRef.current) {
+          // Resume, not play: play() carries the replay-at-end reset, and
+          // an occlusion during the final step must continue that step,
+          // never restart the scenario. No gesture is needed — audio was
+          // already unlocked by the session's first play, and narration's
+          // playing-effect resumes the clip from its frozen position.
+          visibilityPausedRef.current = false;
+          resume();
+          if (coordinatorRef.current) {
+            PlaybackCoordinator.notifyPlaying(coordinatorRef.current.id);
+          }
+        }
       },
       { threshold: 0.5 },
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [isVideoExport, playing, pause]);
+  }, [isVideoExport, pause, resume]);
 
   const {
     muted, toggleMute, audioRef, seekToStep, audioBlocked, unlock, setVolume, prefetch,
@@ -301,6 +349,12 @@ export function ScenarioPlayer<T>({
     else onStepChange?.(step.data, stepIndex);
   }, [stepIndex, steps, onStepChange, onCardStepChange]);
 
+  // Transport state callback — every state change, including the ones the
+  // engine initiates itself (end-of-scenario pause, viewport auto-pause).
+  useEffect(() => {
+    onPlaybackStateChange?.(playbackState);
+  }, [playbackState, onPlaybackStateChange]);
+
   // Controls auto-hide
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -328,6 +382,8 @@ export function ScenarioPlayer<T>({
   }, [playbackState, scheduleHide]);
 
   const handlePlay = useCallback(() => {
+    // A deliberate play supersedes any pending visibility auto-resume.
+    visibilityPausedRef.current = false;
     // Start narration and soundtrack synchronously in the click's call
     // stack — this is what unlocks audio on iOS Safari. `play()` then
     // flips playback state and the audio effects take over.
@@ -385,23 +441,28 @@ export function ScenarioPlayer<T>({
   // through `handlePlay` so narration starts inside the click gesture (the
   // iOS Safari unlock path); the transient burst confirms every toggle.
   const handleContentClick = useCallback(() => {
+    // The engine's own click interactions (`dispatchClick` → `el.click()`
+    // on a target inside the content) bubble up through this handler.
+    // Only viewer gestures toggle the transport — the choreography must
+    // never pause its own playback.
+    if (isEngineClickInProgress()) return;
     if (playing) {
       fireBurst("pause");
-      pause();
+      userPause();
     } else {
       fireBurst("play");
       handlePlay();
     }
-  }, [playing, pause, handlePlay, fireBurst]);
+  }, [playing, userPause, handlePlay, fireBurst]);
 
   // The bar's play/pause button — same semantics as a content click minus
   // the center burst (the button's own icon flip is its feedback). Must go
   // through `handlePlay` too: with no poster, this button can be the first
   // gesture of the session, which is what unlocks narration audio.
   const handleTogglePlayControl = useCallback(() => {
-    if (playing) pause();
+    if (playing) userPause();
     else handlePlay();
-  }, [playing, pause, handlePlay]);
+  }, [playing, userPause, handlePlay]);
 
   // Retry narration inside a fresh gesture after the browser blocked it.
   const handleEnableAudio = useCallback(() => {
@@ -489,7 +550,8 @@ export function ScenarioPlayer<T>({
     viewport: embedViewport,
     controls: {
       play: handlePlay,
-      pause,
+      // A host's pause command is as deliberate as a viewer's click.
+      pause: userPause,
       seekToTime: handleSeekToTime,
       setMuted: (next: boolean) => {
         if (muted !== next) toggleMute();

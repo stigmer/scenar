@@ -46,6 +46,34 @@ describe("useNarrationPlayback", () => {
     expect(play).toHaveBeenCalledTimes(1);
   });
 
+  it("unlock() resumes a loaded clip from its position without reloading (#28)", () => {
+    const play = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+    const load = vi.spyOn(HTMLMediaElement.prototype, "load");
+    render(<Harness manifest={MANIFEST} initialMuted={false} />);
+
+    // First gesture: fresh start — the clip loads and plays from 0.
+    act(() => {
+      api.unlock();
+    });
+    const audio = api.audioRef.current!;
+    expect(audio.src).toContain("/step-0.mp3");
+    const loadsAfterStart = load.mock.calls.length;
+
+    // Pause mid-clip: the element keeps its src and position.
+    audio.currentTime = 3.14;
+
+    // Resume gesture: play() continues from the position. Re-loading here
+    // is the #28 bug — load() resets currentTime to 0 and the narration
+    // audibly restarts on every resume.
+    act(() => {
+      api.unlock();
+    });
+
+    expect(play).toHaveBeenCalledTimes(2);
+    expect(load.mock.calls.length).toBe(loadsAfterStart);
+    expect(audio.currentTime).toBe(3.14);
+  });
+
   it("flags audioBlocked when the browser rejects play()", async () => {
     vi.spyOn(HTMLMediaElement.prototype, "play").mockRejectedValue(
       new DOMException("blocked", "NotAllowedError"),

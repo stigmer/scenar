@@ -94,6 +94,7 @@ export { PlaybackBurst, ScenarioAudioNotice } from "./player/PlaybackFeedback.js
 export { ScenarioControls } from "./player/ScenarioControls.js";
 export { SpeedMenu } from "./player/SpeedMenu.js";
 export { useStepProgression } from "./player/useStepProgression.js";
+export type { ScenarioPlaybackState } from "./player/useStepProgression.js";
 export { usePlaybackProgress } from "./player/usePlaybackProgress.js";
 
 // Step interactions
