@@ -185,12 +185,22 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
     : `<ScenarioComposition bundle={_bundle}>`;
 
   if (input.providersPath) {
+    // The inner AbsoluteFill is load-bearing: ScenarioComposition sizes its
+    // player through a CSS height chain, and providers are not required to
+    // be height-transparent — a provider that renders a real wrapper element
+    // with auto height (e.g. a theme-scope div) would otherwise collapse the
+    // chain, shrinking cards to content height and authored step surfaces to
+    // zero (black frames — scenar#33). Sandwiching the provider between two
+    // absolute fills makes the entry's layout guarantee independent of
+    // whatever the provider renders.
     lines.push(`  return (`);
     lines.push(`    <AbsoluteFill className={SCENAR_CLASS}>`);
     lines.push(`      <_Providers>`);
-    lines.push(`        ${compositionOpen}`);
-    lines.push(`          {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
-    lines.push(`        </ScenarioComposition>`);
+    lines.push(`        <AbsoluteFill>`);
+    lines.push(`          ${compositionOpen}`);
+    lines.push(`            {(data: any, stepIndex: number) => renderStep(data, stepIndex)}`);
+    lines.push(`          </ScenarioComposition>`);
+    lines.push(`        </AbsoluteFill>`);
     lines.push(`      </_Providers>`);
     lines.push(`    </AbsoluteFill>`);
     lines.push(`  );`);

@@ -37,6 +37,31 @@ describe("generateRemotionEntry captions", () => {
   });
 });
 
+describe("generateRemotionEntry providers layout", () => {
+  it("sandwiches the providers between two absolute fills (scenar#33)", () => {
+    const src = generateRemotionEntry({
+      ...BASE,
+      providersPath: "/proj/.scenar/providers.tsx",
+      captions: false,
+    });
+    // ScenarioComposition sizes through a CSS height chain; a provider
+    // wrapper with auto height must not be able to collapse it. The inner
+    // AbsoluteFill restores the chain regardless of what providers render.
+    const providersOpen = src.indexOf("<_Providers>");
+    const innerFill = src.indexOf("<AbsoluteFill>", providersOpen);
+    const composition = src.indexOf("<ScenarioComposition", providersOpen);
+    expect(providersOpen).toBeGreaterThan(-1);
+    expect(innerFill).toBeGreaterThan(providersOpen);
+    expect(composition).toBeGreaterThan(innerFill);
+  });
+
+  it("keeps the provider-less tree at a single fill — prior output unchanged", () => {
+    const src = generateRemotionEntry({ ...BASE, captions: false });
+    expect(src).not.toContain("<AbsoluteFill>\n");
+    expect(src.match(/<AbsoluteFill/g)).toHaveLength(1);
+  });
+});
+
 describe("generateRemotionEntry soundtrack", () => {
   it("discovers the soundtrack from the steps module at module-eval time", () => {
     const src = generateRemotionEntry({ ...BASE, captions: false });
