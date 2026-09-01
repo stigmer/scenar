@@ -21,6 +21,7 @@ import {
   pollVideo,
   uploadAudioAsset,
 } from "./heygen-client.js";
+import { probeMp4Dimensions } from "./mp4-dimensions.js";
 
 /** Default generation poll cadence and per-step budget. */
 const POLL_INTERVAL_MS = 5_000;
@@ -478,11 +479,24 @@ async function presentScenario(
   };
 }
 
+interface ManifestEntry {
+  src: string;
+  durationMs: number;
+  width?: number;
+  height?: number;
+}
+
 /**
  * Write `manifest.json` and `.presenter-cache.json` from completed work
  * only (cached steps + this run's successes). Failed and non-opted
  * steps stay `null` — playback degrades to no-presenter on those steps
  * by design, and a rerun regenerates exactly the missing ones.
+ *
+ * Each entry carries the clip's probed pixel dimensions (scenar#30):
+ * re-probed from the file on disk at every rewrite — never cached —
+ * so they can never drift from the actual bytes, and a rerun over
+ * cached clips upgrades a pre-probe manifest for free. A probe miss
+ * only omits the fields (playback falls back to the 16:9 frame).
  */
 async function writeOutputs(
   outDir: string,
@@ -499,25 +513,31 @@ async function writeOutputs(
     ? `${options.baseUrl.replace(/\/$/, "")}/${scenarioId}`
     : ".";
 
-  const manifestEntries = new Map<number, { src: string; durationMs: number }>();
+  const manifestEntries = new Map<number, ManifestEntry>();
   const cacheEntries = new Map<number, { hash: string; durationMs: number }>();
 
+  const buildEntry = async (index: number, durationMs: number): Promise<ManifestEntry> => {
+    const entry: ManifestEntry = { src: `${srcPrefix}/step-${index}.mp4`, durationMs };
+    // The clip's existence is a precondition of reaching this map (the
+    // cache check / this run's download), so a read failure surfaces.
+    const dims = probeMp4Dimensions(await readFile(join(outDir, `step-${index}.mp4`)));
+    if (dims) {
+      entry.width = dims.width;
+      entry.height = dims.height;
+    }
+    return entry;
+  };
+
   for (const step of plan.filter((p) => p.cached)) {
-    manifestEntries.set(step.index, {
-      src: `${srcPrefix}/step-${step.index}.mp4`,
-      durationMs: step.durationMs,
-    });
+    manifestEntries.set(step.index, await buildEntry(step.index, step.durationMs));
     cacheEntries.set(step.index, { hash: step.hash, durationMs: step.durationMs });
   }
   for (const step of completed) {
-    manifestEntries.set(step.index, {
-      src: `${srcPrefix}/step-${step.index}.mp4`,
-      durationMs: step.durationMs,
-    });
+    manifestEntries.set(step.index, await buildEntry(step.index, step.durationMs));
     cacheEntries.set(step.index, { hash: step.hash, durationMs: step.durationMs });
   }
 
-  const manifestSteps: Array<{ src: string; durationMs: number } | null> = Array.from(
+  const manifestSteps: Array<ManifestEntry | null> = Array.from(
     { length: totalSteps },
     () => null,
   );
