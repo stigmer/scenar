@@ -4,7 +4,7 @@ vi.mock("../tts/echogarden.js", () => ({
   isEchogardenAvailable: vi.fn(),
   createEchogardenProvider: vi.fn(() => ({
     name: "echogarden",
-    fingerprint: "echogarden/vits",
+    fingerprint: "echogarden/vits/mp3-64",
     synthesize: vi.fn(),
   })),
 }));
