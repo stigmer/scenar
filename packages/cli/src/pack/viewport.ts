@@ -10,8 +10,10 @@
  * dimensions (flags or these defaults), bakes them into the bundle via
  * `DemoViewport`, and records them in `scenario.json` so `deploy` can derive a
  * correctly-proportioned embed snippet without re-deriving them (DD-004). This
- * one module is the single home for the defaults, consumed by both the bake
- * (`pack`) and the fallback (`deploy`) so they cannot drift.
+ * one module is the single home for the defaults, consumed by the bake
+ * (`pack`), the fallback (`deploy`), and the video output (`render`, which
+ * resolves the same chain so the MP4 lays out at the embed's canonical size —
+ * scenar#29) so they cannot drift.
  */
 export interface Viewport {
   /** Canonical render width in px (ViewportConfig.width). */

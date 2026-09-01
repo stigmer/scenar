@@ -12,18 +12,28 @@ const BASE = {
   width: 1920,
   height: 1080,
   compositionId: "welcome-tour",
+  // The resolved canonical viewport (runRender's explicit > authored >
+  // default chain) — required: every auto-generated entry mounts the
+  // presentation stack (scenar#29).
+  viewport: { widthPx: 896, heightPx: 480 },
 } as const;
 
+/** The composition open tag BASE's viewport bakes (captions off). */
+const BASE_COMPOSITION_OPEN =
+  "<ScenarioComposition bundle={_bundle} viewport={{ widthPx: 896, heightPx: 480 }}>";
+
 describe("generateRemotionEntry captions", () => {
-  it("emits a plain ScenarioComposition without the flag — prior output unchanged", () => {
+  it("emits no captions prop without the flag", () => {
     const src = generateRemotionEntry({ ...BASE, captions: false });
-    expect(src).toContain("<ScenarioComposition bundle={_bundle}>");
+    expect(src).toContain(BASE_COMPOSITION_OPEN);
     expect(src).not.toContain("captions");
   });
 
   it("bakes the captions prop into the composition when the flag is set", () => {
     const src = generateRemotionEntry({ ...BASE, captions: true });
-    expect(src).toContain("<ScenarioComposition bundle={_bundle} captions>");
+    expect(src).toContain(
+      "<ScenarioComposition bundle={_bundle} captions viewport={{ widthPx: 896, heightPx: 480 }}>",
+    );
   });
 
   it("bakes the captions prop inside the providers wrapper too", () => {
@@ -33,12 +43,14 @@ describe("generateRemotionEntry captions", () => {
       captions: true,
     });
     expect(src).toContain("<_Providers>");
-    expect(src).toContain("<ScenarioComposition bundle={_bundle} captions>");
+    expect(src).toContain(
+      "<ScenarioComposition bundle={_bundle} captions viewport={{ widthPx: 896, heightPx: 480 }}>",
+    );
   });
 });
 
-describe("generateRemotionEntry presentation stack (scenar#35)", () => {
-  it("bakes the viewport prop into the composition when set", () => {
+describe("generateRemotionEntry presentation stack (scenar#35, scenar#29)", () => {
+  it("bakes the resolved viewport into the composition", () => {
     const src = generateRemotionEntry({
       ...BASE,
       captions: false,
@@ -61,10 +73,10 @@ describe("generateRemotionEntry presentation stack (scenar#35)", () => {
     );
   });
 
-  it("emits no stack props when the flags are absent — prior output unchanged", () => {
+  it("always carries a viewport — the presentation stack is unconditional (scenar#29)", () => {
     const src = generateRemotionEntry({ ...BASE, captions: false });
-    expect(src).toContain("<ScenarioComposition bundle={_bundle}>");
-    expect(src).not.toContain("viewport=");
+    expect(src).toContain("viewport={{ widthPx: 896, heightPx: 480 }}");
+    // stage stays an authored/flag opt-in, unlike the viewport.
     expect(src).not.toContain(" stage>");
   });
 });

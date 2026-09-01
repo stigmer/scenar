@@ -45,16 +45,16 @@ export function registerRenderCommand(program: Command): void {
     .option("--height <number>", "video height in pixels (default: 1080)", "1080")
     .option(
       "--viewport <size>",
-      "canonical viewport the scenario lays out at, WIDTHxHEIGHT (e.g. " +
-        "1440x900) — mounts the full presentation stack (geometry, camera, " +
-        "cursor, interactions), contain-fit into the video frame. Without " +
-        "it, only step content renders and interactions have no visible " +
-        "effect. Use the same size the bundle is packed at.",
+      "override the canonical viewport the scenario lays out at, " +
+        "WIDTHxHEIGHT (e.g. 1440x900). Omitted, the scenario's authored " +
+        "viewport applies, then the pack default — the same resolution " +
+        "`scenar pack` uses, so the video and the embed lay out " +
+        "identically. The result is contain-fit into the video frame.",
     )
     .option(
       "--stage",
       "float each step's window on the stage backdrop (matches `scenar " +
-        "pack --stage`); requires --viewport",
+        "pack --stage`)",
     )
     .option("--composition-id <id>", "Remotion composition ID to render")
     .option(
@@ -68,9 +68,6 @@ export function registerRenderCommand(program: Command): void {
     )
     .action(async (dir: string, options: RenderOptions) => {
       try {
-        if (options.stage && !options.viewport) {
-          throw new Error("--stage requires --viewport (the stage needs a canonical box to lay out in).");
-        }
         const result = await runRender({
           scenarioDir: dir,
           out: options.out,

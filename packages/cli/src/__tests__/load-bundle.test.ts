@@ -120,4 +120,22 @@ describe("loadBundle", () => {
     const bundle = await loadBundle("/fake/scenarios/plain-demo");
     expect(bundle.titleCards).toBeUndefined();
   });
+
+  it("carries the authored viewport from the steps module (scenar#29)", async () => {
+    vi.mocked(loadTs.loadStepsFromTs).mockResolvedValue(mockSteps);
+    vi.mocked(loadTs.loadViewportFromTs).mockResolvedValue({ width: 1440, height: 900 });
+    vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
+
+    const bundle = await loadBundle("/fake/scenarios/sized-demo");
+    expect(bundle.viewport).toEqual({ width: 1440, height: 900 });
+  });
+
+  it("leaves viewport undefined when the module authors none", async () => {
+    vi.mocked(loadTs.loadStepsFromTs).mockResolvedValue(mockSteps);
+    vi.mocked(loadTs.loadViewportFromTs).mockResolvedValue(null);
+    vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
+
+    const bundle = await loadBundle("/fake/scenarios/plain-demo");
+    expect(bundle.viewport).toBeUndefined();
+  });
 });

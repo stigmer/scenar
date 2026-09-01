@@ -26,10 +26,13 @@ export interface EntryGeneratorInput {
   /** Burn step captions into the video (`scenar render --captions`). */
   captions: boolean;
   /**
-   * Canonical viewport the scenario lays out at (`--viewport WxH`) —
-   * mounts the full presentation stack in the composition (scenar#35).
+   * Canonical viewport the scenario lays out at, resolved by `runRender`
+   * (explicit `--viewport` > authored > pack default, scenar#29). Always
+   * present: an auto-generated entry always mounts the full presentation
+   * stack in the composition (scenar#35) — a bare, unscaled player was
+   * never a meaningful render.
    */
-  viewport?: { readonly widthPx: number; readonly heightPx: number };
+  viewport: { readonly widthPx: number; readonly heightPx: number };
   /** Float step content on the stage backdrop (`--stage`). */
   stage?: boolean;
 }
@@ -190,11 +193,9 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   // fps/width/height above.
   const compositionProps = ["bundle={_bundle}"];
   if (input.captions) compositionProps.push("captions");
-  if (input.viewport) {
-    compositionProps.push(
-      `viewport={{ widthPx: ${input.viewport.widthPx}, heightPx: ${input.viewport.heightPx} }}`,
-    );
-  }
+  compositionProps.push(
+    `viewport={{ widthPx: ${input.viewport.widthPx}, heightPx: ${input.viewport.heightPx} }}`,
+  );
   if (input.stage) compositionProps.push("stage");
   const compositionOpen = `<ScenarioComposition ${compositionProps.join(" ")}>`;
 

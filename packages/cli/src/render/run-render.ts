@@ -3,6 +3,7 @@ import { stat, mkdir, access, writeFile, rm } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { loadBundle, type CliBundle } from "../util/load-bundle.js";
 import { resolveSfxAssetPaths } from "../util/soundtrack-assets.js";
+import { resolvePackViewport } from "../pack/viewport.js";
 import { generateRemotionEntry } from "./generate-entry.js";
 import { resolveProvidersPath } from "./resolve-providers.js";
 import { detectRenderExport } from "./detect-render-export.js";
@@ -25,13 +26,16 @@ export interface RunRenderOptions {
    */
   readonly captions?: boolean;
   /**
-   * Canonical viewport the scenario lays out at — mounts the full
-   * presentation stack (geometry, camera, cursor, interactions),
-   * contain-fit into the video frame (scenar#35). Only applies to the
-   * auto-generated entry.
+   * Explicit override of the canonical viewport the scenario lays out at.
+   * Omitted, the scenario's authored viewport applies, then the shared
+   * pack default — the same explicit > authored > default chain `pack`
+   * resolves, so both outputs lay out at one canonical size (scenar#29).
+   * The resolved viewport mounts the full presentation stack (geometry,
+   * camera, cursor, interactions), contain-fit into the video frame
+   * (scenar#35). Only applies to the auto-generated entry.
    */
   readonly viewport?: { readonly widthPx: number; readonly heightPx: number };
-  /** Float each step's window on the stage backdrop. Requires `viewport`. */
+  /** Float each step's window on the stage backdrop, laid out in the resolved viewport. */
   readonly stage?: boolean;
   readonly onLog?: (message: string) => void;
 }
@@ -73,18 +77,19 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
   const width = options.width ?? 1920;
   const height = options.height ?? 1080;
   const captions = options.captions ?? false;
-  const viewport = options.viewport;
   const stage = options.stage ?? false;
 
   // A custom entry owns its own <ScenarioComposition> props, so these
   // flags cannot reach it. Say so instead of silently ignoring them.
+  // Keyed to the explicitly passed options, never the resolved viewport:
+  // entry users must not be nagged about a default they didn't ask for.
   if (captions && options.entry) {
     onLog(
       "Warning: --captions has no effect with --entry. " +
         'Pass captions to <ScenarioComposition> in your entry file instead.',
     );
   }
-  if (viewport && options.entry) {
+  if ((options.viewport || options.stage) && options.entry) {
     onLog(
       "Warning: --viewport/--stage have no effect with --entry. " +
         "Pass viewport/stage to <ScenarioComposition> in your entry file instead.",
@@ -97,6 +102,21 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
     const scenarioId = bundle.id;
     const compositionId = options.compositionId ?? scenarioId;
     const outputPath = resolveOutputPath(options.out, scenarioId);
+
+    // Canonical viewport: explicit option > the scenario's authored
+    // viewport > the shared pack default — the same chain (and resolver)
+    // `pack` uses, so the MP4 and the packed embed lay out at one
+    // canonical size and cannot drift (scenar#29). The presentation
+    // stack always mounts in the auto-generated entry; a bare, unscaled
+    // player was never a meaningful render.
+    const resolvedViewport = resolvePackViewport(
+      { width: options.viewport?.widthPx, shellHeight: options.viewport?.heightPx },
+      bundle.viewport ?? null,
+    );
+    const viewport = {
+      widthPx: resolvedViewport.width,
+      heightPx: resolvedViewport.height,
+    };
 
     const { entryPoint, generated } = await resolveEntryPoint({
       entryOption: options.entry,
@@ -138,10 +158,17 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
     if (captions) {
       onLog(`Captions: burned in (from step narration text)`);
     }
-    if (viewport) {
+    if (generated) {
+      // Mirrors pack's viewport log: a surprising size is one log line
+      // from its explanation. Custom entries own their own viewport.
+      const viewportSourceLabel = {
+        explicit: "explicit",
+        authored: "authored by the scenario",
+        default: "default",
+      }[resolvedViewport.source];
       onLog(
-        `Viewport: ${viewport.widthPx}x${viewport.heightPx} canonical` +
-          `${stage ? ", staged" : ""} — full presentation stack (camera, cursor, interactions)`,
+        `Viewport: ${viewport.widthPx}x${viewport.heightPx} canonical ` +
+          `(${viewportSourceLabel})${stage ? ", staged" : ""}`,
       );
     }
 
@@ -230,7 +257,8 @@ interface EntryResolutionInput {
   width: number;
   height: number;
   captions: boolean;
-  viewport?: { readonly widthPx: number; readonly heightPx: number };
+  /** Resolved canonical viewport — always present; see {@link runRender}. */
+  viewport: { readonly widthPx: number; readonly heightPx: number };
   stage: boolean;
 }
 
