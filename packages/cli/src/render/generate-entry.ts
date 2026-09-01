@@ -25,6 +25,13 @@ export interface EntryGeneratorInput {
   compositionId: string;
   /** Burn step captions into the video (`scenar render --captions`). */
   captions: boolean;
+  /**
+   * Canonical viewport the scenario lays out at (`--viewport WxH`) —
+   * mounts the full presentation stack in the composition (scenar#35).
+   */
+  viewport?: { readonly widthPx: number; readonly heightPx: number };
+  /** Float step content on the stage backdrop (`--stage`). */
+  stage?: boolean;
 }
 
 /**
@@ -177,12 +184,19 @@ export function generateRemotionEntry(input: EntryGeneratorInput): string {
   lines.push(``);
   lines.push(`function _VideoRoot() {`);
 
-  // `captions` is baked into the generated JSX (not read at render time):
-  // the entry is written per render invocation, so the flag's value IS the
-  // render's configuration — same treatment as fps/width/height above.
-  const compositionOpen = input.captions
-    ? `<ScenarioComposition bundle={_bundle} captions>`
-    : `<ScenarioComposition bundle={_bundle}>`;
+  // `captions`/`viewport`/`stage` are baked into the generated JSX (not
+  // read at render time): the entry is written per render invocation, so
+  // each flag's value IS the render's configuration — same treatment as
+  // fps/width/height above.
+  const compositionProps = ["bundle={_bundle}"];
+  if (input.captions) compositionProps.push("captions");
+  if (input.viewport) {
+    compositionProps.push(
+      `viewport={{ widthPx: ${input.viewport.widthPx}, heightPx: ${input.viewport.heightPx} }}`,
+    );
+  }
+  if (input.stage) compositionProps.push("stage");
+  const compositionOpen = `<ScenarioComposition ${compositionProps.join(" ")}>`;
 
   if (input.providersPath) {
     // The inner AbsoluteFill is load-bearing: ScenarioComposition sizes its

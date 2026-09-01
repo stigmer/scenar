@@ -20,6 +20,7 @@ import {
   VideoExportProvider,
   ScenarioPlayer,
 } from "@scenar/react";
+import { PresentationStack, type RenderViewport } from "./PresentationStack.js";
 import { msToFrames, useScenarioTimeline } from "./useScenarioTimeline.js";
 
 const DEFAULT_FPS = 30;
@@ -69,6 +70,29 @@ interface ScenarioCompositionProps<T> {
    * render` stages them at (`soundtrack/sfx/<name>.mp3`).
    */
   sfxSrcs?: Record<SfxSound, string>;
+  /**
+   * Mount the full presentation stack around the player — the same stack
+   * packed embeds mount: a definite canonical box contain-fit into the
+   * video frame (the geometry `DemoViewport` provides in browsers but
+   * deliberately passes through under `isVideoExport`), the
+   * `ViewportTransformLayer` camera, the `Cursor`, and TimeSource-driven
+   * step interactions. Without it, only step content renders:
+   * interactions' visible effects are absent from the MP4 and surfaces
+   * that size through the shell-geometry contract
+   * (`--scenar-shell-height`) collapse (scenar#35). Omitted, the
+   * composition keeps its prior bare-player output.
+   */
+  viewport?: RenderViewport;
+  /**
+   * Wrap each step's content in `<ScenarioStage>` (staged bundles — the
+   * `scenar pack --stage` presentation). Only meaningful with `viewport`.
+   */
+  stage?: boolean;
+  /**
+   * Render the cursor overlay for interactions. Defaults to true; only
+   * meaningful with `viewport`.
+   */
+  cursor?: boolean;
 }
 
 /**
@@ -120,6 +144,9 @@ export function ScenarioComposition<T>({
   useStaticFile: useStaticFileProp = true,
   captions = false,
   sfxSrcs = DEFAULT_SFX_SRCS,
+  viewport,
+  stage = false,
+  cursor = true,
 }: ScenarioCompositionProps<T>) {
   const videoConfig = useVideoConfig();
   const fps = fpsProp ?? videoConfig.fps ?? DEFAULT_FPS;
@@ -223,9 +250,25 @@ export function ScenarioComposition<T>({
         stepStartTimesMs={timeline.stepStartTimesMs}
       >
         <VideoExportProvider presenterMedia={presenterMedia}>
-          <ScenarioPlayer bundle={playerBundle} captions={captions}>
-            {children}
-          </ScenarioPlayer>
+          {viewport ? (
+            // The full presentation stack (scenar#35). Rendered below the
+            // TimeSourceProvider on purpose: its useStepInteractions call
+            // must see the time source or it silently selects the
+            // wall-clock browser scheduler (the capture mount's lesson).
+            <PresentationStack
+              bundle={playerBundle}
+              captions={captions}
+              viewport={viewport}
+              stage={stage}
+              cursor={cursor}
+            >
+              {children}
+            </PresentationStack>
+          ) : (
+            <ScenarioPlayer bundle={playerBundle} captions={captions}>
+              {children}
+            </ScenarioPlayer>
+          )}
         </VideoExportProvider>
       </TimeSourceProvider>
 

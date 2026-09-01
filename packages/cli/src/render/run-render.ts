@@ -24,6 +24,15 @@ export interface RunRenderOptions {
    * `--entry` owns its own `<ScenarioComposition>` props.
    */
   readonly captions?: boolean;
+  /**
+   * Canonical viewport the scenario lays out at — mounts the full
+   * presentation stack (geometry, camera, cursor, interactions),
+   * contain-fit into the video frame (scenar#35). Only applies to the
+   * auto-generated entry.
+   */
+  readonly viewport?: { readonly widthPx: number; readonly heightPx: number };
+  /** Float each step's window on the stage backdrop. Requires `viewport`. */
+  readonly stage?: boolean;
   readonly onLog?: (message: string) => void;
 }
 
@@ -64,13 +73,21 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
   const width = options.width ?? 1920;
   const height = options.height ?? 1080;
   const captions = options.captions ?? false;
+  const viewport = options.viewport;
+  const stage = options.stage ?? false;
 
-  // A custom entry owns its own <ScenarioComposition> props, so --captions
-  // cannot reach it. Say so instead of silently ignoring the flag.
+  // A custom entry owns its own <ScenarioComposition> props, so these
+  // flags cannot reach it. Say so instead of silently ignoring them.
   if (captions && options.entry) {
     onLog(
       "Warning: --captions has no effect with --entry. " +
         'Pass captions to <ScenarioComposition> in your entry file instead.',
+    );
+  }
+  if (viewport && options.entry) {
+    onLog(
+      "Warning: --viewport/--stage have no effect with --entry. " +
+        "Pass viewport/stage to <ScenarioComposition> in your entry file instead.",
     );
   }
 
@@ -92,6 +109,8 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
       width,
       height,
       captions,
+      viewport,
+      stage,
     });
     tempDir = generated?.tempDir;
 
@@ -118,6 +137,12 @@ export async function runRender(options: RunRenderOptions): Promise<RenderResult
     }
     if (captions) {
       onLog(`Captions: burned in (from step narration text)`);
+    }
+    if (viewport) {
+      onLog(
+        `Viewport: ${viewport.widthPx}x${viewport.heightPx} canonical` +
+          `${stage ? ", staged" : ""} — full presentation stack (camera, cursor, interactions)`,
+      );
     }
 
     // Stage every local asset into a Remotion public dir so staticFile()
@@ -205,6 +230,8 @@ interface EntryResolutionInput {
   width: number;
   height: number;
   captions: boolean;
+  viewport?: { readonly widthPx: number; readonly heightPx: number };
+  stage: boolean;
 }
 
 interface EntryResolutionResult {
@@ -243,6 +270,8 @@ async function resolveEntryPoint(input: EntryResolutionInput): Promise<EntryReso
     height: input.height,
     compositionId: input.compositionId,
     captions: input.captions,
+    viewport: input.viewport,
+    stage: input.stage,
   });
 
   // Write the entry inside the scenario directory so webpack's standard
@@ -351,6 +380,12 @@ async function renderScenario(config: RenderConfig): Promise<void> {
     serveUrl,
     codec: "h264" as const,
     outputLocation: config.outputPath,
+    // Sequential by contract: interaction state (cursor, camera moves,
+    // typed text) assumes frames render in timeline order — the same
+    // model ScenarioCaptureMount.walkTo documents. Chunked concurrency
+    // cold-starts mid-timeline, dropping cross-frame interaction state at
+    // every chunk seam.
+    concurrency: 1,
     onProgress: ({ progress }: { progress: number }) => {
       const pct = Math.round(progress * 100);
       config.onLog(`  Progress: ${pct}%`);

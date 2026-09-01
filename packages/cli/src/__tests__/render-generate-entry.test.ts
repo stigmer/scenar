@@ -37,6 +37,38 @@ describe("generateRemotionEntry captions", () => {
   });
 });
 
+describe("generateRemotionEntry presentation stack (scenar#35)", () => {
+  it("bakes the viewport prop into the composition when set", () => {
+    const src = generateRemotionEntry({
+      ...BASE,
+      captions: false,
+      viewport: { widthPx: 1440, heightPx: 900 },
+    });
+    expect(src).toContain(
+      "<ScenarioComposition bundle={_bundle} viewport={{ widthPx: 1440, heightPx: 900 }}>",
+    );
+  });
+
+  it("bakes viewport + stage + captions together, in stable prop order", () => {
+    const src = generateRemotionEntry({
+      ...BASE,
+      captions: true,
+      viewport: { widthPx: 1440, heightPx: 900 },
+      stage: true,
+    });
+    expect(src).toContain(
+      "<ScenarioComposition bundle={_bundle} captions viewport={{ widthPx: 1440, heightPx: 900 }} stage>",
+    );
+  });
+
+  it("emits no stack props when the flags are absent — prior output unchanged", () => {
+    const src = generateRemotionEntry({ ...BASE, captions: false });
+    expect(src).toContain("<ScenarioComposition bundle={_bundle}>");
+    expect(src).not.toContain("viewport=");
+    expect(src).not.toContain(" stage>");
+  });
+});
+
 describe("generateRemotionEntry providers layout", () => {
   it("sandwiches the providers between two absolute fills (scenar#33)", () => {
     const src = generateRemotionEntry({
