@@ -78,6 +78,7 @@
     "remotion": "4.0.448",
     "@remotion/bundler": "4.0.448",
     "@remotion/renderer": "4.0.448",
+    "echogarden": "^2.10.1",
     "edge-tts-universal": "^1.4.0",
     "vite": "^6.0.0",
     "@vitejs/plugin-react": "^4.3.0",

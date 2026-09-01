@@ -3,6 +3,13 @@ import type { TtsProvider, TtsOptions, TtsResult } from "./types.js";
 const ENGINE = "vits";
 
 /**
+ * Requested MP3 bitrate — the mono-speech standard (OpenAI's tts-1
+ * emits ~64 kbps MP3 too). The bitrate doubles as the fallback duration
+ * estimate when the synthesis timeline is unavailable.
+ */
+const OUTPUT_BITRATE_KBPS = 64;
+
+/**
  * Checks whether the `echogarden` package is available at runtime.
  * Returns `true` if it can be imported, `false` otherwise.
  */
@@ -24,11 +31,20 @@ export async function isEchogardenAvailable(): Promise<boolean> {
  *
  * Uses dynamic import to avoid compile-time type coupling to the
  * optional dependency.
+ *
+ * MP3 encoding happens inside `synthesize` via the `outputAudioFormat`
+ * option — echogarden 2.x has no standalone encode export (the removal
+ * of `encodeRawAudioToMp3` is what broke this provider once, see
+ * issue #19; the export-surface smoke test in
+ * `__tests__/echogarden-provider.test.ts` guards against a repeat).
  */
 export function createEchogardenProvider(): TtsProvider {
   return {
     name: "echogarden",
-    fingerprint: `echogarden/${ENGINE}`,
+    // The output format is part of the cache identity: a codec or
+    // bitrate change alters the audio bytes, so cached audio from a
+    // different encoding configuration must regenerate.
+    fingerprint: `echogarden/${ENGINE}/mp3-${OUTPUT_BITRATE_KBPS}`,
 
     async synthesize(text: string, options: TtsOptions): Promise<TtsResult> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,19 +62,31 @@ export function createEchogardenProvider(): TtsProvider {
       const result = await echogarden.synthesize(text, {
         engine: ENGINE,
         voice: options.voice,
+        outputAudioFormat: { codec: "mp3", bitrate: OUTPUT_BITRATE_KBPS },
       });
 
-      const rawAudio = result.audio;
-      const sampleRate: number = rawAudio.sampleRate ?? 22050;
-      const samples: number = rawAudio.audioChannels?.[0]?.length ?? 0;
-      const durationMs = Math.round((samples / sampleRate) * 1000);
+      // With `outputAudioFormat` set, `result.audio` is the encoded
+      // MP3 bytes (Uint8Array), not a RawAudio object.
+      const audio = Buffer.from(result.audio as Uint8Array);
 
-      const mp3Bytes: Uint8Array = await echogarden.encodeRawAudioToMp3(rawAudio);
+      // Duration comes from the synthesis timeline: the last entry's
+      // `endTime` (seconds) marks speech end, excluding the trailing
+      // end-pause silence echogarden pads the file with. Speech end is
+      // the duration convention across providers here — edge-tts uses
+      // subtitle metadata, ElevenLabs character alignment — and it is
+      // what step timing consumes as screen time.
+      let durationMs = 0;
+      const timeline = result.timeline;
+      if (Array.isArray(timeline) && timeline.length > 0) {
+        const endTime: number = timeline[timeline.length - 1].endTime ?? 0;
+        durationMs = Math.ceil(endTime * 1000);
+      }
 
-      return {
-        audio: Buffer.from(mp3Bytes),
-        durationMs,
-      };
+      if (durationMs === 0 && audio.length > 0) {
+        durationMs = Math.ceil((audio.length * 8) / OUTPUT_BITRATE_KBPS);
+      }
+
+      return { audio, durationMs };
     },
   };
 }
