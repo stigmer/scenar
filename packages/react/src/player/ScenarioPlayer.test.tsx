@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, within } from "@testing-library/react";
-import type { ScenarioStep } from "@scenar/core";
+import { act, cleanup, fireEvent, render, within } from "@testing-library/react";
+import type { NarrationManifest, ScenarioStep } from "@scenar/core";
 import { ScenarioPlayer } from "./ScenarioPlayer.js";
+import { runEngineClick } from "../interactions/engine-click-guard.js";
 import { VideoExportProvider } from "../video/VideoExportContext.js";
 import { TimeSourceProvider } from "../time/TimeSource.js";
 import { DemoViewport } from "../viewport/DemoViewport.js";
@@ -15,13 +16,25 @@ const CAPTIONED_STEPS = [
   { delayMs: 60_000, narration: "This is the dashboard." },
 ] as unknown as ScenarioStep<unknown>[];
 
+// jsdom has no IntersectionObserver; the driveable fake below collects each
+// observer's callback (one per mounted player, in mount order) so tests can
+// simulate visibility changes: `intersect(false)` occludes, `intersect(true)`
+// returns the player to view.
+let intersectionCallbacks: Array<(entries: Array<{ isIntersecting: boolean }>) => void> = [];
+
+function intersect(isIntersecting: boolean, observerIndex = 0) {
+  act(() => intersectionCallbacks[observerIndex]?.([{ isIntersecting }]));
+}
+
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
-  // jsdom has no IntersectionObserver; the player's viewport auto-pause
-  // observes the container outside video export.
+  intersectionCallbacks = [];
   vi.stubGlobal(
     "IntersectionObserver",
     class {
+      constructor(cb: (entries: Array<{ isIntersecting: boolean }>) => void) {
+        intersectionCallbacks.push(cb);
+      }
       observe() {}
       unobserve() {}
       disconnect() {}
@@ -319,5 +332,121 @@ describe("ScenarioPlayer captions", () => {
     );
 
     expect(captionIn(container)!.textContent).toBe("This is the dashboard.");
+  });
+});
+
+describe("ScenarioPlayer viewport auto-pause / auto-resume (#31)", () => {
+  const stateOf = (container: HTMLElement) =>
+    (container.firstElementChild as HTMLElement).getAttribute("data-demo-state");
+
+  it("pauses on occlusion and resumes when visibility returns", () => {
+    const { container } = renderPlayer();
+
+    // The browser fires an initial observation on observe(): visible at
+    // idle must not start playback.
+    intersect(true);
+    expect(stateOf(container)).toBe("idle");
+
+    fireEvent.click(within(container).getByTestId("content"));
+    expect(stateOf(container)).toBe("playing");
+
+    // Occlusion (scroll-out, window overlap) pauses the engine's own way…
+    intersect(false);
+    expect(stateOf(container)).toBe("paused");
+
+    // …and returning visibility undoes exactly that pause, no click needed.
+    intersect(true);
+    expect(stateOf(container)).toBe("playing");
+  });
+
+  it("a viewer's deliberate pause never auto-resumes on visibility changes", () => {
+    const { container } = renderPlayer();
+    const content = within(container).getByTestId("content");
+
+    fireEvent.click(content); // play
+    fireEvent.click(content); // pause — deliberate
+    expect(stateOf(container)).toBe("paused");
+
+    intersect(false);
+    intersect(true);
+    expect(stateOf(container)).toBe("paused");
+  });
+
+  it("a coordinator pause (another player claimed the page) never auto-resumes", () => {
+    const { container } = render(
+      <>
+        <ScenarioPlayer steps={STEPS}>{() => <div data-testid="content-a" />}</ScenarioPlayer>
+        <ScenarioPlayer steps={STEPS}>{() => <div data-testid="content-b" />}</ScenarioPlayer>
+      </>,
+    );
+    const [rootA, rootB] = Array.from(container.children) as HTMLElement[];
+
+    fireEvent.click(within(container).getByTestId("content-a"));
+    expect(rootA!.getAttribute("data-demo-state")).toBe("playing");
+
+    // Player B starts: the coordinator pauses A. That handoff is not a
+    // visibility pause — A scrolling back into view must not steal
+    // playback back from B.
+    fireEvent.click(within(container).getByTestId("content-b"));
+    expect(rootA!.getAttribute("data-demo-state")).toBe("paused");
+    expect(rootB!.getAttribute("data-demo-state")).toBe("playing");
+
+    intersect(true, 0);
+    expect(rootA!.getAttribute("data-demo-state")).toBe("paused");
+    expect(rootB!.getAttribute("data-demo-state")).toBe("playing");
+  });
+});
+
+describe("ScenarioPlayer engine-click guard", () => {
+  it("the engine's own click dispatches never toggle the transport; viewer clicks do", () => {
+    const { container } = renderPlayer();
+    const root = container.firstElementChild as HTMLElement;
+    const content = within(container).getByTestId("content");
+
+    fireEvent.click(content); // viewer play
+    expect(root.getAttribute("data-demo-state")).toBe("playing");
+
+    // A `click` interaction fires a native el.click() on a target inside
+    // the content; it bubbles through the player's click-to-toggle. The
+    // guard must keep the choreography from pausing its own playback.
+    act(() => {
+      runEngineClick(() => content.click());
+    });
+    expect(root.getAttribute("data-demo-state")).toBe("playing");
+
+    // The same bubbled click WITHOUT the engine marker is a viewer
+    // gesture and toggles as always.
+    fireEvent.click(content);
+    expect(root.getAttribute("data-demo-state")).toBe("paused");
+  });
+});
+
+describe("ScenarioPlayer narration resume (#28)", () => {
+  const MANIFEST = {
+    steps: [{ src: "/step-0.mp3", durationMs: 5_000 }, null],
+  } as unknown as NarrationManifest;
+
+  it("play → pause → play resumes the clip without reloading it", () => {
+    const load = vi.spyOn(HTMLMediaElement.prototype, "load");
+    const { container } = render(
+      <ScenarioPlayer steps={STEPS} narrationManifest={MANIFEST}>
+        {() => <div data-testid="content" />}
+      </ScenarioPlayer>,
+    );
+    const content = within(container).getByTestId("content");
+
+    fireEvent.click(content); // play: the gesture loads and starts the clip
+    const audio = container.querySelector("audio")!;
+    expect(audio.src).toContain("/step-0.mp3");
+    const loadsAfterStart = load.mock.calls.length;
+
+    audio.currentTime = 2.5; // mid-clip
+    fireEvent.click(content); // pause
+    fireEvent.click(content); // resume
+
+    // Reloading here is the #28 bug: load() resets currentTime to 0 and
+    // the step's narration audibly restarts on every resume.
+    expect(load.mock.calls.length).toBe(loadsAfterStart);
+    expect(audio.currentTime).toBe(2.5);
   });
 });

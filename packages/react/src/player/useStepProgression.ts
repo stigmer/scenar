@@ -2,7 +2,14 @@ import { type MutableRefObject, useCallback, useEffect, useRef, useState } from 
 import { type NarrationManifest, type PresenterManifest, type ScenarioStep, type StepTimeline, deriveStepFromTime } from "@scenar/core";
 import { useTimeSource } from "../time/TimeSource.js";
 
-type PlaybackState = "idle" | "playing" | "paused";
+/**
+ * The player's transport state: `idle` before the first play of a
+ * session, then `playing`/`paused` for the rest of it. Reported to
+ * integrators by `ScenarioPlayer`'s `onPlaybackStateChange` — the
+ * transport sibling of `onStepChange` — and consumed by the embed
+ * bridge and the interaction scheduler's `playing` option.
+ */
+export type ScenarioPlaybackState = "idle" | "playing" | "paused";
 
 interface UseStepProgressionOptions<T> {
   steps: ScenarioStep<T>[];
@@ -25,9 +32,17 @@ interface UseStepProgressionOptions<T> {
 
 interface UseStepProgressionResult {
   stepIndex: number;
-  playbackState: PlaybackState;
+  playbackState: ScenarioPlaybackState;
   playing: boolean;
   play: () => void;
+  /**
+   * Continue from the current frozen point — `play()` minus its
+   * replay-at-end reset. The engine's own resumes (the viewport
+   * auto-resume) use this so an auto-pause during the final step never
+   * restarts the scenario; `play` stays the user-facing transport verb,
+   * where play-at-the-end deliberately means "replay".
+   */
+  resume: () => void;
   pause: () => void;
   togglePlay: () => void;
   goTo: (index: number) => void;
@@ -80,7 +95,7 @@ export function useStepProgression<T>({
   const [timerStepIndex, setStepIndex] = useState(() =>
     prefersReducedMotion ? lastIndex : 0,
   );
-  const [playbackState, setPlaybackState] = useState<PlaybackState>(
+  const [playbackState, setPlaybackState] = useState<ScenarioPlaybackState>(
     isVideoExport ? "playing" : "idle",
   );
 
@@ -229,6 +244,10 @@ export function useStepProgression<T>({
     setPlaybackState("playing");
   }, [lastIndex]);
 
+  const resume = useCallback(() => {
+    setPlaybackState("playing");
+  }, []);
+
   const pause = useCallback(() => {
     setPlaybackState("paused");
   }, []);
@@ -251,6 +270,7 @@ export function useStepProgression<T>({
     playbackState,
     playing,
     play,
+    resume,
     pause,
     togglePlay,
     goTo,

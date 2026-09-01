@@ -81,6 +81,8 @@ import { ScenarioPlayer } from "@scenar/react";
 </ScenarioPlayer>
 ```
 
+The player pauses itself when less than half of it is visible (scrolled away or occluded) and resumes on its own when visibility returns — only for pauses it made itself. A deliberate pause (viewer click, embed-bridge command) stays paused. Transport state changes are reported through `onPlaybackStateChange` (`ScenarioPlaybackState`: `"idle" | "playing" | "paused"`) — the transport sibling of `onStepChange`. Hosts that wire `useStepInteractions` themselves should feed it into the scheduler's `playing` option (below) so pausing also freezes mid-step interactions.
+
 ### `<DemoViewport>`
 
 Fixed virtual viewport that CSS-zooms children from a canonical width to fit the container. Decoupled from any site-specific tokens — pass your own `canonicalWidth`, `minZoom`, `shellHeight`, and `wrapperClassName`.
@@ -98,6 +100,8 @@ Framer Motion container for smooth zoom/pan transitions.
 ### `useStepInteractions(options)`
 
 Schedule timed mid-step interactions (scroll, cursor, click, type, hover, drag, viewport_transition). Reads interactions from each step's inline `interactions` field. Automatically uses `setTimeout` in browser mode or frame-driven firing in video-export mode.
+
+Pass the player's transport state as `playing` (from `onPlaybackStateChange`) to make the browser scheduler pause-aware: while `false`, pending interactions are suspended, and resume continues from the same point in the step. Omitted, it defaults to `true` — the scheduler runs regardless of playback state, as it did before the option existed.
 
 ### `useNarrationManifest(scenarioId, resolveUrl?)`
 

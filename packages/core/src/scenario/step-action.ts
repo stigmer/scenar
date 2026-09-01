@@ -93,6 +93,17 @@ export interface UseStepInteractionsOptions<T> {
    */
   playbackRate?: number;
   /**
+   * Whether the player is currently advancing (`ScenarioPlayer`'s
+   * `onPlaybackStateChange` reports it). While `false` the browser
+   * scheduler suspends: pending interactions stop firing, and resume
+   * continues from the same point in the step — a paused player is a
+   * frozen point on the timeline. Defaults to `true`, preserving the
+   * always-running behavior for wirings that do not track playback
+   * state. The frame-driven path ignores it (export time only moves
+   * when the renderer advances it).
+   */
+  playing?: boolean;
+  /**
    * Optional callback to control the Cursor's click ripple. The
    * `hover` action calls `setShowRipple(false)` before moving the
    * cursor and `setShowRipple(true)` after hover leave events fire.

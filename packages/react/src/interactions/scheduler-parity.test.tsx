@@ -81,9 +81,11 @@ function makeSteps(action: StepAction): ScenarioStep<unknown>[] {
 interface HarnessProps {
   steps: ScenarioStep<unknown>[];
   playbackRate?: number;
+  /** Omitted in the parity suites: the scheduler defaults it to true. */
+  playing?: boolean;
 }
 
-function Harness({ steps, playbackRate = 1 }: HarnessProps) {
+function Harness({ steps, playbackRate = 1, playing }: HarnessProps) {
   useStepInteractions({
     stepIndex: 0,
     narrationManifest: undefined,
@@ -91,6 +93,7 @@ function Harness({ steps, playbackRate = 1 }: HarnessProps) {
     setCursorTarget: () => record("cursor-move"),
     steps,
     playbackRate,
+    playing,
   });
   return null;
 }
@@ -136,6 +139,77 @@ describe.each(Object.entries(ACTIONS))(
     });
   },
 );
+
+describe("browser scheduler: pause/resume (#6)", () => {
+  it("suspends pending events while paused and fires the remainder on resume", () => {
+    const action = ACTIONS.hover!;
+    const steps = makeSteps(action);
+    const duration = getStepDurationMs(0, undefined, steps);
+    // hover derives three events: cursor-move, hover-enter, hover-leave.
+    const derived = deriveActionEvents(action, duration);
+    const firstOffset = derived[0]!.offsetMs;
+
+    const view = render(<Harness steps={steps} playing />);
+    vi.advanceTimersByTime(firstOffset);
+    expect(recorded).toHaveLength(1);
+
+    // Pause: pending events stop firing, no matter how long the pause lasts.
+    view.rerender(<Harness steps={steps} playing={false} />);
+    vi.advanceTimersByTime(60_000);
+    expect(recorded).toHaveLength(1);
+
+    // Resume: exactly the remaining events fire, each at its remaining
+    // offset — the paused minute is excluded from the step's elapsed time,
+    // and the already-fired event does not repeat.
+    const resumedAt = Date.now();
+    view.rerender(<Harness steps={steps} playing />);
+    vi.advanceTimersByTime(duration + 10_000);
+
+    const expected = derived
+      .map((e, i) => ({
+        kind: expectedRecordKind(e),
+        at: i === 0 ? firstOffset : resumedAt + (e.offsetMs - firstOffset),
+      }))
+      .sort((a, b) => a.at - b.at || a.kind.localeCompare(b.kind));
+    const actual = [...recorded].sort(
+      (a, b) => a.at - b.at || a.kind.localeCompare(b.kind),
+    );
+    expect(actual).toEqual(expected);
+  });
+
+  it("dispatches nothing when mounted paused", () => {
+    render(<Harness steps={makeSteps(ACTIONS.click!)} playing={false} />);
+    vi.advanceTimersByTime(60_000);
+    expect(recorded).toHaveLength(0);
+  });
+
+  it("a mid-step rate change does not re-fire events that already fired", () => {
+    const action = ACTIONS.click!;
+    const steps = makeSteps(action);
+    const duration = getStepDurationMs(0, undefined, steps);
+    const [cursor, dispatch] = deriveActionEvents(action, duration);
+
+    const view = render(<Harness steps={steps} playbackRate={1} />);
+    vi.advanceTimersByTime(cursor!.offsetMs);
+    expect(recorded).toHaveLength(1);
+
+    // Double the speed mid-step. The old scheduler re-armed every timer
+    // from the step's entry, replaying the cursor move; the elapsed bank
+    // plus the fired ledger must schedule only the remaining dispatch, at
+    // its remaining offset scaled by the new rate.
+    const changedAt = Date.now();
+    view.rerender(<Harness steps={steps} playbackRate={2} />);
+    vi.advanceTimersByTime(duration + 10_000);
+
+    expect(recorded).toEqual([
+      { kind: "cursor-move", at: cursor!.offsetMs },
+      {
+        kind: "click-dispatch",
+        at: changedAt + (dispatch!.offsetMs - cursor!.offsetMs) / 2,
+      },
+    ]);
+  });
+});
 
 describe("browser scheduler parity: playback rate", () => {
   it("scales every derived offset by the rate", () => {

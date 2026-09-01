@@ -8,7 +8,7 @@ import {
   parseEmbedCommand,
 } from "@scenar/core";
 
-type PlaybackState = "idle" | "playing" | "paused";
+import type { ScenarioPlaybackState } from "../player/useStepProgression.js";
 
 /** Imperative controls the host can drive over the bridge. */
 export interface ScenarEmbedControls {
@@ -37,7 +37,7 @@ export interface UseScenarEmbedBridgeOptions {
   enabled: boolean;
   /** Container whose height changes are reported to the host. */
   containerRef: RefObject<HTMLElement | null>;
-  playbackState: PlaybackState;
+  playbackState: ScenarioPlaybackState;
   stepIndex: number;
   totalSteps: number;
   /** Timeline used to derive the position fraction for `progress` events. */

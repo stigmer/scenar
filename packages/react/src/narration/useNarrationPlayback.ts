@@ -44,7 +44,9 @@ interface UseNarrationPlaybackResult {
   /**
    * Start narration from within a user gesture (the poster/resume click).
    * Calling `play()` synchronously in the gesture's call stack is what lets
-   * iOS Safari unlock the audio element for the rest of the session. No-op when
+   * iOS Safari unlock the audio element for the rest of the session. When the
+   * current clip is already loaded (a resume, not a first play), playback
+   * continues from its current position rather than restarting. No-op when
    * muted or when the current step has no clip.
    */
   unlock: () => void;
@@ -260,6 +262,13 @@ export function useNarrationPlayback({
    * synchronously in the gesture is what unlocks audio on iOS Safari for the
    * rest of the session; the subsequent step/playing effects then resume
    * normally. No-op when muted or when the current step has no clip.
+   *
+   * A true first-gesture unlock: when the element already holds a clip
+   * (paused mid-step, or positioned by a paused seek), `play()` resumes it
+   * from its current position — still synchronously inside the gesture,
+   * which is all the unlock requires. Re-loading via `playClip` here would
+   * reset `currentTime` to 0 and replay the step's narration on every
+   * resume (#28).
    */
   const unlock = useCallback(() => {
     const audio = audioRef.current;
@@ -267,6 +276,10 @@ export function useNarrationPlayback({
     if (manifest && !prefetchedRef.current) {
       prefetchManifestClips(manifest);
       prefetchedRef.current = true;
+    }
+    if (audio.src) {
+      track(safePlay(audio));
+      return;
     }
     track(playClip(audio, entrySrc, playbackRateRef.current));
   }, [entrySrc, manifest, track]);
