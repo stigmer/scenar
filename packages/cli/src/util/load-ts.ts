@@ -278,3 +278,16 @@ export async function loadTitleCardsFromTs(
   const mod = await import(pathToFileURL(filePath).href);
   return findAuthoredTitleCards(mod.default ?? mod);
 }
+
+/**
+ * Dynamically import a TypeScript steps file and extract the authored
+ * canonical viewport ({@link findAuthoredViewport}), or null when the
+ * module authors none. Node caches the module, so calling this alongside
+ * {@link loadStepsFromTs} costs one import.
+ */
+export async function loadViewportFromTs(
+  filePath: string,
+): Promise<AuthoredViewport | null> {
+  const mod = await import(pathToFileURL(filePath).href);
+  return findAuthoredViewport(mod.default ?? mod);
+}

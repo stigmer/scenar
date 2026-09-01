@@ -4,8 +4,10 @@ import {
   loadSoundtrackFromTs,
   loadStepsFromTs,
   loadTitleCardsFromTs,
+  loadViewportFromTs,
   type AuthoredSoundtrack,
   type AuthoredTitleCards,
+  type AuthoredViewport,
 } from "./load-ts.js";
 
 /**
@@ -29,6 +31,12 @@ export interface CliBundle {
   };
   soundtrack?: AuthoredSoundtrack;
   titleCards?: AuthoredTitleCards;
+  /**
+   * The scenario's authored canonical viewport, when steps.ts declares one
+   * (`createScenario({ viewport })` or a named `viewport` export). Render
+   * resolves its presentation geometry from this the same way pack does.
+   */
+  viewport?: AuthoredViewport;
 }
 
 /**
@@ -46,6 +54,7 @@ export async function loadBundle(dir: string): Promise<CliBundle> {
   const steps = await loadStepsFromTs(stepsPath);
   const soundtrack = await loadSoundtrackFromTs(stepsPath);
   const titleCards = await loadTitleCardsFromTs(stepsPath);
+  const viewport = await loadViewportFromTs(stepsPath);
 
   return {
     id: basename(dir),
@@ -54,6 +63,7 @@ export async function loadBundle(dir: string): Promise<CliBundle> {
     presenterManifest: await readPositionalManifest(join(dir, "presenter", "manifest.json")),
     soundtrack: soundtrack ?? undefined,
     titleCards: titleCards ?? undefined,
+    viewport: viewport ?? undefined,
   };
 }
 
