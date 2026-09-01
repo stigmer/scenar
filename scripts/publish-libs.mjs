@@ -102,7 +102,11 @@ function generateDistPackageJson(pkgDir, version, { stripInternalDeps = false } 
     description: srcPkg.description,
     license: srcPkg.license,
     type: srcPkg.type,
-    sideEffects: srcPkg.sideEffects,
+    // sideEffects paths must be re-rooted like every other path field:
+    // published globs still pointing at ./dist/ match nothing, so webpack
+    // consumers tree-shake bare CSS imports as dead code — unstyled scenar
+    // shells, black-on-black render frames (#38).
+    sideEffects: rewritePaths(srcPkg.sideEffects),
     repository: srcPkg.repository,
     keywords: srcPkg.keywords,
   };
@@ -142,8 +146,14 @@ function rewritePath(p) {
   return p.replace(/^\.\/dist\//, "./");
 }
 
-function rewritePaths(obj) {
+/**
+ * Recursively rewrite ./dist/... paths in strings, arrays (e.g.
+ * `sideEffects`), and objects (e.g. `bin`). Non-path values (booleans,
+ * numbers, null) pass through untouched. Exported for the guard test.
+ */
+export function rewritePaths(obj) {
   if (typeof obj === "string") return rewritePath(obj);
+  if (Array.isArray(obj)) return obj.map((entry) => rewritePaths(entry));
   if (typeof obj === "object" && obj !== null) {
     const result = {};
     for (const [key, value] of Object.entries(obj)) {
