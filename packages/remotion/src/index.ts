@@ -20,6 +20,12 @@ export { applyTitleCards } from "@scenar/core";
 // Composition
 export { ScenarioComposition } from "./ScenarioComposition.js";
 
+// The video-export presentation stack (scenar#35). The composition mounts
+// it when given `viewport`; the pieces are exported for custom entries
+// that assemble their own tree.
+export type { RenderViewport } from "./PresentationStack.js";
+export { PresentationStack, computeContainFit } from "./PresentationStack.js";
+
 // Timeline
 export type { ScenarioTimeline, AudioClip } from "./useScenarioTimeline.js";
 export {
